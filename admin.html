@@ -707,11 +707,13 @@ async function loadHours(){
     const snap=await getDocs(query(collection(db,"bookings"),where("status","==","completed")));
     const completed=snap.docs.map(d=>({id:d.id,...d.data()}));
     completed.sort((a,b)=>(b.completedAt||"").localeCompare(a.completedAt||""));
-    const totalMin=completed.length*55;
+    const totalMin=completed.length*60;
     const hrs=Math.floor(totalMin/60);
     const mins=totalMin%60;
-    document.getElementById("hours-total").textContent=hrs+(mins?"."+Math.round(mins/6):"");
-    document.getElementById("hours-sessions-count").textContent=`${completed.length} сесій · по 55 хвилин кожна`;
+    // Показуємо у форматі "Xг Yхв" або просто "X год"
+    const hoursDisplay = mins > 0 ? `${hrs}г ${mins}хв` : `${hrs}`;
+    document.getElementById("hours-total").textContent=hoursDisplay;
+    document.getElementById("hours-sessions-count").textContent=`${completed.length} сесій · по 60 хвилин кожна · разом ${totalMin} хвилин (${hrs} год)`;
     const listEl=document.getElementById("hours-list");
     if(!completed.length){listEl.innerHTML=`<div class="empty-state"><div class="ico">🌱</div>Ще немає проведених сесій</div>`;return;}
     listEl.innerHTML=`
