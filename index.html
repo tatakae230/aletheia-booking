@@ -1,1141 +1,1493 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Алетея — Психологічні сесії</title>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <style>
-    :root {
-      --sage: #7c9a84;
-      --sage-light: #a8c4af;
-      --cream: #f7f3ee;
-      --warm: #e8ddd0;
-      --text: #3a3530;
-      --text-light: #6b6560;
-      --urgent: #c4704a;
-      --urgent-light: #f5ebe4;
-      --gold: #c9a84c;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Georgia', serif;
-      background: var(--cream);
-      color: var(--text);
-      min-height: 100vh;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Запис на сесію | Психологиня Тетяна | Aletheia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf6f1;
+  --bg2:#f2ece3;
+  --card:#ffffff;
+  --text:#1e1a14;
+  --muted:#7d6e5e;
+  --accent:#8b6636;
+  --accent-bg:#fdf4e7;
+  --accent-hover:#6e5028;
+  --border:#ddd3c6;
+  --success:#1e6b40;
+  --success-bg:#eaf5ee;
+  --radius:14px;
+  --shadow:0 2px 16px rgba(0,0,0,0.07);
+}
+body{font-family:'Georgia',serif;background:transparent;color:var(--text);min-height:100vh;line-height:1.65}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
 
-    /* HERO */
-    .hero {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      background: linear-gradient(135deg, #2c4a3e 0%, #4a6741 30%, #7c9a84 60%, #b8cfc0 100%);
-    }
-    .hero video {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: cover; opacity: 0.45; z-index: 0;
-    }
-    .hero-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(to bottom, rgba(44,74,62,0.4), rgba(44,74,62,0.7));
-      z-index: 1;
-    }
-    .hero-content {
-      position: relative; z-index: 2;
-      text-align: center; color: white; padding: 2rem 1rem;
-    }
-    .hero-content h1 {
-      font-size: clamp(2rem, 6vw, 4rem);
-      font-weight: 300; letter-spacing: 0.08em;
-      margin-bottom: 0.5rem;
-      text-shadow: 0 2px 20px rgba(0,0,0,0.3);
-    }
-    .hero-content .subtitle {
-      font-size: clamp(0.9rem, 2vw, 1.2rem);
-      opacity: 0.9; font-style: italic;
-      margin-bottom: 2rem;
-    }
-    .hero-btn {
-      display: inline-block;
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.5);
-      color: white; padding: 0.8rem 2.5rem;
-      border-radius: 50px; font-size: 1rem;
-      cursor: pointer; backdrop-filter: blur(10px);
-      transition: all 0.3s; text-decoration: none;
-    }
-    .hero-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+/* ─── HEADER ─── */
+header{
+  padding:16px 24px;border-bottom:1px solid var(--border);
+  background:#fff;display:flex;align-items:center;gap:14px;
+  position:sticky;top:0;z-index:200;box-shadow:0 2px 10px rgba(0,0,0,0.05)
+}
+.logo-wrap{display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;background:var(--accent);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-style:italic}
+.logo-text .name{display:block;font-size:1.05rem;font-weight:400;letter-spacing:.04em;color:var(--text)}
+.logo-text .sub{display:block;font-size:.75rem;color:var(--muted);font-family:sans-serif;letter-spacing:.03em}
 
-    /* MAIN BOOKING */
-    .booking-section {
-      max-width: 800px; margin: 0 auto;
-      padding: 3rem 1rem 5rem;
-    }
-    .section-title {
-      text-align: center; font-size: 1.8rem;
-      font-weight: 300; color: var(--text);
-      margin-bottom: 0.5rem;
-    }
-    .section-subtitle {
-      text-align: center; color: var(--text-light);
-      margin-bottom: 2rem; font-style: italic;
-    }
+/* ─── VIEWS ─── */
+.view{display:none;min-height:calc(100vh - 68px);padding-bottom:100px;animation:fadeIn .25s ease;position:relative;z-index:1}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-    /* STEPS */
-    .steps-nav {
-      display: flex; justify-content: center;
-      gap: 0; margin-bottom: 2.5rem;
-      background: white; border-radius: 50px;
-      padding: 0.3rem; box-shadow: 0 2px 15px rgba(0,0,0,0.08);
-      max-width: 500px; margin-left: auto; margin-right: auto;
-    }
-    .step-dot {
-      flex: 1; padding: 0.5rem;
-      border-radius: 50px; text-align: center;
-      font-size: 0.75rem; color: var(--text-light);
-      transition: all 0.3s;
-    }
-    .step-dot.active {
-      background: var(--sage); color: white; font-weight: 600;
-    }
-    .step-dot.done { color: var(--sage); }
+/* ─── HERO ─── */
+.hero{
+  padding:52px 24px 36px;text-align:center;
+  background:linear-gradient(160deg,rgba(255,255,255,0.88) 0%,rgba(250,246,241,0.78) 100%);
+  border-bottom:1px solid var(--border)
+}
+.hero h1{font-size:2rem;font-weight:400;color:var(--text);margin-bottom:16px;line-height:1.3}
+.hero-quote{
+  color:var(--text);font-family:Georgia,serif;font-size:1.05rem;
+  font-style:italic;max-width:480px;margin:0 auto 10px;line-height:1.7;
+  opacity:.85
+}
+.hero-author{color:var(--muted);font-family:sans-serif;font-size:.82rem;letter-spacing:.04em}
 
-    .step { display: none; animation: fadeIn 0.4s ease; }
-    .step.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* ─── SECTION ─── */
+.section{padding:36px 24px;max-width:640px;margin:0 auto;position:relative;z-index:1;background:rgba(255,255,255,0.65);border-radius:0}
+.section-title{font-size:1.3rem;font-weight:400;margin-bottom:22px;color:var(--text)}
 
-    /* INFO BANNER */
-    .info-banner {
-      background: #f0f7f2; border-left: 3px solid var(--sage);
-      border-radius: 8px; padding: 0.8rem 1rem;
-      margin-bottom: 1.5rem; font-size: 0.9rem;
-      color: var(--text-light);
-    }
-    .info-banner strong { color: var(--sage); }
+/* ─── PACKAGES ─── */
+.pkg-grid{display:flex;flex-direction:column;gap:12px}
+.pkg-card{
+  background:rgba(255,255,255,0.78);border:2px solid var(--border);
+  border-radius:var(--radius);padding:22px;cursor:pointer;
+  transition:border-color .18s,background .18s;position:relative;overflow:hidden
+}
+.pkg-card:hover{border-color:var(--accent)}
+.pkg-card.selected{border-color:var(--accent);background:var(--accent-bg)}
+.pkg-card.popular{border-color:#c8a045}
+.pkg-badge{
+  display:inline-block;font-size:.7rem;font-family:sans-serif;
+  text-transform:uppercase;letter-spacing:.09em;color:var(--accent);
+  background:var(--accent-bg);padding:3px 11px;border-radius:20px;margin-bottom:10px
+}
+.pkg-card.popular .pkg-badge{background:#fdf0d0;color:#7a5a10}
+.pkg-card h3{font-size:1.07rem;font-weight:500;margin-bottom:7px}
+.pkg-card .desc{font-family:sans-serif;font-size:.88rem;color:var(--muted);margin-bottom:14px;line-height:1.6}
+.pkg-price{font-size:1.45rem;font-weight:600;color:var(--text)}
+.pkg-save{font-size:.8rem;font-family:sans-serif;color:var(--success);margin-top:4px}
+.pkg-sessions{font-size:.78rem;color:var(--muted);margin-bottom:8px;letter-spacing:.02em}
+.pkg-tg-note{font-size:.75rem;color:#7a5a00;background:#fff8e6;border:1px solid #f0d060;border-radius:7px;padding:6px 10px;margin-top:10px;line-height:1.5}
 
-    /* URGENT BANNER */
-    .urgent-section {
-      background: var(--urgent-light);
-      border: 1px solid #e8c0a8; border-radius: 12px;
-      padding: 1.2rem; margin-bottom: 1.5rem;
-    }
-    .urgent-section h3 {
-      color: var(--urgent); font-size: 1rem;
-      margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;
-    }
+.pkg-check{
+  position:absolute;top:18px;right:18px;width:26px;height:26px;
+  background:var(--accent);color:#fff;border-radius:50%;
+  display:none;align-items:center;justify-content:center;font-size:14px
+}
+.pkg-card.selected .pkg-check{display:flex}
 
-    /* PACKAGES */
-    .packages-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 1rem; margin-bottom: 1rem;
-    }
-    .pkg-card {
-      background: white; border: 2px solid #e8e0d5;
-      border-radius: 12px; padding: 1.2rem;
-      cursor: pointer; transition: all 0.25s;
-      position: relative;
-    }
-    .pkg-card:hover { border-color: var(--sage); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-    .pkg-card.selected { border-color: var(--sage); background: #f0f7f2; box-shadow: 0 4px 20px rgba(124,154,132,0.25); }
-    .pkg-card.urgent-pkg { border-color: #e8c0a8; }
-    .pkg-card.urgent-pkg:hover { border-color: var(--urgent); }
-    .pkg-card.urgent-pkg.selected { border-color: var(--urgent); background: var(--urgent-light); }
-    .pkg-card .badge {
-      position: absolute; top: -8px; right: 12px;
-      background: var(--urgent); color: white;
-      font-size: 0.65rem; padding: 2px 8px;
-      border-radius: 10px; font-weight: 600;
-    }
-    .pkg-card .pkg-name {
-      font-size: 0.85rem; color: var(--text-light);
-      margin-bottom: 0.3rem;
-    }
-    .pkg-card .pkg-price {
-      font-size: 1.5rem; font-weight: 700;
-      color: var(--text); margin-bottom: 0.3rem;
-    }
-    .pkg-card .pkg-price span { font-size: 0.9rem; font-weight: 400; color: var(--text-light); }
-    .pkg-card .pkg-per { font-size: 0.78rem; color: var(--sage); }
-    .pkg-card .pkg-desc { font-size: 0.78rem; color: var(--text-light); margin-top: 0.5rem; }
+/* ─── WHY PREPAY ─── */
+.prepay-box{
+  background:rgba(255,255,255,0.75);border:1px solid var(--border);
+  border-left:4px solid var(--accent);border-radius:var(--radius);padding:26px
+}
+.prepay-icon{font-size:2.2rem;margin-bottom:14px}
+.prepay-box h3{font-size:1.1rem;margin-bottom:14px}
+.prepay-box p{font-family:sans-serif;font-size:.9rem;color:var(--muted);margin-bottom:12px;line-height:1.75}
+.prepay-box p:last-child{margin-bottom:0}
 
-    /* CAT BANNER */
-    .cat-banner {
-      display: none;
-      background: linear-gradient(135deg, #fff8f0, #ffeedd);
-      border: 1px solid #f0d0a8; border-radius: 12px;
-      padding: 1rem 1.2rem; margin-bottom: 1.5rem;
-      animation: fadeIn 0.4s;
-    }
-    .cat-banner.show { display: flex; align-items: center; gap: 1rem; }
-    .cat-emoji { font-size: 2rem; flex-shrink: 0; }
-    .cat-text strong { color: #c4704a; display: block; font-size: 0.95rem; }
-    .cat-text span { font-size: 0.83rem; color: var(--text-light); }
+/* ─── CALENDAR ─── */
+.cal-wrapper{background:rgba(255,255,255,0.75);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.cal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;background:var(--bg2);border-bottom:1px solid var(--border)
+}
+.cal-head button{
+  background:#fff;border:1px solid var(--border);border-radius:8px;
+  padding:7px 15px;cursor:pointer;font-size:1.1rem;color:var(--text);transition:background .15s
+}
+.cal-head button:hover{background:var(--bg2)}
+#month-label{font-size:1.05rem;font-family:sans-serif;font-weight:600;color:var(--text)}
+.cal-wdays{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  background:var(--bg2);border-bottom:1px solid var(--border)
+}
+.cal-wdays span{
+  text-align:center;padding:9px 4px;font-size:.72rem;font-family:sans-serif;
+  color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em
+}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:10px;gap:5px}
+.cal-day{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  border-radius:9px;font-family:sans-serif;font-size:.9rem;cursor:default;transition:all .15s
+}
+.cal-day.past{color:#ccc}
+.cal-day.today{font-weight:700;outline:2px solid var(--border)}
+.cal-day.has-slots{
+  cursor:pointer;background:var(--accent-bg);color:var(--accent);
+  font-weight:700;border:1.5px solid #e0c88a
+}
+.cal-day.has-slots:hover{background:#faecc8}
+.cal-day.sel{background:var(--accent)!important;color:#fff!important;font-weight:700}
 
-    /* FORM ELEMENTS */
-    .form-group { margin-bottom: 1.2rem; }
-    .form-group label {
-      display: block; font-size: 0.85rem;
-      color: var(--text-light); margin-bottom: 0.4rem;
-    }
-    .form-group input, .form-group textarea, .form-group select {
-      width: 100%; padding: 0.7rem 0.9rem;
-      border: 1.5px solid #e8e0d5; border-radius: 8px;
-      font-size: 0.95rem; background: white;
-      transition: border 0.2s; font-family: inherit;
-      color: var(--text);
-    }
-    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-      outline: none; border-color: var(--sage);
-    }
-    .form-group textarea { resize: vertical; min-height: 80px; }
+/* ─── TIME SLOTS ─── */
+.slots-section{
+  margin-top:16px;background:rgba(255,255,255,0.75);border:1px solid var(--border);
+  border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)
+}
+.slots-section h3{font-family:sans-serif;font-size:1rem;font-weight:600;margin-bottom:16px;color:var(--text)}
+.slots-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.slot-btn{
+  padding:13px 8px;text-align:center;border:1.5px solid var(--border);
+  border-radius:9px;cursor:pointer;font-family:sans-serif;font-size:.95rem;
+  background:#fff;transition:all .15s
+}
+.slot-btn:hover{border-color:var(--accent);background:var(--accent-bg)}
+.slot-btn.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+.slot-btn.booked{background:#f5f4f2;color:#bbb;cursor:not-allowed;text-decoration:line-through}
 
-    /* DATE/SLOTS */
-    .dates-grid {
-      display: flex; flex-wrap: wrap; gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .date-btn {
-      padding: 0.5rem 1rem; border: 1.5px solid #e8e0d5;
-      border-radius: 8px; background: white;
-      cursor: pointer; font-size: 0.85rem;
-      transition: all 0.2s; color: var(--text);
-    }
-    .date-btn:hover { border-color: var(--sage); }
-    .date-btn.selected { background: var(--sage); color: white; border-color: var(--sage); }
+/* ─── STICKY FOOTER ─── */
+.sticky-book{
+  position:fixed;bottom:0;left:0;right:0;background:#fff;
+  border-top:1px solid var(--border);padding:12px 20px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  box-shadow:0 -4px 24px rgba(0,0,0,0.1);z-index:300
+}
+.book-sum{font-family:sans-serif;font-size:.85rem;color:var(--muted);flex:1;min-width:0}
+.book-sum strong{display:block;color:var(--text);font-size:.93rem;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.book-sum span{font-size:.82rem}
 
-    .times-grid {
-      display: flex; flex-wrap: wrap; gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .time-btn {
-      padding: 0.5rem 1rem; border: 1.5px solid #e8e0d5;
-      border-radius: 8px; background: white;
-      cursor: pointer; font-size: 0.9rem;
-      transition: all 0.2s; color: var(--text);
-    }
-    .time-btn:hover { border-color: var(--sage); }
-    .time-btn.selected { background: var(--sage); color: white; border-color: var(--sage); }
-    .time-btn.urgent-time { border-color: #e8c0a8; }
-    .time-btn.urgent-time.selected { background: var(--urgent); border-color: var(--urgent); }
+/* ─── BUTTONS ─── */
+.btn{
+  background:var(--accent);color:#fff;border:none;border-radius:11px;
+  padding:14px 26px;font-size:1rem;font-family:sans-serif;cursor:pointer;
+  font-weight:500;transition:background .18s;white-space:nowrap;display:inline-block
+}
+.btn:hover{background:var(--accent-hover)}
+.btn:disabled{background:#ccc;cursor:not-allowed}
+.btn-outline{
+  background:none;border:1.5px solid var(--border);border-radius:9px;
+  padding:9px 16px;cursor:pointer;font-family:sans-serif;font-size:.88rem;
+  color:var(--muted);transition:background .15s
+}
+.btn-outline:hover{background:var(--bg2)}
+.btn-full{width:100%}
 
-    .no-slots {
-      text-align: center; padding: 2rem;
-      color: var(--text-light); font-style: italic;
-    }
+/* ─── VIEW HEADER ─── */
+.vhead{
+  padding:18px 24px 14px;display:flex;align-items:center;gap:16px;
+  border-bottom:1px solid var(--border);background:#fff;
+  position:sticky;top:68px;z-index:100
+}
+.vhead h2{font-size:1.15rem;font-weight:400}
 
-    /* PAYMENT */
-    .payment-card {
-      background: white; border: 1.5px solid #e8e0d5;
-      border-radius: 12px; padding: 1.5rem;
-      margin-bottom: 1.2rem;
-    }
-    .payment-card h3 { font-size: 1rem; margin-bottom: 1rem; color: var(--text); }
-    .payment-row {
-      display: flex; justify-content: space-between;
-      align-items: center; padding: 0.5rem 0;
-      border-bottom: 1px solid #f0ebe4; font-size: 0.9rem;
-    }
-    .payment-row:last-child { border-bottom: none; }
-    .payment-row .label { color: var(--text-light); }
-    .payment-row .value { font-weight: 600; color: var(--text); }
-    .copy-btn {
-      background: var(--sage); color: white;
-      border: none; border-radius: 6px;
-      padding: 0.3rem 0.7rem; font-size: 0.75rem;
-      cursor: pointer; margin-left: 0.5rem;
-    }
+/* ─── FORM ─── */
+.form-wrap{max-width:560px;margin:0 auto;padding:26px 24px}
+.info-banner{
+  background:var(--success-bg);border:1px solid #b0dcc0;border-radius:10px;
+  padding:14px 18px;margin-bottom:22px;font-family:sans-serif;font-size:.9rem;
+  color:var(--success);line-height:1.5
+}
+.fg{margin-bottom:20px}
+.fg label{display:block;font-family:sans-serif;font-size:.83rem;font-weight:600;color:var(--text);margin-bottom:6px}
+.fg input,.fg select,.fg textarea{
+  width:100%;padding:13px 15px;border:1.5px solid var(--border);
+  border-radius:10px;font-size:.98rem;font-family:sans-serif;
+  background:#fff;color:var(--text);outline:none;transition:border-color .18s
+}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.fg textarea{min-height:90px;resize:vertical;line-height:1.6}
 
-    .receipt-options { display: flex; gap: 0.8rem; margin-bottom: 1rem; }
-    .receipt-opt {
-      flex: 1; padding: 0.7rem; border: 1.5px solid #e8e0d5;
-      border-radius: 8px; cursor: pointer; text-align: center;
-      font-size: 0.85rem; transition: all 0.2s; background: white;
-    }
-    .receipt-opt.selected { border-color: var(--sage); background: #f0f7f2; color: var(--sage); font-weight: 600; }
+/* ─── PAYMENT ─── */
+.pay-wrap{max-width:560px;margin:0 auto;padding:26px 24px}
+.pay-box,.rcpt-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:22px;margin-bottom:16px;box-shadow:var(--shadow)
+}
+.pay-box h3,.rcpt-box h3{font-size:1rem;margin-bottom:18px}
+.req-item{margin-bottom:15px}
+.req-label{display:block;font-family:sans-serif;font-size:.78rem;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.req-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.req-val{font-size:1.08rem;font-weight:600;font-family:'Courier New',monospace;color:var(--text);letter-spacing:.06em}
+.copy-btn{
+  background:none;border:1px solid var(--border);border-radius:7px;
+  padding:5px 12px;font-size:.75rem;font-family:sans-serif;cursor:pointer;color:var(--muted);transition:all .15s
+}
+.copy-btn:hover{background:var(--bg2)}
+.copy-btn.ok{color:var(--success);border-color:var(--success)}
+.amount-val{font-size:1.5rem;color:var(--accent);font-family:sans-serif;font-weight:700}
+.req-divider{border:none;border-top:1px solid var(--border);margin:10px 0 16px}
 
-    /* FREE SESSION BANNER */
-    .free-banner {
-      background: linear-gradient(135deg, #f0f7f2, #e0f0e5);
-      border: 1.5px solid var(--sage-light);
-      border-radius: 12px; padding: 1.2rem;
-      margin-bottom: 1.2rem; text-align: center;
-    }
-    .free-banner .checkmark { font-size: 2rem; margin-bottom: 0.5rem; }
-    .free-banner strong { color: var(--sage); display: block; font-size: 1rem; }
-    .free-banner span { font-size: 0.85rem; color: var(--text-light); }
+/* receipt tabs */
+.rcpt-note{font-family:sans-serif;font-size:.87rem;color:var(--muted);margin-bottom:18px;line-height:1.7}
+.tabs{display:flex;gap:8px;margin-bottom:18px}
+.tab-btn{
+  flex:1;padding:11px;border:1.5px solid var(--border);border-radius:9px;
+  background:#fff;font-family:sans-serif;font-size:.87rem;cursor:pointer;
+  transition:all .15s;color:var(--muted)
+}
+.tab-btn.active{border-color:var(--accent);background:var(--accent-bg);color:var(--accent)}
+.tc{display:none}.tc.active{display:block}
+.drop-zone{
+  border:2px dashed var(--border);border-radius:11px;padding:36px 20px;
+  text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)
+}
+.drop-zone:hover{border-color:var(--accent);background:var(--accent-bg)}
+.drop-icon{font-size:2.6rem;margin-bottom:10px}
+.drop-zone p{font-family:sans-serif;font-size:.9rem;color:var(--muted)}
+.drop-hint{font-size:.78rem!important;margin-top:5px}
+#file-preview{text-align:center;padding:8px}
+#file-preview img{max-width:100%;max-height:220px;border-radius:9px;border:1px solid var(--border);margin-bottom:10px}
+#file-preview button{background:none;border:1px solid #e09898;color:#c0504a;border-radius:7px;padding:5px 14px;cursor:pointer;font-family:sans-serif;font-size:.8rem}
+#link-input{
+  width:100%;padding:13px 15px;border:1.5px solid var(--border);
+  border-radius:10px;font-size:.95rem;font-family:sans-serif;outline:none
+}
+#link-input:focus{border-color:var(--accent)}
+.consent-wrap{margin-bottom:18px}
+.consent-label{display:flex;gap:11px;align-items:flex-start;cursor:pointer;font-family:sans-serif;font-size:.85rem;color:var(--muted);line-height:1.6}
+.consent-label input{margin-top:3px;flex-shrink:0;accent-color:var(--accent)}
+#upload-prog{display:none;text-align:center;margin-top:12px;font-family:sans-serif;font-size:.87rem;color:var(--muted)}
 
-    /* BUTTONS */
-    .btn-primary {
-      display: block; width: 100%;
-      background: var(--sage); color: white;
-      border: none; border-radius: 50px;
-      padding: 0.9rem 2rem; font-size: 1rem;
-      cursor: pointer; transition: all 0.25s;
-      font-family: inherit;
-    }
-    .btn-primary:hover { background: #6a8870; transform: translateY(-1px); }
-    .btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-    .btn-secondary {
-      background: transparent; color: var(--text-light);
-      border: 1.5px solid #e8e0d5; border-radius: 50px;
-      padding: 0.7rem 1.5rem; font-size: 0.9rem;
-      cursor: pointer; transition: all 0.25s;
-      font-family: inherit; margin-bottom: 0.5rem;
-    }
-    .btn-secondary:hover { border-color: var(--sage); color: var(--sage); }
-    .btn-row { display: flex; gap: 0.8rem; }
+/* ─── CONFIRMATION ─── */
+.confirm-wrap{max-width:480px;margin:0 auto;padding:48px 24px;text-align:center}
+.confirm-icon{font-size:4rem;margin-bottom:22px}
+.confirm-wrap h2{font-size:1.55rem;font-weight:400;margin-bottom:24px}
+.confirm-details{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px;text-align:left;margin-bottom:22px;font-family:sans-serif;
+  font-size:.9rem;line-height:2;color:var(--text)
+}
+.confirm-note{font-family:sans-serif;font-size:.88rem;color:var(--muted);margin-bottom:16px;line-height:1.7}
+.confirm-contact{font-family:sans-serif;font-size:.9rem;color:var(--muted)}
+.confirm-cancel{
+  font-family:sans-serif;font-size:.9rem;font-weight:700;
+  background:#fff8e6;border:2px solid #e8a020;border-radius:10px;
+  padding:14px 18px;margin-bottom:18px;line-height:1.6;color:#7a4f00;
+  display:block;text-align:center
+}
+.confirm-cancel a{color:#7a4f00;text-decoration:underline}
 
-    /* CONFIRMATION */
-    .confirm-box {
-      background: white; border-radius: 16px;
-      padding: 2rem; text-align: center;
-      box-shadow: 0 4px 30px rgba(0,0,0,0.08);
-    }
-    .confirm-box .big-check { font-size: 4rem; margin-bottom: 1rem; }
-    .confirm-box h2 { font-size: 1.5rem; font-weight: 300; margin-bottom: 0.5rem; }
-    .confirm-details {
-      background: var(--cream); border-radius: 10px;
-      padding: 1rem; margin: 1.5rem 0; text-align: left;
-    }
-    .confirm-details .row {
-      display: flex; justify-content: space-between;
-      padding: 0.4rem 0; font-size: 0.9rem;
-      border-bottom: 1px solid #e8e0d5;
-    }
-    .confirm-details .row:last-child { border: none; }
-    .confirm-details .row .l { color: var(--text-light); }
-    .confirm-details .row .r { font-weight: 600; }
-    .next-booking-note {
-      background: #f0f7f2; border-radius: 8px;
-      padding: 0.8rem 1rem; margin-top: 1rem;
-      font-size: 0.83rem; color: var(--sage);
-      border-left: 3px solid var(--sage);
-    }
-    .telegram-btn {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      background: #229ED9; color: white;
-      border: none; border-radius: 50px;
-      padding: 0.8rem 2rem; font-size: 0.95rem;
-      cursor: pointer; text-decoration: none;
-      margin-top: 1rem; transition: all 0.25s;
-    }
-    .telegram-btn:hover { background: #1a8bc4; }
+/* ─── MISC ─── */
+.loading{text-align:center;padding:36px;font-family:sans-serif;color:var(--muted)}
+.spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.no-slots{padding:24px;text-align:center;font-family:sans-serif;font-size:.9rem;color:var(--muted);background:var(--bg2);border-radius:9px}
+.badge-pending{color:#9a7210;background:#fdf5d0;padding:2px 9px;border-radius:5px;font-size:.78rem;font-family:sans-serif}
+.badge-ok{color:var(--success);background:var(--success-bg);padding:2px 9px;border-radius:5px;font-size:.78rem;font-family:sans-serif}
+.toast{
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+  background:var(--text);color:#fff;padding:10px 22px;border-radius:22px;
+  font-family:sans-serif;font-size:.87rem;z-index:999;
+  opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none
+}
+.toast.show{opacity:1}
 
-    /* LOADING */
-    .loading {
-      text-align: center; padding: 2rem;
-      color: var(--text-light);
-    }
-    .spinner {
-      display: inline-block; width: 30px; height: 30px;
-      border: 3px solid #e8e0d5; border-top-color: var(--sage);
-      border-radius: 50%; animation: spin 0.8s linear infinite;
-      margin-bottom: 0.5rem;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+/* FAQ accordion */
+.faq-block{
+  background:rgba(255,255,255,0.78);border:1px solid var(--border);
+  border-left:4px solid var(--accent);border-radius:var(--radius);overflow:hidden
+}
+.faq-q{
+  padding:18px 20px;cursor:pointer;font-family:sans-serif;font-size:.97rem;
+  font-weight:600;color:var(--text);list-style:none;display:flex;
+  align-items:center;justify-content:space-between;gap:12px;
+  user-select:none;transition:background .18s
+}
+.faq-q:hover{background:rgba(253,244,231,0.6)}
+.faq-q::-webkit-details-marker{display:none}
+details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
+.faq-body{padding:20px 20px 22px;font-family:sans-serif;font-size:.9rem;color:var(--muted);line-height:1.75}
+.faq-body p{margin-bottom:12px}
+.faq-body p:last-child{margin-bottom:0}
+.faq-body a{color:var(--accent)}
+.faq-highlight{
+  background:#fff8e6;border:1px solid #f0d080;border-radius:10px;
+  padding:13px 16px;margin:14px 0;font-size:.87rem;color:#7a5a00;line-height:1.65
+}
 
-    /* ERRORS */
-    .error-msg {
-      background: #fef0ee; border: 1px solid #f5c0b8;
-      color: #c0392b; border-radius: 8px;
-      padding: 0.7rem 1rem; font-size: 0.85rem;
-      margin-bottom: 1rem;
-    }
+/* ─── КОТИКИ 🐱 ─── */
+@keyframes catJump{0%,100%{transform:translateY(0) rotate(0deg)}30%{transform:translateY(-5px) rotate(-3deg)}60%{transform:translateY(-3px) rotate(2deg)}}
+@keyframes catLick{0%,100%{transform:rotate(0deg)}20%{transform:rotate(-8deg)}50%{transform:rotate(5deg)}}
+@keyframes catBlink{0%,90%,100%{transform:scaleY(1)}95%{transform:scaleY(0.1)}}
+.cat-helper{display:inline-block;font-size:.9rem;animation:catJump 2.8s ease-in-out infinite;cursor:default;user-select:none}
+.cat-lick{display:inline-block;font-size:.9rem;animation:catLick 3.2s ease-in-out infinite;cursor:default;user-select:none}
 
-    .card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-
-    @media (max-width: 600px) {
-      .packages-grid { grid-template-columns: 1fr 1fr; }
-      .btn-row { flex-direction: column-reverse; }
-    }
-    @media (max-width: 380px) {
-      .packages-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+@media(max-width:480px){
+  .hero h1{font-size:1.55rem}
+  .slots-grid{grid-template-columns:repeat(2,1fr)}
+  .sticky-book{padding:10px 16px 18px}
+  #page-bg-video{opacity:0.72!important;filter:brightness(1.25) saturate(1.0)!important}
+}
+</style>
 </head>
 <body>
 
-<!-- HERO -->
-<section class="hero" id="hero">
-  <video autoplay muted loop playsinline id="bgVideo">
-    <!-- Відео підкладається тут при наявності URL -->
-  </video>
-  <div class="hero-overlay"></div>
-  <div class="hero-content">
-    <h1>Алетея</h1>
-    <p class="subtitle">Психологічні сесії · Безпечний простір для тебе</p>
-    <a href="#booking" class="hero-btn" onclick="smoothScroll()">Забронювати сесію</a>
-  </div>
-</section>
-
-<!-- BOOKING -->
-<section class="booking-section" id="booking">
-  <h2 class="section-title">Бронювання</h2>
-  <p class="section-subtitle">Декілька простих кроків — і ми зустрінемось</p>
-
-  <!-- Steps nav -->
-  <div class="steps-nav" id="stepsNav">
-    <div class="step-dot active" id="dot1">1. Пакет</div>
-    <div class="step-dot" id="dot2">2. Час</div>
-    <div class="step-dot" id="dot3">3. Про тебе</div>
-    <div class="step-dot" id="dot4">4. Оплата</div>
-  </div>
-
-  <!-- STEP 1: Package -->
-  <div class="step active" id="step1">
-
-    <!-- Info about 2-3 sessions -->
-    <div class="info-banner">
-      💡 <strong>Хочеш 2–3 сесії?</strong> Немає пакету під таку кількість — просто забронюй окремо кожну по 1000 грн у зручний час
-    </div>
-
-    <!-- Urgent slots section -->
-    <div class="urgent-section" id="urgentSection" style="display:none">
-      <h3>⚡ Термінові слоти — зараз доступні</h3>
-      <p style="font-size:0.83rem; color:#8a5a40; margin-bottom:0.8rem;">Сесія протягом найближчих 24–48 годин. Ціна вища через терміновість.</p>
-      <div class="times-grid" id="urgentSlotsList"></div>
-    </div>
-
-    <h3 style="font-size:1rem; color:var(--text-light); margin-bottom:1rem;">Оберіть формат:</h3>
-
-    <div class="packages-grid" id="packagesGrid">
-      <!-- filled by JS -->
-    </div>
-
-    <div style="margin-top:1.5rem">
-      <button class="btn-primary" id="btnStep1Next" onclick="goStep2()" disabled>Далі →</button>
+<!-- HEADER -->
+<header>
+  <div class="logo-wrap">
+    <div class="logo-icon">A</div>
+    <div class="logo-text">
+      <span class="name">aletheia</span>
+      <span class="sub">психологиня Тетяна</span>
     </div>
   </div>
+</header>
 
-  <!-- STEP 2: Date & Time -->
-  <div class="step" id="step2">
+<div id="toast" class="toast"></div>
+<video id="page-bg-video" autoplay muted loop playsinline
+  style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;opacity:0.62;filter:brightness(1.15) saturate(1.0)">
+  Your browser does not support the video tag.
+</video>
+<div id="page-bg" style="position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;display:none;"></div>
 
-    <!-- Telegram nick -->
-    <div class="card">
-      <div class="form-group" style="margin-bottom:0.5rem">
-        <label>Твій нік у Telegram <span style="color:#aaa">(для перевірки пакету)</span></label>
-        <input type="text" id="telegramNick" placeholder="@твій_нік" oninput="checkPackage()">
+<!-- ══════════════════════════════════════
+     PAGE: HOME
+══════════════════════════════════════ -->
+<div id="view-home" class="view active">
+
+  <div class="hero">
+    <h1>Записатись на сесію</h1>
+    <p class="hero-quote" id="hero-quote"></p>
+    <p class="hero-author" id="hero-author"></p>
+  </div>
+
+  <!-- PACKAGES -->
+  <div class="section">
+    <div class="section-title">Оберіть пакет</div>
+    <div style="background:#fff8e6;border:1px solid #f0d080;border-radius:10px;padding:10px 15px;margin-bottom:16px;font-size:.82rem;color:#7a5a00;line-height:1.6;display:flex;align-items:center;gap:8px">
+      <span class="cat-helper">🐱</span>
+      <span>💡 <strong>Хочеш 2–3 сесії?</strong> Жоден пакет не підходить — просто забронюй кожну окремо по <strong>1&nbsp;000&nbsp;грн</strong> у зручний час.</span>
+    </div>
+    <div class="pkg-grid">
+
+      <div class="pkg-card" data-id="single" data-price="1000" data-name="Разова сесія" onclick="pickPkg(this)">
+        <div class="pkg-check">✓</div>
+        <div class="pkg-badge">Разова</div>
+        <h3>Разова сесія</h3>
+        <div class="pkg-sessions">55–60 хвилин · 1 зустріч</div>
+        <p class="desc">Одна зустріч — один фокус. Якщо є щось конкретне, з чим важливо розібратися тут і зараз, або ми продовжуємо роботу, яку починали раніше — це формат для точкового, присутнього контакту.</p>
+        <div class="pkg-price">1 000 грн</div>
+        <div class="pkg-save" style="color:#999;font-size:.8rem">⚡ Термінова (за 10 год до сесії) — 1 450 грн</div>
       </div>
+
+      <div class="pkg-card popular" data-id="pack8" data-price="7100" data-name="Пакет 8 сесій" data-sessions="8" onclick="pickPkg(this)">
+        <div class="pkg-check">✓</div>
+        <div class="pkg-badge">⭐ Найпопулярніше</div>
+        <h3>Пакет 8 сесій</h3>
+        <div class="pkg-sessions">55–60 хвилин · 8 зустрічей</div>
+        <p class="desc">Дозволяєш собі справді зайнятися тим, що давно чекає на увагу. Разом розбираємо патерни поведінки, захисні механізми, повторювані сценарії в стосунках у тому темпі, який відчувається як твій.</p>
+        <div class="pkg-price">7 100 грн</div>
+        <div class="pkg-save">✓ Економія 900 грн · 887 грн/сесія</div>
+        <div class="pkg-tg-note">📩 Telegram обов'язковий — наступні сесії бронюєш без оплати</div>
+      </div>
+
+      <div class="pkg-card" data-id="pack12" data-price="11000" data-name="Пакет 12 сесій" data-sessions="12" onclick="pickPkg(this)">
+        <div class="pkg-check">✓</div>
+        <div class="pkg-badge">Глибока робота</div>
+        <h3>Пакет 12 сесій</h3>
+        <div class="pkg-sessions">55–60 хвилин · 12 зустрічей</div>
+        <p class="desc">Тривала, стабільна присутність — тут ти приходиш і ми разом будуємо ту якість внутрішнього контакту з собою, де ти починаєш розуміти свою підсвідомість, користуватися інструментами в реальному житті і довіряти процесу. Це не просто сесії — це твоє вкладення у себе на довгий час.</p>
+        <div class="pkg-price">11 000 грн</div>
+        <div class="pkg-save">✓ Економія 1 000 грн · 917 грн/сесія</div>
+        <div class="pkg-tg-note">📩 Telegram обов'язковий — наступні сесії бронюєш без оплати</div>
+      </div>
+
+
     </div>
 
-    <!-- Cat banner (package balance) -->
-    <div class="cat-banner" id="catBanner">
-      <div class="cat-emoji">🐱</div>
-      <div class="cat-text">
-        <strong id="catText">У тебе залишилось X сесій!</strong>
-        <span id="catSubtext">Використай їх на максималочку 🌿</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div id="slotsLoading" class="loading">
-        <div class="spinner"></div><br>Завантажую доступні часи...
-      </div>
-      <div id="slotsContent" style="display:none">
-        <h3 style="font-size:0.95rem; margin-bottom:1rem; color:var(--text);">Оберіть дату:</h3>
-        <div class="dates-grid" id="datesGrid"></div>
-        <div id="timesSection" style="display:none">
-          <h3 style="font-size:0.95rem; margin-bottom:0.8rem; color:var(--text);">Оберіть час:</h3>
-          <div class="times-grid" id="timesGrid"></div>
+    <div id="pkg-cta" style="display:none;margin-top:14px;border-radius:12px;overflow:hidden">
+      <div style="background:rgba(139,102,54,0.92);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:.72rem;opacity:.75;font-family:sans-serif;margin-bottom:2px">Обрано:</div>
+          <div id="pkg-cta-name" style="font-size:1rem;font-weight:600;font-family:sans-serif"></div>
+          <div id="pkg-cta-price" style="font-size:.85rem;opacity:.85;font-family:sans-serif;margin-top:2px"></div>
         </div>
-        <div id="noSlotsMsg" class="no-slots" style="display:none">
-          Немає доступних слотів. Адміністратор додасть нові найближчим часом.
-        </div>
+        <button onclick="scrollToCalendar()" style="background:#fff;color:#8b6636;border:none;border-radius:9px;padding:11px 24px;font-size:.9rem;font-weight:700;font-family:sans-serif;cursor:pointer;white-space:nowrap">Обрати час ↓</button>
       </div>
-    </div>
-
-    <div class="btn-row">
-      <button class="btn-secondary" onclick="goStep(1)">← Назад</button>
-      <button class="btn-primary" id="btnStep2Next" onclick="goStep3()" disabled style="flex:1">Далі →</button>
     </div>
   </div>
 
-  <!-- STEP 3: Info -->
-  <div class="step" id="step3">
-    <div class="card">
-      <div class="form-group">
-        <label>Твоє ім'я *</label>
-        <input type="text" id="clientName" placeholder="Як тебе звати?" required>
+  <!-- WHY PREPAY -->
+  <div class="section" style="padding-top:0">
+    <details class="faq-block">
+      <summary class="faq-q">
+        Чому оплата за 24 години до початку сесії? ›
+      </summary>
+      <div class="faq-body">
+        <p>Це важливе питання, тому відповідаю на нього відкрито.</p>
+        <p>Коли ти обираєш певний час — цей слот закривається для інших, хто також може потребувати підтримки. Підтвердження оплатою — це взаємна повага до часу і намірень одне з одним.</p>
+        <p>З психологічної точки зору, рішення вкласти ресурс заздалегідь — це теж прояв внутрішньої рішучості до змін.</p>
+        <div class="faq-highlight">
+          <strong>⚡ Термінова сесія</strong> — це коли до початку сесії залишилось менше 10 годин. Маю знати завчасно, що зустріч відбудеться — це необхідно для повноцінної присутності і підготовки. Таке бронювання оплачується за тарифом <strong>1&nbsp;450&nbsp;грн</strong>.
+        </div>
+        <p>Скасування або перенесення — не пізніше, ніж за 24 години до початку — без втрат. Коли щось непередбачуване — напиши мені, ми разом знайдемо рішення, аби не було переживань про втрату сесії. Пиши у Telegram <a href="https://t.me/alet_psyche" target="_blank">@alet_psyche</a> 💛</p>
       </div>
-      <div class="form-group">
-        <label>Telegram нік (якщо ще не вводила) *</label>
-        <input type="text" id="clientTelegramFinal" placeholder="@нік" required>
+    </details>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="section">
+    <div class="section-title">Оберіть дату та час</div>
+    <div class="cal-wrapper">
+      <div class="cal-head">
+        <button onclick="chgMonth(-1)">‹</button>
+        <span id="month-label">Завантаження…</span>
+        <button onclick="chgMonth(1)">›</button>
       </div>
-      <div class="form-group">
-        <label>Телефон <span style="color:#aaa">(необов'язково)</span></label>
-        <input type="tel" id="clientPhone" placeholder="+380...">
+      <div class="cal-wdays">
+        <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Нд</span>
       </div>
-      <div class="form-group">
-        <label>Email <span style="color:#aaa">(необов'язково)</span></label>
-        <input type="email" id="clientEmail" placeholder="email@...">
-      </div>
-      <div class="form-group">
-        <label>Коментар <span style="color:#aaa">(необов'язково)</span></label>
-        <textarea id="clientComment" placeholder="Що хочеш обговорити, про що турбуєшся..."></textarea>
+      <div class="cal-grid" id="cal-grid">
+        <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Завантаження…</div>
       </div>
     </div>
-    <div class="btn-row">
-      <button class="btn-secondary" onclick="goStep(2)">← Назад</button>
-      <button class="btn-primary" onclick="goStep4()" style="flex:1">Далі →</button>
+    <div id="slots-section" class="slots-section" style="display:none">
+      <h3 id="slots-label"></h3>
+      <div id="slots-grid" class="slots-grid"></div>
     </div>
   </div>
 
-  <!-- STEP 4: Payment -->
-  <div class="step" id="step4">
-
-    <div id="freeSessionBanner" class="free-banner" style="display:none">
-      <div class="checkmark">✅</div>
-      <strong>Сесія з пакету — оплата не потрібна!</strong>
-      <span id="freeSessionText">Залишається ще X сесій після цього бронювання</span>
+  <div id="slot-pkg-section" class="section" style="display:none;padding-top:0">
+    <div style="background:rgba(255,255,255,0.82);border:2px solid var(--accent);border-radius:14px;overflow:hidden">
+      <div style="background:rgba(139,102,54,0.1);padding:14px 20px;border-bottom:1px solid var(--border)">
+        <div style="font-size:.75rem;font-family:sans-serif;color:var(--muted);margin-bottom:2px">Обраний час:</div>
+        <div id="chosen-slot-label" style="font-size:1rem;font-weight:600;font-family:sans-serif;color:var(--accent)"></div>
+      </div>
+      <div style="padding:16px 20px">
+        <div style="font-size:.82rem;font-family:sans-serif;font-weight:600;color:var(--text);margin-bottom:12px">Оберіть пакет:</div>
+        <div id="inline-pkg-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button id="slot-book-btn" onclick="gotoForm()" disabled
+          style="margin-top:16px;width:100%;padding:15px;background:#8b6636;color:#fff;border:none;border-radius:11px;font-size:1rem;font-family:sans-serif;font-weight:600;cursor:pointer;opacity:.45;transition:opacity .2s">
+          Записатись →
+        </button>
+      </div>
     </div>
+  </div>
 
-    <div id="paymentSection">
-      <div class="payment-card">
-        <h3>💳 Реквізити для оплати</h3>
-        <div class="payment-row">
-          <span class="label">Банк</span>
-          <span class="value" id="payBank">Monobank</span>
-        </div>
-        <div class="payment-row">
-          <span class="label">Отримувач</span>
-          <span class="value" id="payHolder">Тетяна Рисак</span>
-        </div>
-        <div class="payment-row">
-          <span class="label">IBAN</span>
-          <div style="display:flex; align-items:center; flex-wrap:wrap; gap:0.3rem">
-            <span class="value" id="payCard" style="font-size:0.8rem; word-break:break-all"></span>
-            <button class="copy-btn" onclick="copyCard()">Скопіювати</button>
+</div><!-- end view-home -->
+
+<!-- Sticky "Book" bar -->
+<div id="sticky-bar" class="sticky-book" style="display:none">
+  <div class="book-sum">
+    <strong id="bar-slot">─</strong>
+    <span id="bar-pkg">─</span>
+  </div>
+  <button class="btn" onclick="gotoForm()">Записатись →</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: FORM
+══════════════════════════════════════ -->
+<div id="view-form" class="view">
+  <div class="vhead">
+    <button class="btn-outline" onclick="goto('home')">← Назад</button>
+    <h2>Ваші дані</h2>
+  </div>
+  <div class="form-wrap">
+    <div class="info-banner" id="form-banner"></div>
+    <form id="bk-form" onsubmit="submitForm(event)">
+      <div class="fg">
+        <label>Ім'я *</label>
+        <input id="f-name" type="text" required placeholder="Наприклад: Оксана" autocomplete="given-name">
+      </div>
+            <div class="fg">
+        <label>Нікнейм у Telegram *</label>
+        <div id="tg-pkg-hint" style="display:none;font-size:.8rem;background:#fff8e6;border:1px solid #f0d080;border-radius:8px;padding:8px 12px;margin-bottom:8px;color:#7a5a00">📩 Для пакетів Telegram обов'язковий — саме через нього ти зможеш бронювати наступні сесії без додаткової оплати.</div>
+        <div id="tg-pkg-active" style="display:none;font-size:.88rem;background:linear-gradient(135deg,#fff8f0,#ffeedd);border:1.5px solid #f0c890;border-radius:12px;padding:12px 16px;margin-bottom:8px;color:#7a4a00;line-height:1.6">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.8rem;flex-shrink:0">🐱</span>
+            <div id="tg-pkg-active-text"></div>
           </div>
         </div>
-        <div class="payment-row">
-          <span class="label">Сума</span>
-          <span class="value" id="payAmount" style="color:var(--sage); font-size:1.2rem"></span>
+        <input id="f-tg" type="text" required placeholder="@username" autocomplete="off" onblur="checkClientPackage()">
+      </div>
+      <div style="display:none">
+      <div class="fg">
+        <label>Пакет *</label>
+        <select id="f-pkg" required onchange="onPkgSelectChange()">
+          <option value="">— Оберіть пакет —</option>
+          <option value="single|1000|Разова сесія">Разова сесія — 1 000 грн</option>
+          <option value="pack8|7100|Пакет 8 сесій">Пакет 8 сесій — 7 100 грн</option>
+          <option value="pack12|11000|Пакет 12 сесій">Пакет 12 сесій — 11 000 грн</option>
+        </select>
+      </div>
+      </div>
+      <div class="fg">
+        <label>Коментар (необов'язково)</label>
+        <textarea id="f-comment" placeholder="Якщо є щось важливе – напишіть тут"></textarea>
+      </div>
+      <button type="submit" class="btn btn-full">Далі – до оплати →</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: PAYMENT
+══════════════════════════════════════ -->
+<div id="view-payment" class="view">
+  <div class="vhead">
+    <button class="btn-outline" onclick="goto('form')">← Назад</button>
+    <h2>Підтвердження оплати</h2>
+  </div>
+  <div class="pay-wrap">
+    <div class="info-banner" id="pay-banner"></div>
+
+    <div class="pay-box">
+      <h3>💳 Реквізити для оплати</h3>
+      <div class="req-item">
+        <span class="req-label">Картка</span>
+        <div class="req-row">
+          <span class="req-val" id="disp-card">────</span>
+          <button class="copy-btn" onclick="copyVal('disp-card',this)">Копіювати</button>
         </div>
       </div>
-
-      <div class="payment-card" id="urgentNote" style="display:none; border-color:#e8c0a8;">
-        <p style="font-size:0.85rem; color:var(--urgent);">
-          ⭐ <strong>Термінова сесія</strong> — підвищена ціна через можливість зустрітись найближчим часом.
-          Після оплати підтвердження надійде в Telegram протягом 1–2 годин.
-        </p>
+      <div class="req-item">
+        <span class="req-label">Банк</span>
+        <span class="req-val" id="disp-bank">────</span>
       </div>
-
-      <div class="payment-card">
-        <h3>📎 Підтвердження оплати</h3>
-        <div class="receipt-options">
-          <div class="receipt-opt selected" id="optLink" onclick="selectReceiptType('link')">🔗 Посилання на чек</div>
-          <div class="receipt-opt" id="optScreenshot" onclick="selectReceiptType('screenshot')">📸 Скриншот</div>
-        </div>
-        <div id="receiptLinkSection">
-          <div class="form-group">
-            <label>Посилання на чек Monobank</label>
-            <input type="text" id="receiptUrl" placeholder="https://send.monobank.ua/...">
-          </div>
-        </div>
-        <div id="receiptScreenshotSection" style="display:none">
-          <p style="font-size:0.83rem; color:var(--text-light); margin-bottom:0.5rem;">
-            Надішли скриншот оплати в Telegram після бронювання
-          </p>
+      <div class="req-item">
+        <span class="req-label">Одержувач</span>
+        <span class="req-val" id="disp-holder">────</span>
+      </div>
+      <hr class="req-divider">
+      <div class="req-item">
+        <span class="req-label">Сума до оплати</span>
+        <div class="req-row">
+          <span class="amount-val" id="disp-amount">────</span>
+          <button class="copy-btn" onclick="copyVal('disp-amount-raw',this)">Копіювати суму</button>
+          <span id="disp-amount-raw" style="display:none"></span>
         </div>
       </div>
     </div>
 
-    <div id="errorMsg" class="error-msg" style="display:none"></div>
-
-    <button class="btn-primary" id="btnConfirm" onclick="confirmBooking()">Підтвердити бронювання ✓</button>
-    <button class="btn-secondary" onclick="goStep(3)" style="margin-top:0.5rem; width:100%">← Назад</button>
-  </div>
-
-  <!-- STEP 5: Confirmation -->
-  <div class="step" id="step5">
-    <div class="confirm-box">
-      <div class="big-check">🌿</div>
-      <h2>Дякую!</h2>
-      <p style="color:var(--text-light); font-size:0.9rem; margin-bottom:1rem;">
-        Бронювання прийнято. Я напишу в Telegram після підтвердження.
-      </p>
-      <div class="confirm-details" id="confirmDetails"></div>
-
-      <div class="next-booking-note" id="pkgReminderNote" style="display:none">
-        📌 <strong>Нагадування:</strong> Наступного разу просто обери зручний час — оплачувати більше не потрібно. Сесії з твого пакету вже зараховані.
+    <div class="rcpt-box">
+      <h3>📎 Підтвердіть оплату</h3>
+      <p class="rcpt-note">Після оплати завантажте скріншот квитанції або вставте посилання (наприклад, Monobank). Після цього ваш запис буде підтверджено автоматично. 💛</p>
+      <div class="tabs">
+        <button class="tab-btn active" id="tb-upload" onclick="switchTab('upload')">📷 Фото / скрін</button>
+        <button class="tab-btn" id="tb-link" onclick="switchTab('link')">🔗 Посилання</button>
       </div>
-
-      <a href="https://t.me/aletheia_psych" class="telegram-btn" target="_blank">
-        ✈ Написати в Telegram
-      </a>
-      <br>
-      <button class="btn-secondary" onclick="location.reload()" style="margin-top:0.8rem">Нове бронювання</button>
+      <div id="tc-upload" class="tc active">
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-in').click()">
+          <input type="file" id="file-in" accept="image/*" style="display:none" onchange="onFile(this)">
+          <div class="drop-icon">📷</div>
+          <p>Натисніть, щоб вибрати фото квитанції</p>
+          <p class="drop-hint">JPG · PNG · WebP · до 10 МБ</p>
+        </div>
+        <div id="file-preview" style="display:none">
+          <img id="prev-img" src="" alt="Квитанція">
+          <br><button onclick="clearFile()">✕ Видалити</button>
+        </div>
+      </div>
+      <div id="tc-link" class="tc">
+        <input id="link-input" type="url" placeholder="https://send.monobank.ua/…  або інше посилання">
+      </div>
     </div>
+
+    <div class="consent-wrap">
+      <label class="consent-label">
+        <input type="checkbox" id="consent">
+        <span>Я погоджуюсь з умовами бронювання: повна оплата підтверджує запис; скасування або перенесення – не пізніше 24 годин до початку сесії.</span>
+      </label>
+    </div>
+
+    <button class="btn btn-full" id="confirm-btn" onclick="confirmBooking()">Підтвердити бронювання ✓</button>
+    <div id="upload-prog">⏳ Відправляємо квитанцію…</div>
   </div>
+</div>
 
-</section>
+<!-- ══════════════════════════════════════
+     PAGE: SUCCESS
+══════════════════════════════════════ -->
+<div id="view-success" class="view">
+  <div class="confirm-wrap">
+    <div class="confirm-icon">✅</div>
+    <h2>✅ Запис підтверджено!</h2>
+    <div class="confirm-details" id="confirm-details"></div>
+    <p class="confirm-note">Ваш запис підтверджено. Тетяна вже отримала сповіщення про вашу оплату. 💛</p>
+    <div id="pkg-next-note" style="display:none;background:#fff8e6;border:1.5px solid #f0c060;border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:.88rem;color:#7a5a00;line-height:1.65;text-align:left">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <span class="cat-lick" style="font-size:1.4rem">🐱</span>
+        <span><strong>Наступний раз</strong> — просто обери зручний час і запишись. <strong>Оплачувати більше не потрібно</strong> — сесії з твого пакету вже зараховані. Введи свій Telegram-нік при бронюванні, і система все підтягне 🌿</span>
+      </div>
+    </div>
+    <p class="confirm-note" style="background:#f0f8ff;border:1px solid #b8d8f0;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-family:sans-serif;font-size:.88rem;color:#3a6080">📩 Пізніше вам буде надіслано посилання на сесію від Тетяни через Telegram <a href="https://t.me/alet_psyche" target="_blank">@alet_psyche</a></p>
+    <span class="confirm-cancel">⚠️ СКАСУВАННЯ АБО ПЕРЕНЕСЕННЯ СЕСІЇ:<br>напишіть у Telegram <a href="https://t.me/alet_psyche" target="_blank">@alet_psyche</a></span>
+    <p class="confirm-contact">Є питання? <a href="https://t.me/alet_psyche" target="_blank">@alet_psyche</a></p>
+  </div>
+</div>
 
+<!-- ══════════════════════════════════════
+     SCRIPT
+══════════════════════════════════════ -->
 <script>
-// ─────────────────────────────────────────
-// FIREBASE INIT
-// ─────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyAb01cYm0zJHhJ1vEDruw4APHqPo3TYK4I",
-  authDomain: "aletheia-booking.firebaseapp.com",
-  projectId: "aletheia-booking",
-  storageBucket: "aletheia-booking.firebasestorage.app",
-  messagingSenderId: "118890506561",
-  appId: "1:118890506561:web:0925dc72d8dadb856c19c0",
-  measurementId: "G-X1HKYG1T8X"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// ─── QUOTES + ILLUSTRATED BACKGROUNDS ────────────────────────
+const QUOTES = [
+  { text: "Поки ти не зробиш несвідоме усвідомленим, воно керуватиме твоїм життям, і ти називатимеш це долею.", author: "Карл Густав Юнг", role: "засновник аналітичної психології",        bg:{type:"mandala",  c1:"#e8deff",c2:"#a084cc",c3:"#f5f0ff"} },
+  { text: "Між стимулом і реакцією є простір. У цьому просторі є наша свобода і сила обирати свою відповідь.", author: "Віктор Франкл", role: "психіатр, засновник логотерапії",            bg:{type:"rays",     c1:"#fff3cc",c2:"#c8963e",c3:"#fffdf0"} },
+  { text: "Пізнай себе.", author: "Сократ", role: "давньогрецький філософ",                                                                                                          bg:{type:"columns",  c1:"#dce8f5",c2:"#6a9bc8",c3:"#f0f5fc"} },
+  { text: "Турбота про себе – це не поблажливість. Це самозбереження і це акт політичного спротиву.", author: "Одрі Лорд", role: "поетеса, активістка, письменниця",                            bg:{type:"botanical",c1:"#fde8ee",c2:"#c0607a",c3:"#fff5f8"} },
+  { text: "Ти не можеш зупинити хвилі, але можеш навчитися серфінгу.", author: "Джон Кабат-Зінн", role: "вчений, засновник медитації усвідомленості (MBSR)",                                                   bg:{type:"waves",    c1:"#d0f0f0",c2:"#4aa0b0",c3:"#f0fbfb"} },
+  { text: "Найважче для людини пізнати себе.", author: "Фалес Мілетський", role: "давньогрецький філософ, один із Семи мудреців",                                                                           bg:{type:"stars",    c1:"#d4e4f7",c2:"#4a7ab0",c3:"#eef4fc"} },
+  { text: "Все, що ми ненавидимо в інших, може привести нас до пізнання себе.", author: "Карл Густав Юнг", role: "засновник аналітичної психології",                                          bg:{type:"mandala",  c1:"#ddd0f0",c2:"#7a55b0",c3:"#f2eeff"} },
+  { text: "Людина – це істота, яка шукає сенс.", author: "Віктор Франкл", role: "психіатр, засновник логотерапії",                                                                              bg:{type:"rays",     c1:"#ffeacc",c2:"#b07830",c3:"#fff8ee"} },
+  { text: "Щастя залежить від нас самих.", author: "Аристотель", role: "давньогрецький філософ, учень Платона",                                                                                     bg:{type:"columns",  c1:"#f5e8cc",c2:"#a07830",c3:"#fdf8ee"} },
+  { text: "Справжня подорож відкриття полягає не у пошуку нових краєвидів, а в погляді новими очима.", author: "Марсель Пруст", role: "французький письменник, автор \"У пошуках втраченого часу\"",                      bg:{type:"spiral",   c1:"#f0dde8",c2:"#a05878",c3:"#fdf4f8"} },
+  { text: "Дозволь собі бути людиною. Добре бути злим, сумним, роздратованим, наляканим. Це людська природа.", author: "Пема Чодрон", role: "буддійська монахиня, письменниця, вчитель медитації",               bg:{type:"mandala",  c1:"#ffe8d0",c2:"#c07840",c3:"#fff8f0"} },
+  { text: "Те, чому ти чиниш опір – зберігається. Те, що ти приймаєш – змінюється.", author: "Карл Густав Юнг", role: "засновник аналітичної психології",                                        bg:{type:"waves",    c1:"#ddd8f0",c2:"#7060a8",c3:"#f5f2ff"} },
+  { text: "Ми не бачимо речі такими, якими вони є. Ми бачимо їх такими, якими є ми самі.", author: "Анаїс Нін", role: "французько-американська письменниця, авторка щоденників",                                    bg:{type:"mirror",   c1:"#ccf0ec",c2:"#3a8878",c3:"#f0fbf9"} },
+  { text: "Мужність – це не відсутність страху. Це рішення, що щось інше важливіше за страх.", author: "Амброз Редмун", role: "ірландський письменник і активіст",               bg:{type:"mountain", c1:"#d8ecd8",c2:"#4a7a50",c3:"#f2faf2"} },
+  { text: "Все у твоєму житті є відображенням твого внутрішнього стану.", author: "Рам Дасс", role: "духовний вчитель, психолог, автор \"Be Here Now\"",                                                        bg:{type:"rays",     c1:"#ffe0d0",c2:"#b86040",c3:"#fff8f4"} },
 
-// ─────────────────────────────────────────
-// PACKAGES CONFIG
-// ─────────────────────────────────────────
-const PACKAGES = [
-  {
-    id: 'single',
-    name: 'Разова сесія',
-    price: 1000,
-    sessions: 1,
-    isUrgent: false,
-    desc: '50 хвилин · індивідуальна робота',
-    perSession: null
-  },
-  {
-    id: 'pkg4',
-    name: 'Пакет 4 сесії',
-    price: 3600,
-    sessions: 4,
-    isUrgent: false,
-    desc: 'Рекомендовано для початку',
-    perSession: 900
-  },
-  {
-    id: 'pkg8',
-    name: 'Пакет 8 сесій',
-    price: 6800,
-    sessions: 8,
-    isUrgent: false,
-    desc: 'Глибока робота — найпопулярніший',
-    perSession: 850
-  },
-  {
-    id: 'pkg12',
-    name: 'Пакет 12 сесій',
-    price: 9600,
-    sessions: 12,
-    isUrgent: false,
-    desc: 'Тривала підтримка та зміни',
-    perSession: 800
-  },
-  {
-    id: 'urgent',
-    name: 'Термінова сесія ⭐',
-    price: 1500,
-    sessions: 1,
-    isUrgent: true,
-    desc: 'Протягом 24–48 годин',
-    perSession: null
-  }
+  { text: "Невисловлені емоції ніколи не вмирають. Вони поховані живими і пізніше виходять назовні у потворніший спосіб.", author: "Зиґмунд Фрейд", role: "засновник психоаналізу",          bg:{type:"spiral",   c1:"#e0d8f0",c2:"#6a5090",c3:"#f4f0ff"} },
+  { text: "Що людина здатна бути — вона мусить бути. Ця потреба і є самоактуалізація.", author: "Абрагам Маслоу", role: "психолог, гуманістичний підхід",                                    bg:{type:"rays",     c1:"#fff0d8",c2:"#c8903e",c3:"#fffaee"} },
+  { text: "Любити когось — це не просто сильне почуття. Це рішення, обіцянка, зобов'язання.", author: "Еріх Фромм", role: "психоаналітик, гуманістичний підхід",                            bg:{type:"botanical",c1:"#fde8f5",c2:"#b05890",c3:"#fff4fb"} },
+  { text: "Страждання — це те, що відбувається з тобою. Твоя реакція на нього — це те, ким ти є.", author: "Альфред Адлер", role: "психолог, індивідуальна психологія",                      bg:{type:"columns",  c1:"#d8ecd8",c2:"#508858",c3:"#f2faf2"} },
+  { text: "Взаємозв'язок — це ліки. Відчути справжній контакт з іншою людиною — значить зцілитися.", author: "Ірвін Ялом", role: "психотерапевт, екзистенційний підхід",                   bg:{type:"waves",    c1:"#d0e8f8",c2:"#4080b0",c3:"#f0f8ff"} },
+  { text: "Тривога — не ворог. Це покликання до справжнього існування.", author: "Ролло Мей", role: "психолог, екзистенційний підхід",                                                       bg:{type:"mountain", c1:"#dde0f5",c2:"#5060a8",c3:"#f0f2ff"} },
+  { text: "Щоб змінитися, треба спочатку побачити себе ясно — без ілюзій і без засудження.", author: "Карен Хорні", role: "психоаналітик, неофрейдизм",                                     bg:{type:"mirror",   c1:"#f5e8d8",c2:"#a07050",c3:"#fffaf5"} },
+  { text: "Краще горіти яскраво, ніж повільно згасати.", author: "Курт Кобейн", role: "фронтмен Nirvana",                                                                             bg:{type:"stars",    c1:"#d8d8e8",c2:"#505070",c3:"#f0f0f8"} },
+  { text: "Я вчився у болю. Я виростав у ньому. І саме тому можу про нього співати.", author: "Честер Беннінгтон", role: "фронтмен Linkin Park",                                       bg:{type:"rays",     c1:"#e8d0d0",c2:"#904040",c3:"#fff0f0"} },
+  { text: "Якщо ти відчуваєш щось — це вже означає, що ти живеш. Не заглушуй це.", author: "Еді Веддер", role: "фронтмен Pearl Jam",                                            bg:{type:"waves",    c1:"#d0e0f0",c2:"#305878",c3:"#f0f8ff"} },
+  { text: "Люди уникають себе будь-якою ціною. А потім дивуються, що відчувають себе порожніми.", author: "Джим Моррісон", role: "фронтмен The Doors",                                  bg:{type:"spiral",   c1:"#f0e8d8",c2:"#a07840",c3:"#fdf8f0"} },
+  { text: "Я не хочу бути тим, чого від мене хочуть. Я хочу бути собою — навіть якщо це незручно.", author: "Біллі Джо Армстронг", role: "фронтмен Green Day",                   bg:{type:"botanical",c1:"#d8f0d0",c2:"#508040",c3:"#f4fdf0"} },
 ];
 
-// ─────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────
-let state = {
-  selectedPkg: null,
-  selectedSlotId: null,
-  selectedDate: null,
-  selectedTime: null,
-  isUrgentSlot: false,
-  clientData: {},
-  receiptType: 'link',
-  availableSlots: [],
-  clientPackage: null, // from Firestore clients collection
-  usePackageSession: false,
-  paymentSettings: { bank: 'Monobank', card: '', holder: 'Тетяна Рисак' }
+function buildBg(b, author) {
+  const W=1440,H=900,cx=W/2,cy=430;
+  let s=`<defs>
+    <radialGradient id="rg" cx="52%" cy="42%" r="68%">
+      <stop offset="0%" stop-color="${b.c1}" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="${b.c3}"/>
+    </radialGradient>
+  </defs>
+  <rect width="${W}" height="${H}" fill="${b.c3}"/>
+  <rect width="${W}" height="${H}" fill="url(#rg)"/>`;
+  s += getPortrait(author, b.c2, cx, cy);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">${s}</svg>`;
+}
+
+function getPortrait(author, c, cx, cy) {
+  let p = "";
+  const o = 0.55;
+  // Base: head, neck, shoulders, eyes, nose, lips
+  p += `<ellipse cx="${cx}" cy="${cy}" rx="162" ry="195" fill="${c}" fill-opacity="0.04" stroke="${c}" stroke-width="1.8" opacity="${o}"/>`;
+  p += `<path d="M${cx-54} ${cy+182} L${cx-54} ${cy+248} L${cx+54} ${cy+248} L${cx+54} ${cy+182}" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o*0.88}"/>`;
+  p += `<path d="M${cx-420} 950 Q${cx-190} ${cy+355} ${cx-58} ${cy+248} M${cx+58} ${cy+248} Q${cx+190} ${cy+355} ${cx+420} 950" stroke="${c}" stroke-width="1.6" fill="none" opacity="${o*0.75}"/>`;
+  p += `<ellipse cx="${cx-60}" cy="${cy-20}" rx="15" ry="10" fill="none" stroke="${c}" stroke-width="0.9" opacity="${o*0.65}"/>`;
+  p += `<ellipse cx="${cx+60}" cy="${cy-20}" rx="15" ry="10" fill="none" stroke="${c}" stroke-width="0.9" opacity="${o*0.65}"/>`;
+  p += `<path d="M${cx-2} ${cy-55} Q${cx+20} ${cy+15} ${cx-6} ${cy+36} Q${cx+8} ${cy+44} ${cx+26} ${cy+35}" fill="none" stroke="${c}" stroke-width="0.9" opacity="${o*0.6}"/>`;
+  p += `<path d="M${cx-30} ${cy+82} Q${cx} ${cy+96} ${cx+30} ${cy+82}" fill="none" stroke="${c}" stroke-width="1" opacity="${o*0.55}"/>`;
+  p += `<path d="M${cx-28} ${cy+84} Q${cx} ${cy+112} ${cx+28} ${cy+84}" fill="none" stroke="${c}" stroke-width="0.9" opacity="${o*0.5}"/>`;
+
+  if(author.includes("Юнг")) {
+    // Round wire glasses + combed-back hair
+    p += `<circle cx="${cx-61}" cy="${cy-20}" r="40" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o}"/>`;
+    p += `<circle cx="${cx+61}" cy="${cy-20}" r="40" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o}"/>`;
+    p += `<line x1="${cx-21}" y1="${cy-20}" x2="${cx+21}" y2="${cy-20}" stroke="${c}" stroke-width="1.3" opacity="${o*0.9}"/>`;
+    p += `<line x1="${cx-101}" y1="${cy-12}" x2="${cx-136}" y2="${cy-8}" stroke="${c}" stroke-width="1.1" opacity="${o*0.8}"/>`;
+    p += `<line x1="${cx+101}" y1="${cy-12}" x2="${cx+136}" y2="${cy-8}" stroke="${c}" stroke-width="1.1" opacity="${o*0.8}"/>`;
+    p += `<path d="M${cx-162} ${cy-55} Q${cx-155} ${cy-228} ${cx-15} ${cy-256} Q${cx} ${cy-262} ${cx+15} ${cy-256} Q${cx+155} ${cy-228} ${cx+162} ${cy-55}" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o*0.88}"/>`;
+    p += `<path d="M${cx-162} ${cy-55} Q${cx-175} ${cy+25} ${cx-168} ${cy+80}" fill="none" stroke="${c}" stroke-width="1.1" opacity="${o*0.65}"/>`;
+    p += `<path d="M${cx+162} ${cy-55} Q${cx+175} ${cy+25} ${cx+168} ${cy+80}" fill="none" stroke="${c}" stroke-width="1.1" opacity="${o*0.65}"/>`;
+  } else if(author.includes("Франкл")) {
+    // Rectangular glasses + receding hairline
+    p += `<rect x="${cx-100}" y="${cy-52}" width="76" height="48" rx="7" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o}"/>`;
+    p += `<rect x="${cx+24}" y="${cy-52}" width="76" height="48" rx="7" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o}"/>`;
+    p += `<line x1="${cx-24}" y1="${cy-28}" x2="${cx+24}" y2="${cy-28}" stroke="${c}" stroke-width="1.3" opacity="${o*0.9}"/>`;
+    p += `<line x1="${cx-100}" y1="${cy-28}" x2="${cx-134}" y2="${cy-20}" stroke="${c}" stroke-width="1.1" opacity="${o*0.8}"/>`;
+    p += `<line x1="${cx+100}" y1="${cy-28}" x2="${cx+134}" y2="${cy-20}" stroke="${c}" stroke-width="1.1" opacity="${o*0.8}"/>`;
+    p += `<path d="M${cx-115} ${cy-108} Q${cx-92} ${cy-215} ${cx-12} ${cy-232} Q${cx} ${cy-236} ${cx+12} ${cy-232} Q${cx+92} ${cy-215} ${cx+115} ${cy-108}" fill="none" stroke="${c}" stroke-width="1.3" opacity="${o*0.78}"/>`;
+    p += `<path d="M${cx-157} ${cy-70} Q${cx-165} ${cy-95} ${cx-148} ${cy-115} Q${cx-130} ${cy-130} ${cx-115} ${cy-108}" fill="none" stroke="${c}" stroke-width="1" opacity="${o*0.55}"/>`;
+    p += `<path d="M${cx+157} ${cy-70} Q${cx+165} ${cy-95} ${cx+148} ${cy-115} Q${cx+130} ${cy-130} ${cx+115} ${cy-108}" fill="none" stroke="${c}" stroke-width="1" opacity="${o*0.55}"/>`;
+  } else if(author.includes("Сократ")) {
+    // Bald top + curly sides + full beard
+    p += `<path d="M${cx-162} ${cy-25} Q${cx-120} ${cy-220} ${cx-22} ${cy-248} Q${cx} ${cy-255} ${cx+22} ${cy-248} Q${cx+120} ${cy-220} ${cx+162} ${cy-25}" fill="none" stroke="${c}" stroke-width="1.4" opacity="${o*0.82}"/>`;
+    for(let i=0;i<6;i++){
+      p += `<path d="M${cx-162+i*5} ${cy-25+i*22} Q${cx-180+i*4} ${cy-5+i*24} ${cx-160+i*5} ${cy+20+i*22}" fill="none" stroke="${c}" stroke-width="0.9" opacity="${o*0.5}"/>`;
+      p += `<path d="M${cx+162-i*5} ${cy-25+i*22} Q${cx+180-i*4} ${cy-5+i*24} ${cx+160-i*5} ${cy+20+i*22}" fill="none" stroke="${c}" stroke-width="0.9" opacity="${o*0.5}"/>`;
+    }
+    p += `<path d="M${cx-150} ${cy+62} Q${cx-182} ${cy+175} ${cx-98} ${cy+262} Q${cx} ${cy+298} ${cx+98} ${cy+262} Q${cx+182} ${cy+175} ${cx+150} ${cy+62}" fill="none" stroke="${c}" stroke-width="1.8" opacity="${o}"/>`;
+    p += `<path d="M${cx-122} ${cy+75} Q${cx-68} ${cy+195} ${cx} ${cy+248}" fill="none" stroke="${c}" stroke-width="0.9" opacity="${o*0.42}" stroke-dasharray="5,5"/>`;
+    p += `<path d="M${cx+122} ${cy+75} Q${cx+68} ${cy+195} ${cx} ${cy+248}" fill="none" stroke="${c}" stroke-width="0.9" opacity="${o*0.42}" stroke-dasharray="5,5"/>`;
+  } else if(author.includes("Лорд")) {
+    // Close natural hair + strong oval
+    p += `<path d="M${cx-162} ${cy-62} Q${cx-172} ${cy-210} ${cx-55} ${cy-262} Q${cx} ${cy-278} ${cx+55} ${cy-262} Q${cx+172} ${cy-210} ${cx+162} ${cy-62}" fill="none" stroke="${c}" stroke-width="2" opacity="${o}"/>`;
+    for(let i=0;i<14;i++){
+      const ang=-0.2+i*Math.PI*1.4/13, cy2=cy-95;
+      p += `<line x1="${(cx+162*Math.cos(ang)).toFixed(0)}" y1="${(cy2+162*0.88*Math.sin(ang)).toFixed(0)}" x2="${(cx+180*Math.cos(ang+0.05)).toFixed(0)}" y2="${(cy2+180*0.88*Math.sin(ang+0.05)).toFixed(0)}" stroke="${c}" stroke-width="1" opacity="${o*0.55}"/>`;
+    }
+  } else if(author.includes("Кабат")) {
+    // Bald + oval glasses
+    p += `<path d="M${cx-162} ${cy-58} Q${cx-150} ${cy-230} ${cx} ${cy-255} Q${cx+150} ${cy-230} ${cx+162} ${cy-58}" fill="none" stroke="${c}" stroke-width="1.2" opacity="${o*0.62}"/>`;
+    p += `<ellipse cx="${cx-61}" cy="${cy-22}" rx="46" ry="31" fill="none" stroke="${c}" stroke-width="1.6" opacity="${o}"/>`;
+    p += `<ellipse cx="${cx+61}" cy="${cy-22}" rx="46" ry="31" fill="none" stroke="${c}" stroke-width="1.6" opacity="${o}"/>`;
+    p += `<line x1="${cx-15}" y1="${cy-22}" x2="${cx+15}" y2="${cy-22}" stroke="${c}" stroke-width="1.3" opacity="${o*0.9}"/>`;
+    p += `<line x1="${cx-107}" y1="${cy-22}" x2="${cx-140}" y2="${cy-15}" stroke="${c}" stroke-width="1.1" opacity="${o*0.8}"/>`;
+    p += `<line x1="${cx+107}" y1="${cy-22}" x2="${cx+140}" y2="${cy-15}" stroke="${c}" stroke-width="1.1" opacity="${o*0.8}"/>`;
+  } else if(author.includes("Фалес")) {
+    // Long ancient beard
+    p += `<path d="M${cx-160} ${cy-48} Q${cx-135} ${cy-240} ${cx} ${cy-265} Q${cx+135} ${cy-240} ${cx+160} ${cy-48}" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o*0.85}"/>`;
+    p += `<path d="M${cx-150} ${cy+62} Q${cx-192} ${cy+240} ${cx-95} ${cy+400} Q${cx} ${cy+445} ${cx+95} ${cy+400} Q${cx+192} ${cy+240} ${cx+150} ${cy+62}" fill="none" stroke="${c}" stroke-width="1.8" opacity="${o}"/>`;
+    p += `<path d="M${cx-108} ${cy+80} Q${cx-55} ${cy+310} ${cx} ${cy+398}" fill="none" stroke="${c}" stroke-width="1" opacity="${o*0.42}" stroke-dasharray="7,6"/>`;
+    p += `<path d="M${cx+108} ${cy+80} Q${cx+55} ${cy+310} ${cx} ${cy+398}" fill="none" stroke="${c}" stroke-width="1" opacity="${o*0.42}" stroke-dasharray="7,6"/>`;
+  } else if(author.includes("Аристотель")) {
+    // Curly hair + trimmed beard
+    p += `<path d="M${cx-162} ${cy-58} Q${cx-175} ${cy-218} ${cx-48} ${cy-268} Q${cx} ${cy-282} ${cx+48} ${cy-268} Q${cx+175} ${cy-218} ${cx+162} ${cy-58}" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o}"/>`;
+    for(let i=0;i<8;i++){
+      const a=Math.PI*0.72+i*Math.PI*0.38/7;
+      p += `<path d="M${(cx+160*Math.cos(a)).toFixed(0)} ${(cy-88+175*Math.sin(a)).toFixed(0)} Q${(cx+178*Math.cos(a+0.09)).toFixed(0)} ${(cy-88+196*Math.sin(a+0.09)).toFixed(0)} ${(cx+160*Math.cos(a+0.18)).toFixed(0)} ${(cy-88+178*Math.sin(a+0.18)).toFixed(0)}" fill="none" stroke="${c}" stroke-width="1.1" opacity="${o*0.58}"/>`;
+    }
+    p += `<path d="M${cx-140} ${cy+75} Q${cx-148} ${cy+185} ${cx-58} ${cy+240} Q${cx} ${cy+258} ${cx+58} ${cy+240} Q${cx+148} ${cy+185} ${cx+140} ${cy+75}" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o*0.92}"/>`;
+    p += `<path d="M${cx-100} ${cy+85} Q${cx-42} ${cy+195} ${cx} ${cy+218}" fill="none" stroke="${c}" stroke-width="0.8" opacity="${o*0.4}" stroke-dasharray="4,4"/>`;
+    p += `<path d="M${cx+100} ${cy+85} Q${cx+42} ${cy+195} ${cx} ${cy+218}" fill="none" stroke="${c}" stroke-width="0.8" opacity="${o*0.4}" stroke-dasharray="4,4"/>`;
+  } else if(author.includes("Пруст")) {
+    // Wavy hair + fine mustache
+    p += `<path d="M${cx-162} ${cy-62} Q${cx-175} ${cy-225} ${cx-32} ${cy-272} Q${cx} ${cy-282} ${cx+32} ${cy-272} Q${cx+175} ${cy-225} ${cx+162} ${cy-62}" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o}"/>`;
+    p += `<path d="M${cx-162} ${cy-62} Q${cx-188} ${cy-145} ${cx-180} ${cy-215} Q${cx-168} ${cy-248} ${cx-130} ${cy-260}" fill="none" stroke="${c}" stroke-width="1.1" opacity="${o*0.62}"/>`;
+    p += `<path d="M${cx+162} ${cy-62} Q${cx+188} ${cy-145} ${cx+180} ${cy-215} Q${cx+168} ${cy-248} ${cx+130} ${cy-260}" fill="none" stroke="${c}" stroke-width="1.1" opacity="${o*0.62}"/>`;
+    p += `<path d="M${cx-42} ${cy+58} Q${cx-18} ${cy+70} ${cx} ${cy+64}" fill="none" stroke="${c}" stroke-width="1.7" opacity="${o}"/>`;
+    p += `<path d="M${cx+42} ${cy+58} Q${cx+18} ${cy+70} ${cx} ${cy+64}" fill="none" stroke="${c}" stroke-width="1.7" opacity="${o}"/>`;
+    p += `<path d="M${cx-42} ${cy+59} Q${cx-24} ${cy+76} ${cx-6} ${cy+66}" fill="none" stroke="${c}" stroke-width="0.9" opacity="${o*0.55}"/>`;
+    p += `<path d="M${cx+42} ${cy+59} Q${cx+24} ${cy+76} ${cx+6} ${cy+66}" fill="none" stroke="${c}" stroke-width="0.9" opacity="${o*0.55}"/>`;
+  } else if(author.includes("Чодрон")) {
+    // Shaved head + Buddhist robes
+    p += `<path d="M${cx-160} ${cy-68} Q${cx-150} ${cy-238} ${cx} ${cy-262} Q${cx+150} ${cy-238} ${cx+160} ${cy-68}" fill="none" stroke="${c}" stroke-width="1.3" opacity="${o*0.72}"/>`;
+    p += `<path d="M${cx-62} ${cy+248} L${cx} ${cy+325} L${cx+62} ${cy+248}" fill="none" stroke="${c}" stroke-width="1.6" opacity="${o*0.8}"/>`;
+    p += `<path d="M${cx-62} ${cy+248} Q${cx-130} ${cy+285} ${cx-220} ${cy+420}" fill="none" stroke="${c}" stroke-width="1.3" opacity="${o*0.7}"/>`;
+    p += `<path d="M${cx+62} ${cy+248} Q${cx+130} ${cy+285} ${cx+220} ${cy+420}" fill="none" stroke="${c}" stroke-width="1.3" opacity="${o*0.7}"/>`;
+    p += `<line x1="${cx}" y1="${cy+325}" x2="${cx}" y2="950" stroke="${c}" stroke-width="0.9" opacity="${o*0.45}"/>`;
+  } else if(author.includes("Нін")) {
+    // Straight bangs + elegant oval
+    p += `<path d="M${cx-162} ${cy-62} Q${cx-172} ${cy-218} ${cx-36} ${cy-264} Q${cx} ${cy-278} ${cx+36} ${cy-264} Q${cx+172} ${cy-218} ${cx+162} ${cy-62}" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o}"/>`;
+    p += `<path d="M${cx-148} ${cy-218} Q${cx-78} ${cy-178} ${cx-18} ${cy-175} Q${cx+20} ${cy-174} ${cx+72} ${cy-180} Q${cx+118} ${cy-194} ${cx+148} ${cy-216}" fill="none" stroke="${c}" stroke-width="2" opacity="${o}"/>`;
+    p += `<path d="M${cx-148} ${cy-218} Q${cx-110} ${cy-188} ${cx-55} ${cy-178}" fill="none" stroke="${c}" stroke-width="1.1" opacity="${o*0.62}"/>`;
+    p += `<path d="M${cx-162} ${cy-62} Q${cx-180} ${cy+35} ${cx-172} ${cy+90}" fill="none" stroke="${c}" stroke-width="1.1" opacity="${o*0.58}"/>`;
+  } else if(author.includes("Редмун")) {
+    // Medium wavy hair + strong face
+    p += `<path d="M${cx-162} ${cy-58} Q${cx-175} ${cy-220} ${cx-28} ${cy-262} Q${cx} ${cy-272} ${cx+28} ${cy-262} Q${cx+175} ${cy-220} ${cx+162} ${cy-58}" fill="none" stroke="${c}" stroke-width="1.5" opacity="${o}"/>`;
+    p += `<path d="M${cx-162} ${cy-58} Q${cx-185} ${cy+45} ${cx-175} ${cy+108}" fill="none" stroke="${c}" stroke-width="1.3" opacity="${o*0.68}"/>`;
+    p += `<path d="M${cx+162} ${cy-58} Q${cx+185} ${cy+45} ${cx+175} ${cy+108}" fill="none" stroke="${c}" stroke-width="1.3" opacity="${o*0.68}"/>`;
+  } else {
+    // RAM DASS: bald + full beard + round glasses
+    p += `<path d="M${cx-160} ${cy-55} Q${cx-148} ${cy-225} ${cx} ${cy-252} Q${cx+148} ${cy-225} ${cx+160} ${cy-55}" fill="none" stroke="${c}" stroke-width="1.2" opacity="${o*0.65}"/>`;
+    p += `<circle cx="${cx-62}" cy="${cy-22}" r="44" fill="none" stroke="${c}" stroke-width="1.6" opacity="${o}"/>`;
+    p += `<circle cx="${cx+62}" cy="${cy-22}" r="44" fill="none" stroke="${c}" stroke-width="1.6" opacity="${o}"/>`;
+    p += `<line x1="${cx-18}" y1="${cy-22}" x2="${cx+18}" y2="${cy-22}" stroke="${c}" stroke-width="1.3" opacity="${o*0.9}"/>`;
+    p += `<line x1="${cx-106}" y1="${cy-22}" x2="${cx-140}" y2="${cy-14}" stroke="${c}" stroke-width="1.1" opacity="${o*0.8}"/>`;
+    p += `<line x1="${cx+106}" y1="${cy-22}" x2="${cx+140}" y2="${cy-14}" stroke="${c}" stroke-width="1.1" opacity="${o*0.8}"/>`;
+    p += `<path d="M${cx-142} ${cy+72} Q${cx-172} ${cy+215} ${cx-82} ${cy+298} Q${cx} ${cy+328} ${cx+82} ${cy+298} Q${cx+172} ${cy+215} ${cx+142} ${cy+72}" fill="none" stroke="${c}" stroke-width="1.8" opacity="${o}"/>`;
+    p += `<path d="M${cx-105} ${cy+88} Q${cx-52} ${cy+238} ${cx} ${cy+285}" fill="none" stroke="${c}" stroke-width="1" opacity="${o*0.45}" stroke-dasharray="5,5"/>`;
+    p += `<path d="M${cx+105} ${cy+88} Q${cx+52} ${cy+238} ${cx} ${cy+285}" fill="none" stroke="${c}" stroke-width="1" opacity="${o*0.45}" stroke-dasharray="5,5"/>`;
+  }
+  return p;
+}
+
+(function(){
+  const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  document.getElementById("hero-quote").textContent = "“" + q.text + "”";;
+  const role = q.role ? (" · " + q.role) : "";
+  document.getElementById("hero-author").textContent = "— " + q.author + role;
+
+  // Video background - desktop vs mobile
+  const vid = document.getElementById("page-bg-video");
+  if (vid) {
+    const src = window.innerWidth < 768 ? "bg-mobile.mp4" : "bg-desktop.mp4";
+    vid.src = src;
+    vid.load();
+    vid.play().catch(() => {});
+  }
+})();
+</script>
+
+<script type="module">
+// ─────────────────────────────────────────────────────────────
+//  🔧 КОНФІГУРАЦІЯЗАМІНІТЬ НА ВАШІ ЗНАЧЕННЯ
+//  (Докладно: SETUP.md)
+// ─────────────────────────────────────────────────────────────
+const FIREBASE = {
+  apiKey:            "AIzaSyAb01cYmOzJHhJ1vEDruw4APHqPo3TYK4I",
+  authDomain:        "aletheia-booking.firebaseapp.com",
+  projectId:         "aletheia-booking",
+  storageBucket:     "aletheia-booking.firebasestorage.app",
+  messagingSenderId: "118890506561",
+  appId:             "1:118890506561:web:0925dc72d8dadb856c19c0"
+};
+const TG_TOKEN   = "8326407894:AAEoJI1SP7m_hnwZQmdIBuN38dQ8c8Can1w";
+const TG_CHAT_ID = "8171399054";
+
+// Реквізити (можна змінити в адмін-панелі → збереже в Firebase)
+const DEFAULT_PAY = {
+  card:   "0000 0000 0000 0000",
+  bank:   "Monobank",
+  holder: "Тетяна Рисак"
+};
+// ─────────────────────────────────────────────────────────────
+
+import { initializeApp }      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, getDocs, query,
+  where, updateDoc, doc, getDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+let db, paySettings = { ...DEFAULT_PAY };
+try {
+  const app = initializeApp(FIREBASE);
+  db = getFirestore(app);
+} catch(e) {
+  console.warn("Firebase not configuredrunning in demo mode");
+}
+
+// ─── STATE ───────────────────────────────────────────────────
+const S = {
+  yr: new Date().getFullYear(),
+  mo: new Date().getMonth(),
+  selDate: null,
+  selSlotId: null,
+  selSlotTime: null,
+  selPkg: null,           // {id,price,name}
+  slots: {},              // {"2026-06-05":[{id,time,status},...]}
+  clientData: null,
+  receiptFile: null,
+  activeTab: "upload",
+  view: "home"
 };
 
-// ─────────────────────────────────────────
-// INIT
-// ─────────────────────────────────────────
-async function init() {
-  loadPackages();
-  loadPaymentSettings();
-  checkUrgentSlots();
+const MONTHS = ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"];
+const WDAYS  = ["Неділя","Понеділок","Вівторок","Середа","Четвер","Пʼятниця","Субота"];
+
+// expose to HTML onclick
+
+// ── URGENT SESSION ─────────────────────────────────────────────
+let _pendingUrgentSlot = null, _pendingUrgentEl = null;
+
+function isWithin12h(slotDate, slotTime) {
+  if (!slotDate || !slotTime) return false;
+  const slotDt = new Date(slotDate + "T" + slotTime + ":00");
+  const now = new Date();
+  const diffMs = slotDt - now;
+  return diffMs > 0 && diffMs <= 10 * 60 * 60 * 1000;
 }
 
-function loadPackages() {
-  const grid = document.getElementById('packagesGrid');
-  grid.innerHTML = '';
-  PACKAGES.filter(p => !p.isUrgent).forEach(pkg => {
-    const card = document.createElement('div');
-    card.className = 'pkg-card';
-    card.id = 'pkg_' + pkg.id;
-    card.onclick = () => selectPackage(pkg.id);
-    card.innerHTML = `
-      <div class="pkg-name">${pkg.name}</div>
-      <div class="pkg-price">${pkg.price.toLocaleString('uk-UA')} <span>грн</span></div>
-      ${pkg.perSession ? `<div class="pkg-per">${pkg.perSession} грн/сесія</div>` : ''}
-      <div class="pkg-desc">${pkg.desc}</div>
-      ${pkg.sessions > 1 ? `<div style="font-size:0.78rem;margin-top:0.4rem;color:var(--sage)">${pkg.sessions} сесій</div>` : ''}
-    `;
-    grid.appendChild(card);
-  });
+function declineUrgent() {
+  document.getElementById("urgent-modal").style.display = "none";
+  _pendingUrgentSlot = null; _pendingUrgentEl = null;
 }
 
-async function checkUrgentSlots() {
+function acceptUrgent() {
+  document.getElementById("urgent-modal").style.display = "none";
+  if (_pendingUrgentSlot && _pendingUrgentEl) {
+    S.isUrgent = true;
+    S.urgentPrice = 1450;
+    document.querySelectorAll(".slot-btn.sel").forEach(x => x.classList.remove("sel"));
+    _pendingUrgentEl.classList.add("sel");
+    S.selSlotId = _pendingUrgentSlot.id;
+    S.selSlotTime = _pendingUrgentSlot.time;
+    updateBar();
+  }
+}
+
+// ── PACKAGE TRACKING (Firebase clientPackages) ──────────────────
+async function checkClientPackage() {
+  if (!db) return;
+  const tg = document.getElementById("f-tg").value.trim();
+  const activeDiv = document.getElementById("tg-pkg-active");
+  const hintDiv = document.getElementById("tg-pkg-hint");
+  if (!tg || tg.length < 2) { activeDiv.style.display = "none"; return; }
+  const handle = tg.startsWith("@") ? tg : "@" + tg;
   try {
-    const snap = await db.collection('slots')
-      .where('isUrgent', '==', true)
-      .where('status', '==', 'available')
-      .get();
-
+    const { getDocs: _getDocs, query: _query, collection: _coll, where: _where } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const snap = await _getDocs(_query(_coll(db, "clientPackages"), _where("telegram", "==", handle), _where("sessionsRemaining", ">", 0)));
     if (!snap.empty) {
-      document.getElementById('urgentSection').style.display = 'block';
-      const list = document.getElementById('urgentSlotsList');
-      list.innerHTML = '';
-      snap.docs.forEach(doc => {
-        const s = doc.data();
-        const btn = document.createElement('button');
-        btn.className = 'time-btn urgent-time';
-        btn.textContent = `${s.date ? formatDateShort(s.date) : ''} ${s.time}`;
-        btn.onclick = () => selectUrgentSlot(doc.id, s);
-        list.appendChild(btn);
-      });
+      const pkg = snap.docs[0].data();
+      const pkgDocId = snap.docs[0].id;
+      S.activePackage = { docId: pkgDocId, ...pkg };
+      const rem = pkg.sessionsRemaining;
+      const plural = rem === 1 ? "сесія" : rem < 5 ? "сесії" : "сесій";
+      document.getElementById("tg-pkg-active-text").innerHTML =
+        "<strong>У тебе залишилось " + rem + " " + plural + " в пакеті!</strong><br>" +
+        "Пакет «" + pkg.packageName + "» — оплата не потрібна, використай їх на максималочку 🌿";
+      activeDiv.style.display = "block";
+      // Pre-select matching package in form
+      const sel = document.getElementById("f-pkg");
+      sel.value = pkg.packageId + "|" + pkg.packagePrice + "|" + pkg.packageName;
+    } else {
+      S.activePackage = null;
+      activeDiv.style.display = "none";
     }
-  } catch(e) { console.log('urgent slots check:', e); }
+  } catch(e) { console.warn("checkClientPackage error", e); }
 }
 
-async function loadPaymentSettings() {
-  try {
-    const doc = await db.collection('settings').doc('payment').get();
-    if (doc.exists) {
-      const d = doc.data();
-      state.paymentSettings = { bank: d.bank || 'Monobank', card: d.card || '', holder: d.holder || '' };
-    }
-  } catch(e) {}
-}
-
-// ─────────────────────────────────────────
-// PACKAGE SELECTION
-// ─────────────────────────────────────────
-function selectPackage(pkgId) {
-  state.selectedPkg = PACKAGES.find(p => p.id === pkgId);
-  state.isUrgentSlot = false;
-  document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('selected'));
-  const el = document.getElementById('pkg_' + pkgId);
-  if (el) el.classList.add('selected');
-  document.getElementById('btnStep1Next').disabled = false;
-}
-
-function selectUrgentSlot(slotId, slotData) {
-  state.selectedPkg = PACKAGES.find(p => p.id === 'urgent');
-  state.selectedSlotId = slotId;
-  state.selectedDate = slotData.date;
-  state.selectedTime = slotData.time;
-  state.isUrgentSlot = true;
-  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
-  event.target.classList.add('selected');
-  document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('btnStep1Next').disabled = false;
-}
-
-// ─────────────────────────────────────────
-// STEP NAVIGATION
-// ─────────────────────────────────────────
-function goStep(n) {
-  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-  document.getElementById('step' + n).classList.add('active');
-  document.querySelectorAll('.step-dot').forEach((d, i) => {
-    d.classList.remove('active', 'done');
-    if (i + 1 < n) d.classList.add('done');
-    if (i + 1 === n) d.classList.add('active');
-  });
-  document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
-}
-
-async function goStep2() {
-  goStep(2);
-  if (!state.isUrgentSlot) {
-    await loadAvailableSlots();
+function onPkgSelectChange() {
+  const val = document.getElementById("f-pkg").value;
+  const hintDiv = document.getElementById("tg-pkg-hint");
+  if (val.startsWith("pack8") || val.startsWith("pack12")) {
+    hintDiv.style.display = "block";
   } else {
-    document.getElementById('slotsLoading').style.display = 'none';
-    document.getElementById('slotsContent').style.display = 'block';
-    document.getElementById('noSlotsMsg').style.display = 'none';
-    document.getElementById('timesSection').style.display = 'none';
-    document.getElementById('datesGrid').innerHTML = `
-      <div style="background:#fff0ea;border-radius:8px;padding:0.8rem;font-size:0.85rem;color:var(--urgent)">
-        ⚡ Термінова сесія: <strong>${formatDateShort(state.selectedDate)} о ${state.selectedTime}</strong>
-      </div>`;
-    document.getElementById('btnStep2Next').disabled = false;
+    hintDiv.style.display = "none";
   }
-  // pre-fill telegram if entered on step 1
-  const nick = document.getElementById('telegramNick').value;
-  if (nick) checkPackage();
-}
-
-function goStep3() {
-  const nick = document.getElementById('telegramNick').value.trim();
-  if (nick) {
-    document.getElementById('clientTelegramFinal').value = nick;
+  // also sync card selection
+  if (val) {
+    const [id] = val.split("|");
+    document.querySelectorAll(".pkg-card").forEach(c => {
+      c.classList.toggle("selected", c.dataset.id === id);
+    });
   }
-  goStep(3);
 }
 
-async function goStep4() {
-  const name = document.getElementById('clientName').value.trim();
-  const tg = document.getElementById('clientTelegramFinal').value.trim();
-  if (!name) { alert('Будь ласка, введи своє ім\'я'); return; }
-  if (!tg) { alert('Будь ласка, введи нік у Telegram'); return; }
-
-  state.clientData = {
-    clientName: name,
-    clientTelegram: tg.startsWith('@') ? tg : '@' + tg,
-    clientPhone: document.getElementById('clientPhone').value.trim(),
-    clientEmail: document.getElementById('clientEmail').value.trim(),
-    clientComment: document.getElementById('clientComment').value.trim()
-  };
-
-  // Check if this person has active package sessions to use
-  await checkIfCanUsePackage(state.clientData.clientTelegram);
-
-  goStep(4);
-  renderPaymentStep();
+// ── SAVE CLIENT PACKAGE after pack purchase ─────────────────────
+async function saveClientPackage(telegram, pkgId, pkgName, pkgPrice, sessions) {
+  if (!db || !telegram || !pkgId.startsWith("pack")) return;
+  const { setDoc, doc: _doc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  const handle = telegram.startsWith("@") ? telegram : "@" + telegram;
+  const docId = handle.replace("@", "") + "_" + pkgId + "_" + Date.now();
+  await setDoc(_doc(db, "clientPackages", docId), {
+    telegram: handle,
+    packageId: pkgId,
+    packageName: pkgName,
+    packagePrice: pkgPrice,
+    sessionsTotal: sessions,
+    sessionsRemaining: sessions - 1,
+    sessionsUsed: 1,
+    createdAt: new Date().toISOString()
+  });
 }
 
-async function checkIfCanUsePackage(telegramNick) {
-  if (!state.selectedPkg || state.selectedPkg.sessions > 1) {
-    // They're buying a new package or urgent, no free sessions
-    state.usePackageSession = false;
+// ── USE ONE SESSION FROM PACKAGE ────────────────────────────────
+async function usePackageSession(docId) {
+  if (!db || !docId) return;
+  const { updateDoc: _upd, doc: _doc, increment } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  await _upd(_doc(db, "clientPackages", docId), {
+    sessionsRemaining: increment(-1),
+    sessionsUsed: increment(1)
+  });
+}
+
+
+// PACKAGE BOOKING - skip payment
+async function confirmPackageBooking() {
+  if (!db) { toast("Помилка: немає з'єднання"); return; }
+  try {
+    const { addDoc, collection: _coll } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const bkRef = await addDoc(_coll(db, "bookings"), {
+      slotId: S.selSlotId, slotDate: S.selDate, slotTime: S.selSlotTime,
+      status: "confirmed", usedPackage: true,
+      clientName: S.clientData.name, clientTelegram: S.clientData.telegram,
+      pkgId: S.clientData.pkgId, pkgName: S.clientData.pkgName, pkgPrice: 0,
+      clientComment: S.clientData.comment, receipt: "package",
+      createdAt: new Date().toISOString()
+    });
+    await updateDoc(doc(db, "slots", S.selSlotId), { status: "booked", bookingId: bkRef.id });
+    if (S.clientData.usedPackageDoc) await usePackageSession(S.clientData.usedPackageDoc);
+    fetch(`https://api.telegram.org/bot8326407894:AAEoJI1SP7m_hnwZQmdIBuN38dQ8c8Can1w/sendMessage`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ chat_id:"8171399054", text: "📦 Новий запис (пакет)\nІм'я: "+S.clientData.name+"\nTelegram: "+S.clientData.telegram+"\nЧас: "+S.selDate+" "+S.selSlotTime+"\nПакет: "+S.clientData.pkgName })
+    }).catch(()=>{});
+    const [y,m,d] = S.selDate.split("-");
+    document.getElementById("confirm-details").innerHTML =
+      "<p>Дата: <strong>"+parseInt(d)+" "+MONTHS[parseInt(m)-1]+" "+y+"</strong></p><p>Час: <strong>"+S.selSlotTime+"</strong></p><p>Оплата: <strong>З пакету</strong></p>";
+    goto("success");
+  } catch(e) { console.error(e); toast("Помилка бронювання"); }
+}
+
+
+
+// SCROLL TO CALENDAR
+function scrollToCalendar() {
+  const el = document.querySelector(".cal-wrapper");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// PKG LIST for inline chooser
+const PKG_LIST = [
+  { id:"single", price:1000, name:"Разова сесія", note:"55–60 хвилин · 1 зустріч" },
+  { id:"pack8",  price:7100, name:"Пакет 8 сесій",  note:"887 грн/сесія · Економія 900 грн" },
+  { id:"pack12", price:11000, name:"Пакет 12 сесій", note:"917 грн/сесія · Економія 1000 грн" },
+];
+
+function showInlinePkgChooser() {
+  const sec = document.getElementById("slot-pkg-section");
+  if (!sec) return;
+  sec.style.display = "block";
+  const [y,m,d] = S.selDate.split("-");
+  document.getElementById("chosen-slot-label").textContent =
+    parseInt(d) + " " + MONTHS[parseInt(m)-1] + " " + y + ", " + S.selSlotTime;
+  updateInlinePkgChooser();
+  setTimeout(() => sec.scrollIntoView({ behavior:"smooth", block:"start" }), 80);
+}
+
+function updateInlinePkgChooser() {
+  const list = document.getElementById("inline-pkg-list");
+  if (!list) return;
+  list.innerHTML = PKG_LIST.map(p => {
+    const sel = S.selPkg && S.selPkg.id === p.id;
+    const brd = sel ? "#8b6636" : "#ddd3c6";
+    const bg  = sel ? "rgba(253,244,231,0.92)" : "rgba(255,255,255,0.72)";
+    return "<label style=\"display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid "+brd+";border-radius:10px;cursor:pointer;background:"+bg+";transition:all .18s\">"
+      + "<input type=\"radio\" name=\"inline-pkg\" value=\""+p.id+"\" "+(sel?"checked":"")+" onchange=\"selectInlinePkg('"+p.id+"',"+p.price+",'"+p.name+"')\" style=\"accent-color:#8b6636;width:18px;height:18px;flex-shrink:0\">"
+      + "<div style=\"flex:1\">"
+      + "<div style=\"font-family:sans-serif;font-size:.93rem;font-weight:600;color:#1e1a14\">"+p.name+"</div>"
+      + "<div style=\"font-family:sans-serif;font-size:.78rem;color:#7d6e5e;margin-top:2px\">"+p.note+"</div>"
+      + "</div>"
+      + "<div style=\"font-family:sans-serif;font-size:.95rem;font-weight:700;color:#8b6636;white-space:nowrap\">"+p.price.toLocaleString("uk-UA")+" грн</div>"
+      + "</label>";
+  }).join("");
+  refreshBookBtn();
+}
+
+function selectInlinePkg(id, price, name) {
+  S.selPkg = { id, price, name };
+  document.querySelectorAll(".pkg-card").forEach(c => c.classList.toggle("selected", c.dataset.id===id));
+  const sel = document.getElementById("f-pkg");
+  const val = id+"|"+price+"|"+name;
+  for(const o of sel.options){ if(o.value===val){sel.value=val;break;} }
+  updateInlinePkgChooser();
+  updateBar();
+}
+
+function refreshBookBtn() {
+  const btn = document.getElementById("slot-book-btn");
+  if (!btn) return;
+  const ok = !!(S.selSlotId && S.selPkg);
+  btn.disabled = !ok;
+  btn.style.opacity = ok ? "1" : "0.45";
+  btn.style.cursor = ok ? "pointer" : "not-allowed";
+  if (ok) btn.textContent = "Записатись: " + S.selPkg.name + " →";
+  else btn.textContent = "Записатись →";
+}
+
+
+Object.assign(window, {
+  pickPkg, chgMonth, goto, gotoForm, submitForm,
+  switchTab, onFile, clearFile, copyVal, confirmBooking,
+  checkClientPackage, onPkgSelectChange, declineUrgent, acceptUrgent, confirmPackageBooking,
+  scrollToCalendar, showInlinePkgChooser, updateInlinePkgChooser, selectInlinePkg, refreshBookBtn
+});
+
+// ─── INIT ────────────────────────────────────────────────────
+(async () => {
+  await loadPaySettings();
+  renderCal();
+  await loadSlots(S.yr, S.mo);
+})();
+
+async function loadPaySettings() {
+  if (!db) return;
+  try {
+    const snap = await getDoc(doc(db,"settings","payment"));
+    if (snap.exists()) paySettings = { ...DEFAULT_PAY, ...snap.data() };
+  } catch {}
+}
+
+// ─── SLOTS ───────────────────────────────────────────────────
+async function loadSlots(yr, mo) {
+  const grid = document.getElementById("cal-grid");
+  grid.innerHTML = `<div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Завантаження…</div>`;
+
+  const pad = n => String(n).padStart(2,"0");
+  const from = `${yr}-${pad(mo+1)}-01`;
+  const to   = `${yr}-${pad(mo+1)}-31`;
+
+  S.slots = {};
+  if (db) {
+    try {
+      const q = query(collection(db,"slots"),
+        where("date",">=",from), where("date","<=",to));
+      const snap = await getDocs(q);
+      snap.forEach(d => {
+        const v = { id:d.id, ...d.data() };
+        if (v.status !== "available") return;
+        if (!S.slots[v.date]) S.slots[v.date] = [];
+        S.slots[v.date].push(v);
+      });
+      Object.values(S.slots).forEach(arr => arr.sort((a,b)=>a.time.localeCompare(b.time)));
+    } catch(e){ console.warn("loadSlots error",e); }
+  }
+  renderCal();
+}
+
+// ─── CALENDAR ────────────────────────────────────────────────
+function renderCal() {
+  const {yr, mo} = S;
+  document.getElementById("month-label").textContent = `${MONTHS[mo]} ${yr}`;
+
+  const firstDay = new Date(yr,mo,1).getDay();
+  const days = new Date(yr,mo+1,0).getDate();
+  const today = fmtDate(new Date());
+  const off = firstDay===0 ? 6 : firstDay-1;
+
+  const grid = document.getElementById("cal-grid");
+  grid.innerHTML = "";
+
+  for (let i=0;i<off;i++){
+    const el=document.createElement("div"); el.className="cal-day"; grid.appendChild(el);
+  }
+  for (let d=1;d<=days;d++){
+    const ds = `${yr}-${String(mo+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const el = document.createElement("div");
+    el.className = "cal-day";
+    el.textContent = d;
+    const past = ds < today;
+    if (past) el.classList.add("past");
+    else if (S.slots[ds]?.length) {
+      el.classList.add("has-slots");
+      el.title = `${S.slots[ds].length} вільних слотів`;
+      el.onclick = () => pickDate(ds,el);
+    }
+    if (ds===today) el.classList.add("today");
+    if (ds===S.selDate) el.classList.add("sel");
+    grid.appendChild(el);
+  }
+}
+
+function pickDate(ds, el) {
+  document.querySelectorAll(".cal-day.sel").forEach(x=>x.classList.remove("sel"));
+  el.classList.add("sel");
+  S.selDate=ds; S.selSlotId=null; S.selSlotTime=null;
+  updateBar();
+  renderSlots(ds);
+  setTimeout(()=>document.getElementById("slots-section").scrollIntoView({behavior:"smooth",block:"nearest"}),80);
+}
+
+function renderSlots(ds) {
+  const sec = document.getElementById("slots-section");
+  const grid = document.getElementById("slots-grid");
+  const lbl  = document.getElementById("slots-label");
+  const [y,m,d] = ds.split("-");
+  const dObj = new Date(parseInt(y),parseInt(m)-1,parseInt(d));
+  lbl.textContent = `${WDAYS[dObj.getDay()]}, ${parseInt(d)} ${MONTHS[parseInt(m)-1]}`;
+  const arr = S.slots[ds]||[];
+  if (!arr.length) {
+    grid.innerHTML = `<div class="no-slots">На цей день поки немає вільних слотів</div>`;
+  } else {
+    grid.innerHTML = "";
+    arr.forEach(sl => {
+      const el = document.createElement("div");
+      el.className = "slot-btn";
+      if (sl.id===S.selSlotId) el.classList.add("sel");
+      el.textContent = sl.time;
+      el.onclick = () => pickSlot(sl,el);
+      grid.appendChild(el);
+    });
+  }
+  sec.style.display = "block";
+}
+
+function pickSlot(sl, el) {
+  // Check urgent session (within 12 hours) for single package only
+  if (isWithin12h(S.selDate, sl.time) && (!S.selPkg || S.selPkg.id === "single")) {
+    _pendingUrgentSlot = sl;
+    _pendingUrgentEl = el;
+    document.getElementById("urgent-modal").style.display = "flex";
     return;
   }
-  if (!telegramNick) { state.usePackageSession = false; return; }
-  try {
-    const nick = telegramNick.replace('@','').toLowerCase();
-    const doc = await db.collection('clients').doc(nick).get();
-    if (doc.exists) {
-      const d = doc.data();
-      if (d.activePackage && d.activePackage.sessionsRemaining > 0) {
-        state.clientPackage = d.activePackage;
-        state.usePackageSession = true;
-      }
-    }
-  } catch(e) {}
+  S.isUrgent = false; S.urgentPrice = null;
+  document.querySelectorAll(".slot-btn.sel").forEach(x=>x.classList.remove("sel"));
+  el.classList.add("sel");
+  S.selSlotId=sl.id; S.selSlotTime=sl.time;
+  updateBar();
+  showInlinePkgChooser();
 }
 
-function renderPaymentStep() {
-  const pkg = state.selectedPkg;
-  const p = state.paymentSettings;
+function chgMonth(d) {
+  S.mo+=d;
+  if (S.mo>11){S.mo=0;S.yr++;}
+  if (S.mo<0){S.mo=11;S.yr--;}
+  S.selDate=null;S.selSlotId=null;S.selSlotTime=null;
+  document.getElementById("slots-section").style.display="none";
+  updateBar();
+  loadSlots(S.yr,S.mo);
+}
 
-  document.getElementById('payBank').textContent = p.bank;
-  document.getElementById('payHolder').textContent = p.holder;
-  document.getElementById('payCard').textContent = p.card;
-  document.getElementById('payAmount').textContent = (pkg ? pkg.price.toLocaleString('uk-UA') : '') + ' грн';
+// ─── PACKAGE ─────────────────────────────────────────────────
+function pickPkg(card) {
+  document.querySelectorAll(".pkg-card.selected").forEach(c=>c.classList.remove("selected"));
+  card.classList.add("selected");
+  S.selPkg = { id:card.dataset.id, price:parseInt(card.dataset.price), name:card.dataset.name };
+  const sel=document.getElementById("f-pkg");
+  const val=`${S.selPkg.id}|${S.selPkg.price}|${S.selPkg.name}`;
+  for(const o of sel.options){ if(o.value===val){sel.value=val;break;} }
+  // Show CTA
+  const cta=document.getElementById("pkg-cta");
+  if(cta){
+    cta.style.display="block";
+    document.getElementById("pkg-cta-name").textContent=S.selPkg.name;
+    document.getElementById("pkg-cta-price").textContent=S.selPkg.price.toLocaleString("uk-UA")+" грн";
+  }
+  // If slot already chosen - update inline chooser too
+  if(S.selSlotId) { updateInlinePkgChooser(); refreshBookBtn(); }
+  // Scroll to calendar
+  scrollToCalendar();
+  updateBar();
+}
 
-  document.getElementById('urgentNote').style.display = (pkg && pkg.isUrgent) ? 'block' : 'none';
-
-  if (state.usePackageSession && !state.selectedPkg.isUrgent && state.selectedPkg.sessions === 1) {
-    document.getElementById('freeSessionBanner').style.display = 'block';
-    const rem = state.clientPackage.sessionsRemaining - 1;
-    document.getElementById('freeSessionText').textContent =
-      `Після цього бронювання залишиться ще ${rem} сес${rem === 1 ? 'ія' : 'ій'} у твоєму пакеті`;
-    document.getElementById('paymentSection').style.display = 'none';
+// ─── STICKY BAR ──────────────────────────────────────────────
+function updateBar() {
+  const bar = document.getElementById("sticky-bar");
+  if (S.selSlotId && S.view==="home") {
+    const [,m,d]=S.selDate.split("-");
+    document.getElementById("bar-slot").textContent=`📅 ${parseInt(d)} ${MONTHS[parseInt(m)-1]}, ${S.selSlotTime}`;
+    const dispPrice = (S.isUrgent && S.urgentPrice) ? S.urgentPrice : (S.selPkg ? S.selPkg.price : null);
+    document.getElementById("bar-pkg").textContent = S.selPkg
+      ? `${S.selPkg.name} · ${dispPrice ? dispPrice.toLocaleString("uk-UA") : S.selPkg.price.toLocaleString("uk-UA")} грн${S.isUrgent?" ⚡ Термінова":""}`
+      : "Оберіть пакет вище ↑";
+    bar.style.display="flex";
   } else {
-    document.getElementById('freeSessionBanner').style.display = 'none';
-    document.getElementById('paymentSection').style.display = 'block';
+    bar.style.display="none";
   }
 }
 
-// ─────────────────────────────────────────
-// SLOTS LOADING
-// ─────────────────────────────────────────
-async function loadAvailableSlots() {
-  document.getElementById('slotsLoading').style.display = 'block';
-  document.getElementById('slotsContent').style.display = 'none';
+// ─── NAVIGATION ──────────────────────────────────────────────
+function goto(v) {
+  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+  document.getElementById(`view-${v}`).classList.add("active");
+  S.view=v; window.scrollTo(0,0); updateBar();
+}
 
-  try {
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const todayStr = today.toISOString().split('T')[0];
+function gotoForm() {
+  if (!S.selSlotId){ toast("Оберіть час сесії ↑"); return; }
+  if (S.selPkg) {
+    const sel=document.getElementById("f-pkg");
+    const val=`${S.selPkg.id}|${S.selPkg.price}|${S.selPkg.name}`;
+    for(const o of sel.options){ if(o.value===val){sel.value=val;break;} }
+  }
+  const [y,m,d]=S.selDate.split("-");
+  document.getElementById("form-banner").innerHTML=
+    `✅ Обраний час: <strong>${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}, ${S.selSlotTime}</strong>`;
+  goto("form");
+}
 
-    let query = db.collection('slots')
-      .where('status', '==', 'available')
-      .where('date', '>=', todayStr)
-      .orderBy('date')
-      .orderBy('time');
+// ─── FORM SUBMIT ─────────────────────────────────────────────
+function submitForm(e) {
+  e.preventDefault();
+  const pkgVal=document.getElementById("f-pkg").value;
+  if(!pkgVal){toast("Оберіть пакет");return;}
+  const [pId,pPrice,pName]=pkgVal.split("|");
+  const tgRaw = document.getElementById("f-tg").value.trim();
+  if (!tgRaw) { toast("Введіть ваш Telegram"); document.getElementById("f-tg").focus(); return; }
+  const tgHandle = tgRaw.startsWith("@") ? tgRaw : "@"+tgRaw;
+  // If active package exists - use session without payment
+  if (S.activePackage && S.activePackage.docId) {
+    S.clientData={
+      name: document.getElementById("f-name").value.trim(),
+      telegram: tgHandle, phone:"", email:"",
+      comment: document.getElementById("f-comment").value.trim(),
+      pkgId:pId, pkgPrice:0, pkgName:pName, usedPackageDoc: S.activePackage.docId
+    };
+    S.selPkg={id:pId,price:0,name:pName};
+    S.skipPayment = true;
+  } else {
+    const finalPrice = (S.isUrgent && S.urgentPrice && pId==="single") ? S.urgentPrice : parseInt(pPrice);
+    S.clientData={
+      name: document.getElementById("f-name").value.trim(),
+      telegram: tgHandle, phone:"", email:"",
+      comment: document.getElementById("f-comment").value.trim(),
+      pkgId:pId, pkgPrice:finalPrice, pkgName:pName
+    };
+    S.selPkg={id:pId,price:finalPrice,name:pName};
+    S.skipPayment = false;
+  }
 
-    // If not urgent package, exclude urgent slots
-    if (!state.selectedPkg?.isUrgent) {
-      query = db.collection('slots')
-        .where('status', '==', 'available')
-        .where('date', '>=', todayStr)
-        .orderBy('date')
-        .orderBy('time');
-    }
-
-    const snap = await query.get();
-    state.availableSlots = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(s => !s.isUrgent); // regular slots only in main flow
-
-    document.getElementById('slotsLoading').style.display = 'none';
-    document.getElementById('slotsContent').style.display = 'block';
-
-    if (state.availableSlots.length === 0) {
-      document.getElementById('noSlotsMsg').style.display = 'block';
-      document.getElementById('datesGrid').innerHTML = '';
-      return;
-    }
-
-    renderDates();
-  } catch(e) {
-    console.error(e);
-    document.getElementById('slotsLoading').style.display = 'none';
-    document.getElementById('slotsContent').style.display = 'block';
-    document.getElementById('noSlotsMsg').style.display = 'block';
+  // Populate payment view
+  const [y,m,d]=S.selDate.split("-");
+  const urgentLabel = (S.isUrgent && pId==="single") ? " ⭐ Термінова сесія" : "";
+  document.getElementById("pay-banner").innerHTML=
+    `✅ Ви бронюєте: <strong>${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}, ${S.selSlotTime}</strong> – ${pName}${urgentLabel}`;
+  document.getElementById("disp-card").textContent   = paySettings.card;
+  document.getElementById("disp-bank").textContent   = paySettings.bank;
+  document.getElementById("disp-holder").textContent = paySettings.holder;
+  document.getElementById("disp-amount").textContent = `${finalPrice.toLocaleString("uk-UA")} грн`;
+  document.getElementById("disp-amount-raw").textContent = `${finalPrice}`;
+  if (S.skipPayment) {
+    confirmPackageBooking();
+  } else {
+    goto("payment");
   }
 }
 
-function renderDates() {
-  const dates = [...new Set(state.availableSlots.map(s => s.date))];
-  const grid = document.getElementById('datesGrid');
-  grid.innerHTML = '';
-  dates.forEach(date => {
-    const btn = document.createElement('button');
-    btn.className = 'date-btn';
-    btn.textContent = formatDate(date);
-    btn.onclick = () => selectDate(date, btn);
-    grid.appendChild(btn);
+// ─── RECEIPT ─────────────────────────────────────────────────
+function switchTab(t) {
+  S.activeTab=t;
+  ["upload","link"].forEach(x=>{
+    document.getElementById(`tc-${x}`).classList.toggle("active",x===t);
+    document.getElementById(`tb-${x}`).classList.toggle("active",x===t);
   });
-  document.getElementById('timesSection').style.display = 'none';
-  document.getElementById('noSlotsMsg').style.display = 'none';
 }
 
-function selectDate(date, btnEl) {
-  state.selectedDate = date;
-  state.selectedSlotId = null;
-  state.selectedTime = null;
-  document.getElementById('btnStep2Next').disabled = true;
-
-  document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('selected'));
-  btnEl.classList.add('selected');
-
-  const slots = state.availableSlots.filter(s => s.date === date);
-  const timesGrid = document.getElementById('timesGrid');
-  timesGrid.innerHTML = '';
-  slots.forEach(slot => {
-    const btn = document.createElement('button');
-    btn.className = 'time-btn';
-    btn.textContent = slot.time;
-    btn.onclick = () => selectTime(slot, btn);
-    timesGrid.appendChild(btn);
-  });
-  document.getElementById('timesSection').style.display = 'block';
+function onFile(input) {
+  const file=input.files[0]; if(!file)return;
+  if(file.size>10*1024*1024){toast("Файл занадто великий (макс 10 МБ)");return;}
+  S.receiptFile=file;
+  const r=new FileReader();
+  r.onload=e=>{
+    document.getElementById("prev-img").src=e.target.result;
+    document.getElementById("file-preview").style.display="block";
+    document.getElementById("drop-zone").style.display="none";
+  };
+  r.readAsDataURL(file);
 }
 
-function selectTime(slot, btnEl) {
-  state.selectedSlotId = slot.id;
-  state.selectedTime = slot.time;
-  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
-  btnEl.classList.add('selected');
-  document.getElementById('btnStep2Next').disabled = false;
+function clearFile(){
+  S.receiptFile=null;
+  document.getElementById("file-in").value="";
+  document.getElementById("file-preview").style.display="none";
+  document.getElementById("drop-zone").style.display="block";
 }
 
-// ─────────────────────────────────────────
-// TELEGRAM PACKAGE CHECK
-// ─────────────────────────────────────────
-let checkTimeout;
-function checkPackage() {
-  clearTimeout(checkTimeout);
-  checkTimeout = setTimeout(async () => {
-    const raw = document.getElementById('telegramNick').value.trim();
-    if (!raw || raw.length < 3) {
-      document.getElementById('catBanner').classList.remove('show');
-      return;
-    }
-    const nick = raw.replace('@','').toLowerCase();
-    try {
-      const doc = await db.collection('clients').doc(nick).get();
-      if (doc.exists) {
-        const d = doc.data();
-        if (d.activePackage && d.activePackage.sessionsRemaining > 0) {
-          const rem = d.activePackage.sessionsRemaining;
-          document.getElementById('catText').textContent = `У тебе залишилось ${rem} сес${rem === 1 ? 'ія' : 'ій'} у пакеті!`;
-          document.getElementById('catSubtext').textContent = `Пакет «${d.activePackage.pkgName}» — використай їх на максималочку 🌿`;
-          document.getElementById('catBanner').classList.add('show');
-          state.clientPackage = d.activePackage;
-        } else {
-          document.getElementById('catBanner').classList.remove('show');
-          state.clientPackage = null;
-        }
-      } else {
-        document.getElementById('catBanner').classList.remove('show');
-        state.clientPackage = null;
-      }
-    } catch(e) {}
-  }, 600);
-}
-
-// ─────────────────────────────────────────
-// RECEIPT TYPE
-// ─────────────────────────────────────────
-function selectReceiptType(type) {
-  state.receiptType = type;
-  document.getElementById('optLink').classList.toggle('selected', type === 'link');
-  document.getElementById('optScreenshot').classList.toggle('selected', type === 'screenshot');
-  document.getElementById('receiptLinkSection').style.display = type === 'link' ? 'block' : 'none';
-  document.getElementById('receiptScreenshotSection').style.display = type === 'screenshot' ? 'block' : 'none';
-}
-
-// ─────────────────────────────────────────
-// CONFIRM BOOKING
-// ─────────────────────────────────────────
+// ─── CONFIRM BOOKING ─────────────────────────────────────────
 async function confirmBooking() {
-  const btn = document.getElementById('btnConfirm');
-  const errorDiv = document.getElementById('errorMsg');
-  errorDiv.style.display = 'none';
+  if (!document.getElementById("consent").checked){ toast("Підтвердіть згоду з умовами"); return; }
+  const hasFile = S.activeTab==="upload" && S.receiptFile;
+  const linkVal = document.getElementById("link-input").value.trim();
+  const hasLink = S.activeTab==="link" && linkVal;
+  if (!hasFile && !hasLink){ toast("Будь ласка, додайте квитанцію про оплату"); return; }
 
-  // Validation
-  if (!state.usePackageSession) {
-    if (state.receiptType === 'link') {
-      const url = document.getElementById('receiptUrl').value.trim();
-      if (!url) {
-        errorDiv.textContent = 'Будь ласка, вкажи посилання на чек або обери "Скриншот"';
-        errorDiv.style.display = 'block'; return;
-      }
-    }
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Зберігаю...';
+  const btn=document.getElementById("confirm-btn");
+  btn.disabled=true; btn.textContent="⏳ Зберігаємо…";
+  document.getElementById("upload-prog").style.display="block";
 
   try {
-    const pkg = state.selectedPkg;
-    const tg = state.clientData.clientTelegram;
-    const receiptUrl = state.receiptType === 'link' ? document.getElementById('receiptUrl').value.trim() : '';
+    let receiptUrl="", receiptType="";
 
-    // Create booking
-    const bookingData = {
-      ...state.clientData,
-      date: state.selectedDate,
-      slotId: state.selectedSlotId,
-      pkgId: pkg.id,
-      pkgName: pkg.name,
-      pkgPrice: state.usePackageSession ? 0 : pkg.price,
-      receiptType: state.usePackageSession ? 'package' : state.receiptType,
-      receiptUrl: receiptUrl,
-      status: 'pending',
-      isUrgent: pkg.isUrgent || false,
-      usedPackageSession: state.usePackageSession,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    if (hasFile) {
+      // Send image directly to Telegram, get file_id back
+      receiptType="image";
+      receiptUrl="(фото відправлено в Telegram)";
+    } else {
+      receiptUrl=linkVal; receiptType="link";
+    }
+
+    // Build booking object
+    const bk = {
+      slotId:        S.selSlotId,
+      date:          S.selDate,
+      time:          S.selSlotTime,
+      clientName:    S.clientData.name,
+      clientTelegram:S.clientData.telegram,
+      clientPhone:   S.clientData.phone,
+      clientEmail:   S.clientData.email,
+      clientComment: S.clientData.comment,
+      pkgId:       S.clientData.pkgId,
+      pkgName:     S.clientData.pkgName,
+      pkgPrice:    S.clientData.pkgPrice,
+      receiptUrl, receiptType,
+      status: "confirmed",
+      createdAt: db ? serverTimestamp() : new Date().toISOString()
     };
 
-    const bookingRef = await db.collection('bookings').add(bookingData);
-
-    // Mark slot as booked
-    if (state.selectedSlotId) {
-      await db.collection('slots').doc(state.selectedSlotId).update({
-        status: 'booked',
-        bookingId: bookingRef.id
-      });
+    if (db) {
+      const ref = await addDoc(collection(db,"bookings"), bk);
+      await updateDoc(doc(db,"slots",S.selSlotId),{status:"booked",bookingId:ref.id});
+      // 🔑 ГОЛОВНИЙ ФІК: зберігаємо пакет клієнта щоб наступний раз не платив!
+      const pkgSessions = {"pack8":8,"pack12":12};
+      if (pkgSessions[bk.pkgId]) {
+        await saveClientPackage(bk.clientTelegram, bk.pkgId, bk.pkgName, bk.pkgPrice, pkgSessions[bk.pkgId]);
+      }
     }
 
-    // Update client package if used
-    if (state.usePackageSession && state.clientPackage) {
-      const nick = tg.replace('@','').toLowerCase();
-      const newRemaining = state.clientPackage.sessionsRemaining - 1;
-      await db.collection('clients').doc(nick).update({
-        'activePackage.sessionsRemaining': newRemaining,
-        'activePackage.sessionsUsed': firebase.firestore.FieldValue.increment(1),
-        'activePackage.lastBookingId': bookingRef.id,
-        'activePackage.lastBookingDate': state.selectedDate
-      });
-    }
+    // Send Telegram notification
+    await tgNotify(bk, hasFile ? S.receiptFile : null);
 
-    // If buying new package (pkg.sessions > 1), create/update client record
-    if (pkg.sessions > 1 && !state.usePackageSession) {
-      const nick = tg.replace('@','').toLowerCase();
-      await db.collection('clients').doc(nick).set({
-        telegramNick: tg,
-        activePackage: {
-          pkgId: pkg.id,
-          pkgName: pkg.name,
-          sessionsTotal: pkg.sessions,
-          sessionsRemaining: pkg.sessions - 1, // first session is current one
-          sessionsUsed: 1,
-          purchasedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          lastBookingId: bookingRef.id,
-          lastBookingDate: state.selectedDate
-        },
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-    }
-
-    showConfirmation(bookingRef.id, pkg, state.usePackageSession);
-  } catch(e) {
-    console.error(e);
-    errorDiv.textContent = 'Помилка збереження. Спробуй ще раз або напиши в Telegram.';
-    errorDiv.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Підтвердити бронювання ✓';
+    showSuccess(bk);
+  } catch(err) {
+    console.error(err);
+    toast("Помилка збереження. Спробуйте ще раз.");
+    btn.disabled=false; btn.textContent="Підтвердити бронювання ✓";
   }
+  document.getElementById("upload-prog").style.display="none";
 }
 
-function showConfirmation(bookingId, pkg, usedPackage) {
-  goStep(5);
+// ─── TELEGRAM ────────────────────────────────────────────────
+async function tgNotify(bk, file) {
+  if (!TG_TOKEN || TG_TOKEN.includes("ВАШ")) return;
+  const [y,m,d]=bk.date.split("-");
+  const dateFmt=`${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}`;
+  const caption=[
+    "🗓 *НОВЕ БРОНЮВАННЯ!*","",
+    `👤 *Ім'я:* ${bk.clientName}`,
+    bk.clientTelegram?`✈️ *Telegram:* ${bk.clientTelegram}`:"",
+    `📅 *Дата:* ${dateFmt}`,
+    `⏰ *Час:* ${bk.time}`,
+    `📦 *Пакет:* ${bk.pkgName}`,
+    `💰 *Сума:* ${bk.pkgPrice.toLocaleString("uk-UA")} грн`,
+    bk.clientComment?`💬 *Коментар:* ${bk.clientComment}`:"","",
+    bk.receiptType==="link"?`🔗 *Квитанція:* ${bk.receiptUrl}`:"📷 *Квитанція:* фотодивись вище",
+    "","_Перевір в адмін-панелі (admin.html)_"
+  ].filter(Boolean).join("\n");
 
-  const details = document.getElementById('confirmDetails');
-  details.innerHTML = `
-    <div class="row"><span class="l">Дата</span><span class="r">${formatDate(state.selectedDate)}</span></div>
-    <div class="row"><span class="l">Час</span><span class="r">${state.selectedTime}</span></div>
-    <div class="row"><span class="l">Формат</span><span class="r">${pkg.name}</span></div>
-    <div class="row"><span class="l">Оплата</span><span class="r">${usedPackage ? '✅ З пакету' : pkg.price.toLocaleString('uk-UA') + ' грн'}</span></div>
-    <div class="row"><span class="l">Підтвердження</span><span class="r">У Telegram найближчим часом</span></div>
+  try {
+    if (file) {
+      const fd=new FormData();
+      fd.append("chat_id",TG_CHAT_ID);
+      fd.append("photo",file,"receipt.jpg");
+      fd.append("caption",caption);
+      fd.append("parse_mode","Markdown");
+      await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`,{method:"POST",body:fd});
+    } else {
+      await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({chat_id:TG_CHAT_ID,text:caption,parse_mode:"Markdown"})
+      });
+    }
+  } catch(e){ console.warn("TG error (non-critical):",e); }
+}
+
+// ─── SUCCESS PAGE ────────────────────────────────────────────
+function showSuccess(bk) {
+  const [y,m,d]=bk.date.split("-");
+  document.getElementById("confirm-details").innerHTML=`
+    <div>📅 <b>Дата та час:</b> ${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}, ${bk.time}</div>
+    <div>👤 <b>Ім'я:</b> ${bk.clientName}</div>
+    <div>📦 <b>Пакет:</b> ${bk.pkgName}</div>
+    <div>💰 <b>Сума:</b> ${bk.pkgPrice.toLocaleString("uk-UA")} грн</div>
+    <div>📌 <b>Статус:</b> <span style="color:#1e6b40;font-weight:600">✅ Підтверджено</span></div>
   `;
-
-  // Show package reminder if bought new package
-  if (pkg.sessions > 1) {
-    document.getElementById('pkgReminderNote').style.display = 'block';
-  } else {
-    document.getElementById('pkgReminderNote').style.display = 'none';
-  }
+  // Показуємо нотатку про наступне бронювання для пакетів
+  const noteEl = document.getElementById("pkg-next-note");
+  if (noteEl) noteEl.style.display = (bk.pkgId==="pack8"||bk.pkgId==="pack12") ? "block" : "none";
+  goto("success");
 }
 
-// ─────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('uk-UA', { weekday: 'short', day: 'numeric', month: 'long' });
+// ─── UTILS ───────────────────────────────────────────────────
+function fmtDate(d){
+  return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
-function formatDateShort(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' });
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),3200);
 }
-function copyCard() {
-  const card = document.getElementById('payCard').textContent;
-  navigator.clipboard.writeText(card).then(() => {
-    const btn = event.target;
-    btn.textContent = 'Скопійовано!';
-    setTimeout(() => btn.textContent = 'Скопіювати', 2000);
-  });
+function copyVal(id,btn){
+  const txt=document.getElementById(id).textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    btn.textContent="✓ Скопійовано"; btn.classList.add("ok");
+    setTimeout(()=>{btn.textContent="Копіювати";btn.classList.remove("ok");},2200);
+  }).catch(()=>toast("Скопіюйте вручну: "+txt));
 }
-function smoothScroll() {
-  event.preventDefault();
-  document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
-}
-
-// ─────────────────────────────────────────
-// START
-// ─────────────────────────────────────────
-init();
 </script>
+
+<!-- URGENT SESSION MODAL -->
+<div id="urgent-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.5);align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:18px;padding:32px 28px;max-width:420px;width:92%;box-shadow:0 12px 50px rgba(0,0,0,0.25)">
+    <div style="font-size:2rem;text-align:center;margin-bottom:12px">⚡</div>
+    <h3 style="text-align:center;margin-bottom:6px;font-size:1.1rem;color:#1e1a14">⚡ Emergency Slot</h3>
+    <p style="text-align:center;font-size:.76rem;color:#999;letter-spacing:.05em;font-family:sans-serif;margin-bottom:12px">термінове бронювання</p>
+    <p style="font-size:.88rem;color:#5a4a3a;line-height:1.65;margin-bottom:14px">До обраної сесії залишилось менше 10 годин — це вважається emergency slot. Психолог має знати заздалегідь, що зустріч відбудеться — це дозволяє повноцінно підготуватися і бути присутнім.</p>
+    <p style="font-size:.88rem;color:#5a4a3a;line-height:1.65;margin-bottom:18px">Термінове бронювання за 10 годин і менше до початку сесії оплачується за тарифом <strong>1 450 грн</strong> замість 1 000 грн.</p>
+    <div style="background:#fff8e6;border:1px solid #f0d080;border-radius:10px;padding:12px 14px;font-size:.82rem;color:#7a5a00;margin-bottom:22px">
+      💡 Щоб уникнути доплати — бронюй та оплачуй заздалегідь, не менш ніж за 10 годин до сесії.
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="declineUrgent()" style="flex:1;padding:11px;border:1px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;font-size:.9rem;color:#666">Обрати інший час</button>
+      <button onclick="acceptUrgent()" style="flex:1;padding:11px;border:none;border-radius:10px;background:#8b6636;color:#fff;cursor:pointer;font-size:.9rem;font-weight:600">Бронювати за 1 450 грн</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

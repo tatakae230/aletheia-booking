@@ -1,639 +1,767 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Алетея — Адмін</title>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <style>
-    :root {
-      --sage: #7c9a84; --sage-light: #a8c4af;
-      --cream: #f7f3ee; --warm: #e8ddd0;
-      --text: #3a3530; --text-light: #6b6560;
-      --urgent: #c4704a; --gold: #c9a84c;
-      --danger: #e74c3c; --success: #27ae60;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; background: #f5f5f5; color: var(--text); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Адмін-панель | Aletheia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f2ee;
+  --card:#fff;
+  --text:#1e1a14;
+  --muted:#7d6e5e;
+  --accent:#8b6636;
+  --accent-bg:#fdf4e7;
+  --accent-hover:#6e5028;
+  --border:#ddd3c6;
+  --success:#1e6b40;
+  --success-bg:#eaf5ee;
+  --warn:#c07a10;
+  --warn-bg:#fff8e6;
+  --danger:#b83030;
+  --danger-bg:#fdeaea;
+  --radius:12px;
+}
+body{font-family:sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--accent)}
 
-    /* LOGIN */
-    .login-screen {
-      min-height: 100vh; display: flex;
-      align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #2c4a3e, #7c9a84);
-    }
-    .login-box {
-      background: white; border-radius: 16px;
-      padding: 2.5rem; width: 320px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    }
-    .login-box h1 { font-size: 1.5rem; margin-bottom: 0.3rem; }
-    .login-box p { color: var(--text-light); font-size: 0.85rem; margin-bottom: 1.5rem; }
-    .inp { width:100%; padding:0.7rem; border:1.5px solid #e8e0d5; border-radius:8px; font-size:1rem; margin-bottom:1rem; }
-    .inp:focus { outline:none; border-color:var(--sage); }
-    .btn { width:100%; padding:0.8rem; background:var(--sage); color:white; border:none; border-radius:8px; font-size:1rem; cursor:pointer; }
-    .btn:hover { background:#6a8870; }
-    .err-msg { color:var(--danger); font-size:0.83rem; margin-top:0.5rem; display:none; }
+/* ─── LOGIN ─── */
+#view-login{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#faf6f1 0%,#ede5da 100%)
+}
+.login-box{
+  background:var(--card);border:1px solid var(--border);border-radius:18px;
+  padding:48px 40px;max-width:380px;width:100%;text-align:center;
+  box-shadow:0 8px 40px rgba(0,0,0,0.1)
+}
+.login-logo{font-size:1.4rem;font-family:Georgia,serif;margin-bottom:6px;letter-spacing:.04em}
+.login-sub{font-size:.82rem;color:var(--muted);margin-bottom:32px}
+.login-box h2{font-size:1.15rem;font-weight:600;margin-bottom:22px}
+.login-box input{
+  width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;
+  font-size:1rem;outline:none;margin-bottom:14px;transition:border-color .18s
+}
+.login-box input:focus{border-color:var(--accent)}
+.login-err{color:var(--danger);font-size:.85rem;margin-bottom:12px;display:none}
 
-    /* ADMIN LAYOUT */
-    .admin-wrap { display:none; }
-    .topbar {
-      background: #2c4a3e; color: white;
-      padding: 0 1.5rem; height: 56px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-    }
-    .topbar h1 { font-size: 1.1rem; font-weight: 500; }
-    .topbar-right { display:flex; gap:1rem; align-items:center; }
-    .topbar button { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:0.4rem 0.9rem; border-radius:6px; cursor:pointer; font-size:0.85rem; }
-    .topbar button:hover { background:rgba(255,255,255,0.25); }
+/* ─── LAYOUT ─── */
+#view-admin{display:none;min-height:100vh}
+header{
+  background:var(--card);border-bottom:1px solid var(--border);
+  padding:14px 24px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.05)
+}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.logo-ico{width:32px;height:32px;background:var(--accent);border-radius:50%;
+  color:#fff;display:flex;align-items:center;justify-content:center;font-style:italic;font-family:Georgia,serif}
+.hdr-title{font-weight:600;font-size:1rem}
+.hdr-sub{font-size:.75rem;color:var(--muted)}
+.logout-btn{background:none;border:1px solid var(--border);border-radius:8px;
+  padding:7px 14px;cursor:pointer;font-size:.83rem;color:var(--muted)}
+.logout-btn:hover{background:var(--bg)}
 
-    .tabs { background:white; border-bottom:1px solid #e8e0d5; display:flex; padding:0 1.5rem; gap:0; }
-    .tab { padding:0.9rem 1.2rem; cursor:pointer; font-size:0.9rem; color:var(--text-light); border-bottom:3px solid transparent; transition:all 0.2s; }
-    .tab.active { color:var(--sage); border-bottom-color:var(--sage); font-weight:600; }
-    .tab:hover { color:var(--sage); }
+/* ─── NAV TABS ─── */
+.nav-tabs{
+  background:var(--card);border-bottom:1px solid var(--border);
+  display:flex;overflow-x:auto;padding:0 16px;
+}
+.nav-tab{
+  padding:14px 18px;cursor:pointer;font-size:.88rem;font-weight:500;
+  border-bottom:2.5px solid transparent;color:var(--muted);white-space:nowrap;
+  transition:all .18s
+}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{border-bottom-color:var(--accent);color:var(--accent)}
 
-    .main { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
-    .panel { display:none; }
-    .panel.active { display:block; }
+/* ─── CONTENT ─── */
+.content{max-width:900px;margin:0 auto;padding:28px 20px}
+.tab-panel{display:none}.tab-panel.active{display:block}
 
-    /* CARDS */
-    .card { background:white; border-radius:12px; padding:1.2rem; margin-bottom:1rem; box-shadow:0 1px 8px rgba(0,0,0,0.06); }
-    .card h2 { font-size:1rem; margin-bottom:1rem; color:var(--text); }
+/* ─── CARDS & STATS ─── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center}
+.stat-num{font-size:2rem;font-weight:700;color:var(--accent);line-height:1}
+.stat-lbl{font-size:.8rem;color:var(--muted);margin-top:6px}
 
-    /* STATS */
-    .stats-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem; }
-    .stat { background:white; border-radius:12px; padding:1.2rem; text-align:center; box-shadow:0 1px 8px rgba(0,0,0,0.06); }
-    .stat .num { font-size:2rem; font-weight:700; color:var(--sage); }
-    .stat .lbl { font-size:0.78rem; color:var(--text-light); margin-top:0.3rem; }
+/* ─── BOOKING CARDS ─── */
+.bk-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;margin-bottom:14px;transition:box-shadow .15s
+}
+.bk-card:hover{box-shadow:0 4px 18px rgba(0,0,0,0.07)}
+.bk-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.bk-time{font-size:1.05rem;font-weight:600}
+.bk-status{padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600}
+.s-pending{background:var(--warn-bg);color:var(--warn)}
+.s-confirmed{background:var(--success-bg);color:var(--success)}
+.s-cancelled{background:var(--danger-bg);color:var(--danger)}
+.s-completed{background:#e8f0ff;color:#2050a0}
+.bk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 16px;margin-bottom:14px}
+.bk-field{font-size:.87rem}
+.bk-field .lbl{display:block;font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.bk-actions{display:flex;gap:8px;flex-wrap:wrap}
+.act-btn{
+  padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.83rem;
+  font-weight:500;border:none;transition:all .18s
+}
+.act-confirm{background:var(--success-bg);color:var(--success)}
+.act-confirm:hover{background:#c8e8d5}
+.act-cancel{background:var(--danger-bg);color:var(--danger)}
+.act-cancel:hover{background:#f8d0d0}
+.act-view{background:var(--accent-bg);color:var(--accent)}
+.act-view:hover{background:#f5e4c0}
 
-    /* BOOKINGS TABLE */
-    .filters { display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:1rem; }
-    .filter-btn { padding:0.4rem 0.9rem; border:1.5px solid #e8e0d5; border-radius:20px; background:white; cursor:pointer; font-size:0.83rem; transition:all 0.2s; }
-    .filter-btn.active { background:var(--sage); color:white; border-color:var(--sage); }
+/* ─── SLOTS MANAGEMENT ─── */
+.add-slot-form{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px;margin-bottom:24px
+}
+.add-slot-form h3{font-size:1.05rem;font-weight:600;margin-bottom:16px}
+.form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.fg{flex:1;min-width:140px}
+.fg label{display:block;font-size:.8rem;font-weight:600;margin-bottom:6px;color:var(--text)}
+.fg input,.fg select{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;
+  font-size:.95rem;outline:none;background:#fff;transition:border-color .18s
+}
+.fg input:focus,.fg select:focus{border-color:var(--accent)}
+.quick-times{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.qt{
+  padding:7px 14px;border:1px solid var(--border);border-radius:7px;
+  background:#fff;cursor:pointer;font-size:.83rem;transition:all .15s
+}
+.qt:hover{border-color:var(--accent);background:var(--accent-bg)}
+.qt.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-    .bookings-list { display:flex; flex-direction:column; gap:0.8rem; }
-    .booking-card {
-      background:white; border-radius:10px; padding:1rem;
-      box-shadow:0 1px 6px rgba(0,0,0,0.06); border-left:4px solid #e8e0d5;
-    }
-    .booking-card.status-pending { border-left-color: var(--gold); }
-    .booking-card.status-confirmed { border-left-color: var(--sage); }
-    .booking-card.status-completed { border-left-color: #27ae60; }
-    .booking-card.status-urgent { border-left-color: var(--urgent); }
-    .booking-top { display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; flex-wrap:wrap; }
-    .booking-name { font-weight:600; font-size:0.95rem; }
-    .booking-date { font-size:0.85rem; color:var(--text-light); }
-    .booking-meta { display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem; }
-    .chip { padding:0.2rem 0.6rem; border-radius:10px; font-size:0.75rem; }
-    .chip-sage { background:#e8f2ea; color:var(--sage); }
-    .chip-urgent { background:#fef0ea; color:var(--urgent); }
-    .chip-gold { background:#fdf6e3; color:var(--gold); }
-    .chip-gray { background:#f0ede8; color:var(--text-light); }
-    .chip-green { background:#e8f5ed; color:#27ae60; }
-    .chip-free { background:#e0f0e5; color:#27ae60; }
-    .booking-actions { display:flex; gap:0.5rem; margin-top:0.8rem; flex-wrap:wrap; }
-    .action-btn { padding:0.35rem 0.8rem; border-radius:6px; border:none; font-size:0.78rem; cursor:pointer; }
-    .btn-confirm { background:#e8f2ea; color:var(--sage); }
-    .btn-confirm:hover { background:var(--sage); color:white; }
-    .btn-done { background:#e8f5ed; color:#27ae60; }
-    .btn-done:hover { background:#27ae60; color:white; }
-    .btn-cancel { background:#fef0ee; color:var(--danger); }
-    .btn-cancel:hover { background:var(--danger); color:white; }
-    .booking-receipt { font-size:0.78rem; color:var(--text-light); margin-top:0.4rem; }
-    .booking-receipt a { color:var(--sage); }
+.slots-list-title{font-size:.95rem;font-weight:600;margin-bottom:14px;color:var(--text)}
+.slots-month-group{margin-bottom:24px}
+.slots-month-label{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px;font-weight:600}
+.slot-item{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--card);border:1px solid var(--border);border-radius:9px;
+  padding:12px 16px;margin-bottom:7px
+}
+.slot-info{font-size:.9rem}
+.slot-info .dt{font-weight:600}
+.slot-info .st{font-size:.78rem;margin-top:2px;color:var(--muted)}
+.slot-del{
+  background:none;border:1px solid var(--border);border-radius:7px;
+  padding:5px 12px;cursor:pointer;font-size:.78rem;color:var(--danger);
+  transition:all .15s
+}
+.slot-del:hover{background:var(--danger-bg);border-color:var(--danger)}
 
-    /* HOURS CALCULATOR */
-    .calc-box { background: linear-gradient(135deg, #f0f7f2, #e8f2ea); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
-    .hours-big { font-size:3.5rem; font-weight:700; color:var(--sage); }
-    .hours-label { color:var(--text-light); font-size:0.9rem; margin-top:0.3rem; }
+/* ─── SETTINGS ─── */
+.settings-form{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px
+}
+.settings-form h3{font-size:1.05rem;font-weight:600;margin-bottom:18px}
 
-    /* SLOTS MANAGEMENT */
-    .slots-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:0.8rem; }
-    .slot-item { background:white; border-radius:8px; padding:0.8rem; border:1.5px solid #e8e0d5; display:flex; justify-content:space-between; align-items:center; }
-    .slot-item.booked { border-color:#e8f2ea; background:#f8fdf9; }
-    .slot-item.urgent { border-color:#f5ebe4; }
-    .slot-del { background:none; border:none; color:#ccc; cursor:pointer; font-size:1.1rem; padding:0.2rem; }
-    .slot-del:hover { color:var(--danger); }
-    .slot-info { font-size:0.85rem; }
-    .slot-info .date { font-weight:600; }
-    .slot-info .time { color:var(--text-light); }
+/* ─── GENERAL ─── */
+.btn{
+  background:var(--accent);color:#fff;border:none;border-radius:9px;
+  padding:12px 22px;font-size:.93rem;cursor:pointer;font-weight:500;transition:background .18s
+}
+.btn:hover{background:var(--accent-hover)}
+.btn:disabled{background:#ccc;cursor:not-allowed}
+.empty-state{
+  text-align:center;padding:48px 24px;color:var(--muted);font-size:.9rem;
+  background:var(--card);border:1px dashed var(--border);border-radius:var(--radius)
+}
+.empty-state .ico{font-size:2.5rem;margin-bottom:12px}
+.loading{text-align:center;padding:36px;color:var(--muted)}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{
+  position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;
+  padding:10px 20px;border-radius:10px;font-size:.87rem;z-index:999;
+  opacity:0;transition:opacity .3s;pointer-events:none
+}
+.toast.show{opacity:1}
+.badge{padding:3px 9px;border-radius:5px;font-size:.75rem;font-weight:600}
+.chip{
+  display:inline-block;padding:2px 9px;border-radius:12px;font-size:.75rem;
+  font-weight:600;background:var(--accent-bg);color:var(--accent);margin-left:6px
+}
 
-    /* ADD SLOT FORM */
-    .add-slot-form { display:flex; gap:0.7rem; flex-wrap:wrap; align-items:flex-end; }
-    .add-slot-form .fg { display:flex; flex-direction:column; gap:0.3rem; }
-    .add-slot-form label { font-size:0.78rem; color:var(--text-light); }
-    .add-slot-form input, .add-slot-form select { padding:0.6rem; border:1.5px solid #e8e0d5; border-radius:6px; font-size:0.85rem; }
-    .add-slot-form input:focus, .add-slot-form select:focus { outline:none; border-color:var(--sage); }
-    .btn-add { padding:0.6rem 1.2rem; background:var(--sage); color:white; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; }
-    .btn-add:hover { background:#6a8870; }
-
-    /* CLIENTS */
-    .client-card { background:white; border-radius:10px; padding:1rem; box-shadow:0 1px 6px rgba(0,0,0,0.06); margin-bottom:0.8rem; }
-    .client-top { display:flex; justify-content:space-between; align-items:center; }
-    .client-name { font-weight:600; }
-    .client-tg { color:var(--sage); font-size:0.85rem; }
-    .sessions-bar { background:#e8e0d5; border-radius:10px; height:8px; margin:0.7rem 0; overflow:hidden; }
-    .sessions-fill { background:var(--sage); height:100%; border-radius:10px; transition:width 0.3s; }
-    .sessions-text { font-size:0.8rem; color:var(--text-light); }
-
-    .empty-state { text-align:center; padding:3rem; color:var(--text-light); }
-    .badge-count { background:var(--urgent); color:white; border-radius:10px; padding:0.1rem 0.4rem; font-size:0.7rem; margin-left:0.3rem; }
-
-    .loading { text-align:center; padding:2rem; color:var(--text-light); }
-    .spinner { display:inline-block; width:24px; height:24px; border:3px solid #e8e0d5; border-top-color:var(--sage); border-radius:50%; animation:spin 0.8s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-
-    @media (max-width:600px) {
-      .stats-row { grid-template-columns:1fr 1fr; }
-      .add-slot-form { flex-direction:column; }
-      .tabs { overflow-x:auto; }
-    }
-  </style>
+@media(max-width:600px){
+  .content{padding:16px 14px}
+  .form-row{flex-direction:column}
+  .bk-grid{grid-template-columns:1fr 1fr}
+}
+</style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div class="login-screen" id="loginScreen">
+<div id="toast" class="toast"></div>
+
+<!-- ══════════════════════════════════════
+     LOGIN
+══════════════════════════════════════ -->
+<div id="view-login">
   <div class="login-box">
-    <h1>🌿 Алетея</h1>
-    <p>Адміністративна панель</p>
-    <input class="inp" type="password" id="adminPass" placeholder="Пароль" onkeydown="if(event.key==='Enter')login()">
-    <button class="btn" onclick="login()">Увійти</button>
-    <div class="err-msg" id="loginErr">Невірний пароль</div>
+    <div class="login-logo">aletheia</div>
+    <div class="login-sub">психологиня Тетяна · адмін-панель</div>
+    <h2>Вхід</h2>
+    <div class="login-err" id="login-err">Невірний пароль</div>
+    <input type="password" id="pw-input" placeholder="Пароль" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn" style="width:100%" onclick="doLogin()">Увійти</button>
   </div>
 </div>
 
-<!-- ADMIN -->
-<div class="admin-wrap" id="adminWrap">
-  <div class="topbar">
-    <h1>🌿 Алетея — Адмін</h1>
-    <div class="topbar-right">
-      <span id="pendingBadge" style="display:none; background:var(--urgent); color:white; border-radius:20px; padding:0.2rem 0.7rem; font-size:0.8rem;"></span>
-      <button onclick="logout()">Вийти</button>
+<!-- ══════════════════════════════════════
+     ADMIN PANEL
+══════════════════════════════════════ -->
+<div id="view-admin">
+  <header>
+    <div class="hdr-left">
+      <div class="logo-ico">A</div>
+      <div>
+        <div class="hdr-title">Aletheia · Адмін</div>
+        <div class="hdr-sub">Психологиня Тетяна</div>
+      </div>
     </div>
+    <button class="logout-btn" onclick="doLogout()">Вийти</button>
+  </header>
+
+  <div class="nav-tabs">
+    <div class="nav-tab active" id="nt-bookings" onclick="showTab('bookings')">📋 Всі записи</div>
+    <div class="nav-tab"        id="nt-slots"    onclick="showTab('slots')">🗓 Слоти</div>
+    <div class="nav-tab"        id="nt-hours"    onclick="showTab('hours')">⏱ Години практики</div>
+    <div class="nav-tab"        id="nt-settings" onclick="showTab('settings')">⚙️ Налаштування</div>
   </div>
 
-  <div class="tabs">
-    <div class="tab active" onclick="showTab('bookings')">Бронювання</div>
-    <div class="tab" onclick="showTab('slots')">Слоти</div>
-    <div class="tab" onclick="showTab('clients')">Клієнти</div>
-    <div class="tab" onclick="showTab('hours')">Години практики</div>
-  </div>
+  <div class="content">
 
-  <div class="main">
-
-    <!-- BOOKINGS TAB -->
-    <div class="panel active" id="tab-bookings">
-      <div class="stats-row" id="statsRow">
-        <div class="stat"><div class="num" id="statTotal">—</div><div class="lbl">Всього бронювань</div></div>
-        <div class="stat"><div class="num" id="statPending">—</div><div class="lbl">Очікують підтвердження</div></div>
-        <div class="stat"><div class="num" id="statConfirmed">—</div><div class="lbl">Підтверджено</div></div>
-        <div class="stat"><div class="num" id="statCompleted">—</div><div class="lbl">Проведено</div></div>
-      </div>
-
-      <div class="filters">
-        <button class="filter-btn active" onclick="filterBookings('all', this)">Всі</button>
-        <button class="filter-btn" onclick="filterBookings('pending', this)">Очікують</button>
-        <button class="filter-btn" onclick="filterBookings('confirmed', this)">Підтверджено</button>
-        <button class="filter-btn" onclick="filterBookings('completed', this)">Проведено</button>
-        <button class="filter-btn" onclick="filterBookings('urgent', this)">⚡ Термінові</button>
-      </div>
-
-      <div id="bookingsLoading" class="loading"><div class="spinner"></div></div>
-      <div class="bookings-list" id="bookingsList"></div>
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="st-total">0</div><div class="stat-lbl">Всього записів</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-slots">0</div><div class="stat-lbl">Вільних слотів</div></div>
     </div>
 
-    <!-- SLOTS TAB -->
-    <div class="panel" id="tab-slots">
-      <div class="card">
-        <h2>➕ Додати слот</h2>
-        <div class="add-slot-form">
+    <!-- ── TAB: ALL BOOKINGS ── -->
+    <div id="tab-bookings" class="tab-panel active">
+      <div id="all-list"><div class="loading"><div class="spinner"></div>Завантаження…</div></div>
+    </div>
+
+    <!-- ── TAB: HOURS ── -->
+    <div id="tab-hours" class="tab-panel">
+      <div class="settings-form" style="text-align:center;padding:32px">
+        <div style="font-size:3.5rem;font-weight:700;color:var(--accent);line-height:1" id="hours-total">0</div>
+        <div style="font-size:.9rem;color:var(--muted);margin-top:6px">годин практики</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-top:4px" id="hours-sessions-count"></div>
+      </div>
+      <div class="settings-form">
+        <h3>✅ Проведені сесії</h3>
+        <div id="hours-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: SLOTS ── -->
+    <div id="tab-slots" class="tab-panel">
+      <div class="add-slot-form">
+        <h3>➕ Додати вільний слот</h3>
+        <div class="form-row">
           <div class="fg">
             <label>Дата</label>
-            <input type="date" id="newSlotDate" min="">
+            <input type="date" id="sl-date">
           </div>
           <div class="fg">
-            <label>Час</label>
-            <input type="time" id="newSlotTime" value="11:00">
+            <label>Час (вручну)</label>
+            <input type="time" id="sl-time">
           </div>
-          <div class="fg">
-            <label>Тип</label>
-            <select id="newSlotType">
-              <option value="regular">Звичайний</option>
-              <option value="urgent">⚡ Терміновий</option>
-            </select>
-          </div>
-          <button class="btn-add" onclick="addSlot()">Додати</button>
+          <button class="btn" onclick="addSlot()" style="height:42px;align-self:flex-end">Додати слот</button>
         </div>
-
-        <!-- Bulk add -->
-        <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid #f0ede8;">
-          <p style="font-size:0.83rem; color:var(--text-light); margin-bottom:0.7rem;">Масове додавання (кілька часів одразу):</p>
-          <div class="add-slot-form">
-            <div class="fg">
-              <label>Дата</label>
-              <input type="date" id="bulkDate" min="">
-            </div>
-            <div class="fg" style="flex:2">
-              <label>Часи через кому (напр: 10:00, 13:00, 17:00)</label>
-              <input type="text" id="bulkTimes" placeholder="10:00, 13:00, 17:00">
-            </div>
-            <div class="fg">
-              <label>Тип</label>
-              <select id="bulkType">
-                <option value="regular">Звичайний</option>
-                <option value="urgent">⚡ Терміновий</option>
-              </select>
-            </div>
-            <button class="btn-add" onclick="addBulkSlots()">Додати всі</button>
-          </div>
+        <div>
+          <div style="font-size:.8rem;color:var(--muted);margin:14px 0 8px">Або оберіть час:</div>
+          <div class="quick-times" id="quick-times"></div>
+        </div>
+        <div style="margin-top:14px">
+          <button class="btn" onclick="addBatch()" style="font-size:.85rem;padding:10px 18px">
+            📅 Додати одразу кілька слотів для обраної дати
+          </button>
         </div>
       </div>
+      <div class="slots-list-title">Вільні слоти <span class="chip" id="slots-count-chip">0</span></div>
+      <div id="slots-list-el"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
 
-      <div class="card">
-        <h2>📅 Доступні слоти</h2>
-        <div id="slotsListAdmin" class="loading"><div class="spinner"></div></div>
+    <!-- ── TAB: SETTINGS ── -->
+    <div id="tab-settings" class="tab-panel">
+      <div class="settings-form">
+        <h3>💳 Реквізити для оплати</h3>
+        <div class="fg" style="margin-bottom:14px">
+          <label>Номер картки</label>
+          <input id="s-card" type="text" placeholder="0000 0000 0000 0000">
+        </div>
+        <div class="fg" style="margin-bottom:14px">
+          <label>Банк</label>
+          <input id="s-bank" type="text" placeholder="Monobank">
+        </div>
+        <div class="fg" style="margin-bottom:18px">
+          <label>Ім'я одержувача</label>
+          <input id="s-holder" type="text" placeholder="Тетяна А.">
+        </div>
+        <button class="btn" onclick="saveSettings()">Зберегти реквізити</button>
+      </div>
+      <div class="settings-form">
+        <h3>🔐 Змінити пароль адмін-панелі</h3>
+        <div class="fg" style="margin-bottom:14px">
+          <label>Новий пароль</label>
+          <input id="s-newpw" type="password" placeholder="Мінімум 6 символів">
+        </div>
+        <div class="fg" style="margin-bottom:18px">
+          <label>Повторити пароль</label>
+          <input id="s-newpw2" type="password" placeholder="">
+        </div>
+        <button class="btn" onclick="savePw()">Змінити пароль</button>
+      </div>
+      <div class="settings-form">
+        <h3>ℹ️ Посилання для клієнтів</h3>
+        <p style="font-size:.88rem;color:var(--muted);line-height:1.6">
+          Посилання на сторінку бронювання (файл <code>index.html</code>)надсилайте своїм клієнтам після першої ознайомчої сесії.<br><br>
+          Telegram: <a href="https://t.me/alet_psyche" target="_blank">@alet_psyche</a>
+        </p>
       </div>
     </div>
 
-    <!-- CLIENTS TAB -->
-    <div class="panel" id="tab-clients">
-      <div class="card">
-        <h2>Клієнти з пакетами</h2>
-        <div id="clientsListAdmin" class="loading"><div class="spinner"></div></div>
-      </div>
-    </div>
+  </div><!-- end content -->
+</div><!-- end view-admin -->
 
-    <!-- HOURS TAB -->
-    <div class="panel" id="tab-hours">
-      <div class="calc-box">
-        <div class="hours-big" id="totalHours">0</div>
-        <div class="hours-label">годин практики (проведені сесії)</div>
-        <div style="font-size:0.85rem; color:var(--text-light); margin-top:0.5rem;" id="totalSessionsCount"></div>
-      </div>
-
-      <div class="card">
-        <h2>📊 Статистика по місяцях</h2>
-        <div id="monthlyStats"></div>
-      </div>
-
-      <div class="card">
-        <h2>✅ Проведені сесії</h2>
-        <div id="completedList" class="loading"><div class="spinner"></div></div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-// ─── FIREBASE ───
-const firebaseConfig = {
-  apiKey: "AIzaSyAb01cYm0zJHhJ1vEDruw4APHqPo3TYK4I",
-  authDomain: "aletheia-booking.firebaseapp.com",
-  projectId: "aletheia-booking",
-  storageBucket: "aletheia-booking.firebasestorage.app",
+<script type="module">
+// ─────────────────────────────────────────────────────────────
+//  🔧 КОНФІГУРАЦІЯТА САМА ЩО В index.html
+// ─────────────────────────────────────────────────────────────
+const FIREBASE = {
+  apiKey:            "AIzaSyAb01cYmOzJHhJ1vEDruw4APHqPo3TYK4I",
+  authDomain:        "aletheia-booking.firebaseapp.com",
+  projectId:         "aletheia-booking",
+  storageBucket:     "aletheia-booking.firebasestorage.app",
   messagingSenderId: "118890506561",
-  appId: "1:118890506561:web:0925dc72d8dadb856c19c0",
-  measurementId: "G-X1HKYG1T8X"
+  appId:             "1:118890506561:web:0925dc72d8dadb856c19c0"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const DEFAULT_PW = "aletheia2024"; // початковий пароль – змініть в налаштуваннях!
+// ─────────────────────────────────────────────────────────────
 
-// ─── AUTH ───
-const ADMIN_PASS = 'aletheia2024'; // змінити при потребі
-let allBookings = [];
-let currentFilter = 'all';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, getDocs, query,
+  where, updateDoc, deleteDoc, doc, getDoc, setDoc,
+  orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-function login() {
-  const pass = document.getElementById('adminPass').value;
-  if (pass === ADMIN_PASS) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminWrap').style.display = 'block';
-    loadAll();
+let db;
+try {
+  const app = initializeApp(FIREBASE);
+  db = getFirestore(app);
+} catch(e){ console.warn("Firebase not configured"); }
+
+const MONTHS = ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"];
+const WDAYS  = ["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
+const QUICK  = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"];
+let quickSel = new Set();
+
+
+// RESCHEDULE
+let _reschBkId = null, _reschOldSlotId = null, _reschNewSlotId = null;
+
+function openReschedule(bkId, oldSlotId) {
+  _reschBkId = bkId;
+  _reschOldSlotId = oldSlotId;
+  _reschNewSlotId = null;
+  const avail = allSlots.filter(s => s.status === "available" && s.id !== oldSlotId);
+  const container = document.getElementById("reschedule-slots");
+  if (avail.length === 0) {
+    container.innerHTML = '<p style="color:#b00;font-size:.88rem">Немає вільних слотів. Спочатку додайте нові слоти.</p>';
   } else {
-    document.getElementById('loginErr').style.display = 'block';
+    container.innerHTML = avail.map(s => {
+      const d = s.date ? s.date.split("-") : [];
+      const dateStr = d.length === 3 ? d[2]+"."+d[1]+"."+d[0] : (s.date || "");
+      return `<label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #ddd;border-radius:10px;cursor:pointer">
+        <input type="radio" name="resch-slot" value="${s.id}" onchange="selectReschSlot('${s.id}')" style="accent-color:#8b6636">
+        <span style="font-size:.92rem"><strong>${dateStr}</strong> о <strong>${s.time}</strong></span>
+      </label>`;
+    }).join("");
+  }
+  document.getElementById("reschedule-confirm-btn").disabled = true;
+  document.getElementById("reschedule-confirm-btn").style.opacity = "0.5";
+  document.getElementById("reschedule-modal").style.display = "flex";
+}
+
+function selectReschSlot(slotId) {
+  _reschNewSlotId = slotId;
+  document.getElementById("reschedule-confirm-btn").disabled = false;
+  document.getElementById("reschedule-confirm-btn").style.opacity = "1";
+}
+
+function closeReschedule() {
+  document.getElementById("reschedule-modal").style.display = "none";
+  _reschBkId = null; _reschOldSlotId = null; _reschNewSlotId = null;
+}
+
+async function confirmReschedule() {
+  if (!_reschNewSlotId) return;
+  const newSlot = allSlots.find(s => s.id === _reschNewSlotId);
+  if (!newSlot) return;
+  const d = newSlot.date ? newSlot.date.split("-") : [];
+  const dateStr = d.length === 3 ? d[2]+"."+d[1]+"."+d[0] : newSlot.date;
+  if (!confirm("Перенести запис на " + dateStr + " о " + newSlot.time + "?")) return;
+  if (db) {
+    if (_reschOldSlotId) await updateDoc(doc(db,"slots",_reschOldSlotId), {status:"available", bookingId:null});
+    await updateDoc(doc(db,"slots",_reschNewSlotId), {status:"booked", bookingId:_reschBkId});
+    await updateDoc(doc(db,"bookings",_reschBkId), {
+      slotId: _reschNewSlotId,
+      slotDate: newSlot.date,
+      slotTime: newSlot.time,
+      rescheduledAt: new Date().toISOString()
+    });
+  }
+  toast("🔄 Час сесії перенесено на " + dateStr + " о " + newSlot.time);
+  closeReschedule();
+  await Promise.all([loadBookings(), loadSlots()]);
+}
+
+Object.assign(window,{doLogin,doLogout,showTab,addSlot,addBatch,deleteSlot,confirmBk,cancelBk,deleteBk,completeBk,openReschedule,selectReschSlot,closeReschedule,confirmReschedule,saveSettings,savePw});
+
+// ─── AUTH ─────────────────────────────────────────────────────
+const getAdminPw = () => localStorage.getItem("adminPw")||DEFAULT_PW;
+
+function doLogin(){
+  const pw=document.getElementById("pw-input").value;
+  if(pw===getAdminPw()){
+    localStorage.setItem("adminAuth","1");
+    document.getElementById("view-login").style.display="none";
+    document.getElementById("view-admin").style.display="block";
+    initAdmin();
+  } else {
+    document.getElementById("login-err").style.display="block";
+    document.getElementById("pw-input").value="";
+    document.getElementById("pw-input").focus();
   }
 }
-function logout() {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('adminWrap').style.display = 'none';
+function doLogout(){
+  localStorage.removeItem("adminAuth");
+  location.reload();
 }
 
-// ─── TABS ───
-function showTab(name) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  event.target.classList.add('active');
-
-  if (name === 'slots') loadSlotsAdmin();
-  if (name === 'clients') loadClientsAdmin();
-  if (name === 'hours') loadHours();
+// Auto-login if session active
+if(localStorage.getItem("adminAuth")==="1"){
+  document.getElementById("view-login").style.display="none";
+  document.getElementById("view-admin").style.display="block";
+  document.addEventListener("DOMContentLoaded",initAdmin);
+} else {
+  document.getElementById("pw-input").focus();
 }
 
-// ─── LOAD ALL ───
-async function loadAll() {
+// ─── INIT ─────────────────────────────────────────────────────
+async function initAdmin(){
+  buildQuickTimes();
+  await Promise.all([loadBookings(), loadSlots(), loadSettings()]);
+}
+
+// ─── TABS ─────────────────────────────────────────────────────
+function showTab(t){
+  ["bookings","slots","hours","settings"].forEach(x=>{
+    const tp=document.getElementById(`tab-${x}`); if(tp) tp.classList.toggle("active",x===t);
+    const nt=document.getElementById(`nt-${x}`);  if(nt) nt.classList.toggle("active",x===t);
+  });
+  if(t==="hours") loadHours();
+}
+
+// ─── BOOKINGS ────────────────────────────────────────────────
+let allBookings=[];
+async function loadBookings(){
+  if(!db){renderBookings([],"all-list","all");return;}
+  try{
+    const snap=await getDocs(collection(db,"bookings"));
+    allBookings=snap.docs.map(d=>({id:d.id,...d.data()}));
+    allBookings.sort((a,b)=>{ try{return b.createdAt?.seconds-a.createdAt?.seconds}catch{return 0} });
+    updateStats();
+    renderBookings(allBookings,"all-list","all");
+  }catch(e){console.error(e);}
+}
+
+function updateStats(){
+  document.getElementById("st-total").textContent = allBookings.filter(b=>b.status!=="cancelled").length;
+}
+
+function renderBookings(arr, containerId, mode){
+  const el=document.getElementById(containerId);
+  if(!arr.length){
+    el.innerHTML=`<div class="empty-state"><div class="ico">${mode==="pending"?"🎉":"📭"}</div>${mode==="pending"?"Немає нових бронювань – все перевірено!":"Записів поки немає"}</div>`;
+    return;
+  }
+  el.innerHTML=arr.map(b=>bkCard(b)).join("");
+}
+
+function bkCard(b){
+  const [y,m,d]=(b.date||"--").split("-");
+  const dateFmt=b.date?`${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y||""}`:"─";
+  const statusMap={pending:"⏳ Очікує підтвердження",confirmed:"✅ Підтверджено",cancelled:"❌ Скасовано",completed:"🏁 Проведено"};
+  const cls={pending:"s-pending",confirmed:"s-confirmed",cancelled:"s-cancelled",completed:"s-completed"};
+  const rcpt=b.receiptType==="link"
+    ? `<a href="${b.receiptUrl}" target="_blank" style="color:var(--accent)">🔗 Відкрити квитанцію</a>`
+    : (b.receiptUrl&&b.receiptUrl!=="(фото відправлено в Telegram)"
+        ? `<a href="${b.receiptUrl}" target="_blank" style="color:var(--accent)">📷 Фото квитанції</a>`
+        : `<span style="color:var(--muted)">📷 Відправлено в Telegram</span>`);
+  return `
+<div class="bk-card" id="bk-${b.id}">
+  <div class="bk-head">
+    <div class="bk-time">📅 ${dateFmt}, ${b.time||"─"}</div>
+    <span class="bk-status ${cls[b.status]||"s-pending"}">${statusMap[b.status]||b.status}</span>
+  </div>
+  <div class="bk-grid">
+    <div class="bk-field"><span class="lbl">Ім'я</span>${b.clientName||"─"}</div>
+    ${b.clientTelegram?`<div class="bk-field"><span class="lbl">Telegram</span><a href="https://t.me/${b.clientTelegram.replace('@','')}" target="_blank">${b.clientTelegram}</a></div>`:""}
+    <div class="bk-field"><span class="lbl">Пакет</span>${b.pkgName||"─"}</div>
+    <div class="bk-field"><span class="lbl">Сума</span>${b.pkgPrice?b.pkgPrice.toLocaleString("uk-UA")+" грн":"─"}</div>
+    <div class="bk-field"><span class="lbl">Квитанція</span>${rcpt}</div>
+    ${b.clientComment?`<div class="bk-field" style="grid-column:1/-1"><span class="lbl">Коментар</span>${b.clientComment}</div>`:""}
+  </div>
+  <div class="bk-actions">
+    ${b.status!=="cancelled"&&b.status!=="completed"?`<button class="act-btn" style="background:#e8f0ff;color:#2050a0;border:1px solid #b0c8f5;font-weight:600" onclick="completeBk('${b.id}')">🏁 Провести сесію</button>`:""}
+    ${b.status!=="cancelled"&&b.status!=="completed"?`<button class="act-btn act-cancel" onclick="cancelBk('${b.id}','${b.slotId}')">↩️ Скасувати (повернути слот)</button>`:""}
+    ${b.status!=="cancelled"&&b.status!=="completed"?`<button class="act-btn" style="background:#e8f5ff;color:#2060a0;border:1px solid #b0d8f5" onclick="openReschedule('${b.id}','${b.slotId}')">🔄 Перенести час</button>`:""}
+    <button class="act-btn" style="background:#fff0f0;color:#b00;border:1px solid #f5c0c0" onclick="deleteBk('${b.id}','${b.slotId}')">🗑 Видалити запис</button>
+  </div>
+</div>`;
+}
+
+async function completeBk(bkId){
+  if(!confirm("Позначити цю сесію як проведену?"))return;
+  if(db){
+    await updateDoc(doc(db,"bookings",bkId),{status:"completed",completedAt:new Date().toISOString()});
+  }
+  toast("🏁 Сесія позначена як проведена");
   await loadBookings();
 }
 
-// ─── BOOKINGS ───
-async function loadBookings() {
-  try {
-    const snap = await db.collection('bookings').orderBy('createdAt', 'desc').get();
-    allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderStats();
-    renderBookings(currentFilter);
-    document.getElementById('bookingsLoading').style.display = 'none';
-  } catch(e) {
-    console.error(e);
-    document.getElementById('bookingsLoading').innerHTML = 'Помилка завантаження';
+async function confirmBk(bkId,slotId){
+  if(!confirm("Підтвердити цей запис?"))return;
+  if(db){
+    await updateDoc(doc(db,"bookings",bkId),{status:"confirmed"});
+    if(slotId) await updateDoc(doc(db,"slots",slotId),{status:"booked"});
   }
+  toast("✅ Запис підтверджено");
+  await loadBookings();
 }
-
-function renderStats() {
-  const total = allBookings.length;
-  const pending = allBookings.filter(b => b.status === 'pending').length;
-  const confirmed = allBookings.filter(b => b.status === 'confirmed').length;
-  const completed = allBookings.filter(b => b.status === 'completed').length;
-
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('statPending').textContent = pending;
-  document.getElementById('statConfirmed').textContent = confirmed;
-  document.getElementById('statCompleted').textContent = completed;
-
-  if (pending > 0) {
-    const badge = document.getElementById('pendingBadge');
-    badge.style.display = 'block';
-    badge.textContent = pending + ' нових';
+async function cancelBk(bkId,slotId){
+  if(!confirm("Скасувати цей запис і повернути слот у доступні?"))return;
+  if(db){
+    await updateDoc(doc(db,"bookings",bkId),{status:"cancelled"});
+    if(slotId) await updateDoc(doc(db,"slots",slotId),{status:"available",bookingId:null});
   }
+  toast("Запис скасовано – слот повернено");
+  await Promise.all([loadBookings(),loadSlots()]);
+}
+async function deleteBk(bkId,slotId){
+  if(!confirm("Видалити цей запис повністю? Слот стане вільним знову."))return;
+  if(db){
+    const {deleteDoc} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await deleteDoc(doc(db,"bookings",bkId));
+    if(slotId) await updateDoc(doc(db,"slots",slotId),{status:"available",bookingId:null});
+  }
+  toast("🗑 Запис видалено");
+  await Promise.all([loadBookings(),loadSlots()]);
 }
 
-function filterBookings(filter, btn) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderBookings(filter);
+// ─── SLOTS ────────────────────────────────────────────────────
+let allSlots=[];
+async function loadSlots(){
+  if(!db){renderSlotsList([]);return;}
+  try{
+    const today=fmtDate(new Date());
+    const snap=await getDocs(query(collection(db,"slots"),where("date",">=",today)));
+    allSlots=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>{
+      if(a.date!==b.date)return a.date.localeCompare(b.date);
+      return a.time.localeCompare(b.time);
+    });
+    const free=allSlots.filter(s=>s.status==="available").length;
+    document.getElementById("st-slots").textContent=free;
+    document.getElementById("slots-count-chip").textContent=free;
+    renderSlotsList(allSlots);
+  }catch(e){console.error(e);}
 }
 
-function renderBookings(filter) {
-  let list = allBookings;
-  if (filter === 'pending') list = list.filter(b => b.status === 'pending');
-  else if (filter === 'confirmed') list = list.filter(b => b.status === 'confirmed');
-  else if (filter === 'completed') list = list.filter(b => b.status === 'completed');
-  else if (filter === 'urgent') list = list.filter(b => b.isUrgent);
-
-  const container = document.getElementById('bookingsList');
-  if (list.length === 0) {
-    container.innerHTML = '<div class="empty-state">Немає бронювань</div>';
+function renderSlotsList(arr){
+  const el=document.getElementById("slots-list-el");
+  if(!arr.length){
+    el.innerHTML=`<div class="empty-state"><div class="ico">🗓</div>Вільних слотів немає. Додайте через форму вище.</div>`;
     return;
   }
-  container.innerHTML = list.map(b => renderBookingCard(b)).join('');
-}
-
-function renderBookingCard(b) {
-  const statusLabel = { pending: 'Очікує', confirmed: 'Підтверджено', completed: 'Проведено', cancelled: 'Скасовано' };
-  const statusClass = b.isUrgent ? 'urgent' : (b.status || 'pending');
-  const date = b.date ? new Date(b.date + 'T12:00:00').toLocaleDateString('uk-UA', { day:'numeric', month:'long' }) : '—';
-  const tg = b.clientTelegram || '';
-  const receiptHtml = b.receiptType === 'link' && b.receiptUrl
-    ? `<div class="booking-receipt">Чек: <a href="${b.receiptUrl}" target="_blank">${b.receiptUrl.substring(0,40)}...</a></div>`
-    : b.receiptType === 'package' ? `<div class="booking-receipt">✅ Сесія з пакету</div>`
-    : b.receiptType === 'screenshot' ? `<div class="booking-receipt">📸 Скриншот (перевір у TG)</div>` : '';
-
-  const actionButtons = [];
-  if (b.status === 'pending') {
-    actionButtons.push(`<button class="action-btn btn-confirm" onclick="updateBookingStatus('${b.id}', 'confirmed')">✓ Підтвердити</button>`);
-  }
-  if (b.status !== 'completed') {
-    actionButtons.push(`<button class="action-btn btn-done" onclick="markCompleted('${b.id}', '${b.clientTelegram || ''}', '${b.pkgId || ''}')">✅ Провести</button>`);
-  }
-  actionButtons.push(`<button class="action-btn btn-cancel" onclick="updateBookingStatus('${b.id}', 'cancelled')">✗ Скасувати</button>`);
-
-  const price = b.pkgPrice === 0 ? '<span class="chip chip-free">З пакету</span>' : `<span class="chip chip-gray">${(b.pkgPrice||0).toLocaleString('uk-UA')} грн</span>`;
-
-  return `
-    <div class="booking-card status-${statusClass}" id="bcard-${b.id}">
-      <div class="booking-top">
-        <div>
-          <div class="booking-name">${b.clientName || '—'}</div>
-          <div class="booking-date">${date} · ${b.selectedTime || ''}${b.isUrgent ? ' ⚡' : ''}</div>
-        </div>
-        <span class="chip ${b.status === 'completed' ? 'chip-green' : b.status === 'confirmed' ? 'chip-sage' : 'chip-gold'}">${statusLabel[b.status] || b.status}</span>
-      </div>
-      <div class="booking-meta">
-        ${tg ? `<span class="chip chip-sage">${tg}</span>` : ''}
-        <span class="chip ${b.isUrgent ? 'chip-urgent' : 'chip-gray'}">${b.pkgName || '—'}</span>
-        ${price}
-        ${b.usedPackageSession ? '<span class="chip chip-free">Пакетна сесія</span>' : ''}
-      </div>
-      ${b.clientPhone ? `<div style="font-size:0.8rem;color:var(--text-light);margin-top:0.4rem">📞 ${b.clientPhone}</div>` : ''}
-      ${b.clientComment ? `<div style="font-size:0.8rem;color:var(--text-light);margin-top:0.3rem;font-style:italic">"${b.clientComment}"</div>` : ''}
-      ${receiptHtml}
-      <div class="booking-actions">${actionButtons.join('')}</div>
-    </div>`;
-}
-
-async function updateBookingStatus(id, status) {
-  try {
-    await db.collection('bookings').doc(id).update({ status });
-    const idx = allBookings.findIndex(b => b.id === id);
-    if (idx >= 0) allBookings[idx].status = status;
-    renderStats();
-    renderBookings(currentFilter);
-  } catch(e) { alert('Помилка: ' + e.message); }
-}
-
-async function markCompleted(bookingId, telegramNick, pkgId) {
-  try {
-    await db.collection('bookings').doc(bookingId).update({
-      status: 'completed',
-      completedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    const idx = allBookings.findIndex(b => b.id === bookingId);
-    if (idx >= 0) { allBookings[idx].status = 'completed'; allBookings[idx].completedAt = new Date(); }
-    renderStats();
-    renderBookings(currentFilter);
-  } catch(e) { alert('Помилка: ' + e.message); }
-}
-
-// ─── SLOTS ───
-async function loadSlotsAdmin() {
-  const container = document.getElementById('slotsListAdmin');
-  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const snap = await db.collection('slots')
-      .where('date', '>=', today)
-      .orderBy('date').orderBy('time').get();
-    const slots = snap.docs.map(d => ({id: d.id, ...d.data()}));
-    if (slots.length === 0) {
-      container.innerHTML = '<div class="empty-state">Немає слотів. Додайте вище.</div>';
-      return;
-    }
-    container.innerHTML = `<div class="slots-grid">${slots.map(s => `
-      <div class="slot-item ${s.status === 'booked' ? 'booked' : ''} ${s.isUrgent ? 'urgent' : ''}">
-        <div class="slot-info">
-          <div class="date">${new Date(s.date+'T12:00:00').toLocaleDateString('uk-UA', {day:'numeric',month:'short'})} ${s.isUrgent ? '⚡' : ''}</div>
-          <div class="time">${s.time} · <span style="color:${s.status==='booked'?'var(--sage)':'#ccc'}">${s.status==='booked'?'Заброньовано':'Вільний'}</span></div>
-        </div>
-        ${s.status !== 'booked' ? `<button class="slot-del" onclick="deleteSlot('${s.id}')" title="Видалити">✕</button>` : ''}
-      </div>`).join('')}</div>`;
-  } catch(e) { container.innerHTML = 'Помилка: ' + e.message; }
-}
-
-async function addSlot() {
-  const date = document.getElementById('newSlotDate').value;
-  const time = document.getElementById('newSlotTime').value;
-  const type = document.getElementById('newSlotType').value;
-  if (!date || !time) { alert('Вкажи дату і час'); return; }
-  try {
-    await db.collection('slots').add({
-      date, time, status: 'available',
-      isUrgent: type === 'urgent',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    loadSlotsAdmin();
-  } catch(e) { alert('Помилка: ' + e.message); }
-}
-
-async function addBulkSlots() {
-  const date = document.getElementById('bulkDate').value;
-  const timesRaw = document.getElementById('bulkTimes').value;
-  const type = document.getElementById('bulkType').value;
-  if (!date || !timesRaw) { alert('Вкажи дату і часи'); return; }
-  const times = timesRaw.split(',').map(t => t.trim()).filter(t => t);
-  try {
-    const batch = db.batch();
-    times.forEach(time => {
-      const ref = db.collection('slots').doc();
-      batch.set(ref, {
-        date, time, status: 'available',
-        isUrgent: type === 'urgent',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    });
-    await batch.commit();
-    document.getElementById('bulkTimes').value = '';
-    loadSlotsAdmin();
-  } catch(e) { alert('Помилка: ' + e.message); }
-}
-
-async function deleteSlot(id) {
-  if (!confirm('Видалити цей слот?')) return;
-  await db.collection('slots').doc(id).delete();
-  loadSlotsAdmin();
-}
-
-// ─── CLIENTS ───
-async function loadClientsAdmin() {
-  const container = document.getElementById('clientsListAdmin');
-  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-  try {
-    const snap = await db.collection('clients').get();
-    const clients = snap.docs.map(d => ({id: d.id, ...d.data()}));
-    if (clients.length === 0) {
-      container.innerHTML = '<div class="empty-state">Немає клієнтів з пакетами</div>';
-      return;
-    }
-    container.innerHTML = clients.map(c => {
-      const pkg = c.activePackage;
-      if (!pkg) return '';
-      const pct = pkg.sessionsTotal > 0 ? Math.round((pkg.sessionsUsed || 0) / pkg.sessionsTotal * 100) : 0;
-      return `
-        <div class="client-card">
-          <div class="client-top">
-            <div>
-              <div class="client-name">${c.telegramNick || c.id}</div>
-              <div style="font-size:0.8rem;color:var(--text-light)">${pkg.pkgName} · куплено ${pkg.purchasedAt?.toDate ? pkg.purchasedAt.toDate().toLocaleDateString('uk-UA') : '—'}</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-size:1.3rem;font-weight:700;color:var(--sage)">${pkg.sessionsRemaining}</div>
-              <div style="font-size:0.75rem;color:var(--text-light)">залишилось</div>
-            </div>
-          </div>
-          <div class="sessions-bar"><div class="sessions-fill" style="width:${pct}%"></div></div>
-          <div class="sessions-text">${pkg.sessionsUsed || 0} використано з ${pkg.sessionsTotal}</div>
-          <div style="margin-top:0.8rem;display:flex;gap:0.5rem;flex-wrap:wrap">
-            <button class="action-btn btn-confirm" onclick="adjustSessions('${c.id}', 1)">+ Додати сесію</button>
-            <button class="action-btn btn-cancel" onclick="adjustSessions('${c.id}', -1)">− Прибрати сесію</button>
-          </div>
-        </div>`;
-    }).join('');
-  } catch(e) { container.innerHTML = 'Помилка: ' + e.message; }
-}
-
-async function adjustSessions(clientId, delta) {
-  try {
-    const doc = await db.collection('clients').doc(clientId).get();
-    const pkg = doc.data().activePackage;
-    const newRem = Math.max(0, (pkg.sessionsRemaining || 0) + delta);
-    await db.collection('clients').doc(clientId).update({
-      'activePackage.sessionsRemaining': newRem,
-      'activePackage.sessionsTotal': pkg.sessionsTotal + (delta > 0 ? delta : 0)
-    });
-    loadClientsAdmin();
-  } catch(e) { alert('Помилка: ' + e.message); }
-}
-
-// ─── HOURS ───
-async function loadHours() {
-  const completedSnap = await db.collection('bookings').where('status', '==', 'completed').get();
-  const completed = completedSnap.docs.map(d => ({id: d.id, ...d.data()}));
-
-  const totalSessions = completed.length;
-  const totalHours = totalSessions * 50 / 60; // 50 min per session
-
-  document.getElementById('totalHours').textContent = totalHours.toFixed(1);
-  document.getElementById('totalSessionsCount').textContent = `${totalSessions} сесій · по 50 хвилин кожна`;
-
-  // Monthly breakdown
-  const monthly = {};
-  completed.forEach(b => {
-    const month = b.date ? b.date.substring(0,7) : 'невідомо';
-    monthly[month] = (monthly[month] || 0) + 1;
+  // Group by month
+  const groups={};
+  arr.forEach(s=>{
+    const [y,m]=s.date.split("-");
+    const key=`${y}-${m}`;
+    if(!groups[key])groups[key]=[];
+    groups[key].push(s);
   });
-  const monthlyEl = document.getElementById('monthlyStats');
-  const months = Object.keys(monthly).sort().reverse();
-  if (months.length === 0) {
-    monthlyEl.innerHTML = '<div class="empty-state">Немає даних</div>';
-  } else {
-    monthlyEl.innerHTML = months.map(m => {
-      const count = monthly[m];
-      const hrs = (count * 50 / 60).toFixed(1);
-      const label = new Date(m + '-01').toLocaleDateString('uk-UA', {month:'long', year:'numeric'});
-      return `<div class="payment-row" style="padding:0.6rem 0;border-bottom:1px solid #f0ede8;display:flex;justify-content:space-between">
-        <span style="color:var(--text-light)">${label}</span>
-        <span style="font-weight:600">${count} сесій · ${hrs} год</span>
-      </div>`;
-    }).join('');
-  }
-
-  // List of completed sessions
-  const listEl = document.getElementById('completedList');
-  listEl.innerHTML = completed.length === 0
-    ? '<div class="empty-state">Немає проведених сесій</div>'
-    : `<div>${completed.map(b => `
-        <div style="padding:0.6rem 0;border-bottom:1px solid #f0ede8;display:flex;justify-content:space-between;font-size:0.88rem">
-          <div>
-            <strong>${b.clientName || '—'}</strong>
-            <span style="color:var(--text-light);margin-left:0.5rem">${b.clientTelegram || ''}</span>
+  el.innerHTML=Object.entries(groups).map(([key,slots])=>{
+    const [y,m]=key.split("-");
+    return `<div class="slots-month-group">
+      <div class="slots-month-label">${MONTHS[parseInt(m)-1]} ${y}</div>
+      ${slots.map(s=>{
+        const [,sm,sd]=s.date.split("-");
+        const dObj=new Date(parseInt(y),parseInt(sm)-1,parseInt(sd));
+        const sLabel={available:"Вільно",pending:"⏳ Очікує оплати",booked:"✅ Заброньовано"}[s.status]||s.status;
+        return `<div class="slot-item">
+          <div class="slot-info">
+            <div class="dt">${WDAYS[dObj.getDay()]}, ${parseInt(sd)} ${MONTHS[parseInt(sm)-1]}${s.time}</div>
+            <div class="st">${sLabel}</div>
           </div>
-          <div style="color:var(--text-light)">${b.date ? new Date(b.date+'T12:00:00').toLocaleDateString('uk-UA') : '—'}</div>
-        </div>`).join('')}</div>`;
+          ${s.status==="available"?`<button class="slot-del" onclick="deleteSlot('${s.id}')">✕ Видалити</button>`:"<span></span>"}
+        </div>`;
+      }).join("")}
+    </div>`;
+  }).join("");
 }
 
-// ─── DATE DEFAULTS ───
-function setDateDefaults() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('newSlotDate').min = today;
-  document.getElementById('newSlotDate').value = today;
-  document.getElementById('bulkDate').min = today;
-  document.getElementById('bulkDate').value = today;
+function buildQuickTimes(){
+  const wrap=document.getElementById("quick-times");
+  QUICK.forEach(t=>{
+    const btn=document.createElement("button");
+    btn.className="qt"; btn.textContent=t; btn.dataset.time=t;
+    btn.onclick=()=>{
+      if(quickSel.has(t)){quickSel.delete(t);btn.classList.remove("sel");}
+      else{quickSel.add(t);btn.classList.add("sel");}
+      document.getElementById("sl-time").value=quickSel.size===1?[...quickSel][0]:"";
+    };
+    wrap.appendChild(btn);
+  });
 }
-setDateDefaults();
+
+async function addSlot(){
+  const date=document.getElementById("sl-date").value;
+  const time=document.getElementById("sl-time").value;
+  if(!date||!time){toast("Оберіть дату та час");return;}
+  if(!db){toast("Firebase не налаштовано");return;}
+  const dup=allSlots.find(s=>s.date===date&&s.time===time&&s.status==="available");
+  if(dup){toast("Такий слот вже є");return;}
+  await addDoc(collection(db,"slots"),{date,time,status:"available",createdAt:serverTimestamp()});
+  toast("✅ Слот додано");
+  await loadSlots();
+}
+
+async function addBatch(){
+  const date=document.getElementById("sl-date").value;
+  if(!date){toast("Оберіть дату");return;}
+  if(!quickSel.size){toast("Оберіть час із кнопок нижче");return;}
+  if(!db){toast("Firebase не налаштовано");return;}
+  let added=0;
+  for(const time of quickSel){
+    const dup=allSlots.find(s=>s.date===date&&s.time===time&&s.status==="available");
+    if(!dup){await addDoc(collection(db,"slots"),{date,time,status:"available",createdAt:serverTimestamp()});added++;}
+  }
+  quickSel.clear();
+  document.querySelectorAll(".qt.sel").forEach(b=>b.classList.remove("sel"));
+  toast(`✅ Додано ${added} слотів`);
+  await loadSlots();
+}
+
+async function deleteSlot(id){
+  if(!confirm("Видалити цей слот?"))return;
+  if(db) await deleteDoc(doc(db,"slots",id));
+  toast("Слот видалено");
+  await loadSlots();
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────
+async function loadSettings(){
+  if(!db)return;
+  try{
+    const snap=await getDoc(doc(db,"settings","payment"));
+    if(snap.exists()){
+      const d=snap.data();
+      document.getElementById("s-card").value=d.card||"";
+      document.getElementById("s-bank").value=d.bank||"";
+      document.getElementById("s-holder").value=d.holder||"";
+    }
+  }catch{}
+}
+async function saveSettings(){
+  const card=document.getElementById("s-card").value.trim();
+  const bank=document.getElementById("s-bank").value.trim();
+  const holder=document.getElementById("s-holder").value.trim();
+  if(!card){toast("Введіть номер картки");return;}
+  if(db) await setDoc(doc(db,"settings","payment"),{card,bank,holder},{merge:true});
+  toast("✅ Реквізити збережено");
+}
+function savePw(){
+  const p1=document.getElementById("s-newpw").value;
+  const p2=document.getElementById("s-newpw2").value;
+  if(p1.length<6){toast("Пароль мінімум 6 символів");return;}
+  if(p1!==p2){toast("Паролі не співпадають");return;}
+  localStorage.setItem("adminPw",p1);
+  toast("✅ Пароль змінено");
+  document.getElementById("s-newpw").value="";
+  document.getElementById("s-newpw2").value="";
+}
+
+// ─── HOURS CALCULATOR ────────────────────────────────────────
+async function loadHours(){
+  if(!db){document.getElementById("hours-list").innerHTML="<p style='color:var(--muted)'>Firebase не підключено</p>";return;}
+  try{
+    const snap=await getDocs(query(collection(db,"bookings"),where("status","==","completed")));
+    const completed=snap.docs.map(d=>({id:d.id,...d.data()}));
+    completed.sort((a,b)=>(b.completedAt||"").localeCompare(a.completedAt||""));
+    const totalMin=completed.length*55;
+    const hrs=Math.floor(totalMin/60);
+    const mins=totalMin%60;
+    document.getElementById("hours-total").textContent=hrs+(mins?"."+Math.round(mins/6):"");
+    document.getElementById("hours-sessions-count").textContent=`${completed.length} сесій · по 55 хвилин кожна`;
+    const listEl=document.getElementById("hours-list");
+    if(!completed.length){listEl.innerHTML=`<div class="empty-state"><div class="ico">🌱</div>Ще немає проведених сесій</div>`;return;}
+    listEl.innerHTML=`
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);text-align:left">
+              <th style="padding:8px 12px;color:var(--muted);font-weight:600">Дата</th>
+              <th style="padding:8px 12px;color:var(--muted);font-weight:600">Клієнт</th>
+              <th style="padding:8px 12px;color:var(--muted);font-weight:600">Telegram</th>
+              <th style="padding:8px 12px;color:var(--muted);font-weight:600">Пакет</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${completed.map(b=>{
+              const [y,m,d]=(b.date||"--").split("-");
+              const df=b.date?`${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}`:"─";
+              return`<tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:9px 12px">${df}</td>
+                <td style="padding:9px 12px">${b.clientName||"─"}</td>
+                <td style="padding:9px 12px">${b.clientTelegram?`<a href="https://t.me/${b.clientTelegram.replace('@','')}" target="_blank">${b.clientTelegram}</a>`:"─"}</td>
+                <td style="padding:9px 12px">${b.pkgName||"─"}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>`;
+  }catch(e){console.error(e);}
+}
+
+// ─── UTILS ────────────────────────────────────────────────────
+function fmtDate(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),3000);
+}
 </script>
+
+<!-- RESCHEDULE MODAL -->
+<div id="reschedule-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:18px;padding:32px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.2)">
+    <h3 style="margin-bottom:6px;font-size:1.1rem">🔄 Перенести час сесії</h3>
+    <p style="font-size:.85rem;color:#7d6e5e;margin-bottom:20px">Оберіть новий вільний слот:</p>
+    <div id="reschedule-slots" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="closeReschedule()" style="padding:10px 20px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:.9rem">Скасувати</button>
+      <button id="reschedule-confirm-btn" onclick="confirmReschedule()" style="padding:10px 20px;border:none;border-radius:8px;background:#8b6636;color:#fff;cursor:pointer;font-size:.9rem;opacity:.5" disabled>Підтвердити перенос</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
