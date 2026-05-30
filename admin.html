@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Алетея — Адмін</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --sage: #7c9a84; --sage-light: #a8c4af;
+      --cream: #f7f3ee; --warm: #e8ddd0;
+      --text: #3a3530; --text-light: #6b6560;
+      --urgent: #c4704a; --gold: #c9a84c;
+      --danger: #e74c3c; --success: #27ae60;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; color: var(--text); }
+
+    /* LOGIN */
+    .login-screen {
+      min-height: 100vh; display: flex;
+      align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #2c4a3e, #7c9a84);
+    }
+    .login-box {
+      background: white; border-radius: 16px;
+      padding: 2.5rem; width: 320px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .login-box h1 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+    .login-box p { color: var(--text-light); font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .inp { width:100%; padding:0.7rem; border:1.5px solid #e8e0d5; border-radius:8px; font-size:1rem; margin-bottom:1rem; }
+    .inp:focus { outline:none; border-color:var(--sage); }
+    .btn { width:100%; padding:0.8rem; background:var(--sage); color:white; border:none; border-radius:8px; font-size:1rem; cursor:pointer; }
+    .btn:hover { background:#6a8870; }
+    .err-msg { color:var(--danger); font-size:0.83rem; margin-top:0.5rem; display:none; }
+
+    /* ADMIN LAYOUT */
+    .admin-wrap { display:none; }
+    .topbar {
+      background: #2c4a3e; color: white;
+      padding: 0 1.5rem; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar h1 { font-size: 1.1rem; font-weight: 500; }
+    .topbar-right { display:flex; gap:1rem; align-items:center; }
+    .topbar button { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:0.4rem 0.9rem; border-radius:6px; cursor:pointer; font-size:0.85rem; }
+    .topbar button:hover { background:rgba(255,255,255,0.25); }
+
+    .tabs { background:white; border-bottom:1px solid #e8e0d5; display:flex; padding:0 1.5rem; gap:0; }
+    .tab { padding:0.9rem 1.2rem; cursor:pointer; font-size:0.9rem; color:var(--text-light); border-bottom:3px solid transparent; transition:all 0.2s; }
+    .tab.active { color:var(--sage); border-bottom-color:var(--sage); font-weight:600; }
+    .tab:hover { color:var(--sage); }
+
+    .main { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .panel { display:none; }
+    .panel.active { display:block; }
+
+    /* CARDS */
+    .card { background:white; border-radius:12px; padding:1.2rem; margin-bottom:1rem; box-shadow:0 1px 8px rgba(0,0,0,0.06); }
+    .card h2 { font-size:1rem; margin-bottom:1rem; color:var(--text); }
+
+    /* STATS */
+    .stats-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+    .stat { background:white; border-radius:12px; padding:1.2rem; text-align:center; box-shadow:0 1px 8px rgba(0,0,0,0.06); }
+    .stat .num { font-size:2rem; font-weight:700; color:var(--sage); }
+    .stat .lbl { font-size:0.78rem; color:var(--text-light); margin-top:0.3rem; }
+
+    /* BOOKINGS TABLE */
+    .filters { display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .filter-btn { padding:0.4rem 0.9rem; border:1.5px solid #e8e0d5; border-radius:20px; background:white; cursor:pointer; font-size:0.83rem; transition:all 0.2s; }
+    .filter-btn.active { background:var(--sage); color:white; border-color:var(--sage); }
+
+    .bookings-list { display:flex; flex-direction:column; gap:0.8rem; }
+    .booking-card {
+      background:white; border-radius:10px; padding:1rem;
+      box-shadow:0 1px 6px rgba(0,0,0,0.06); border-left:4px solid #e8e0d5;
+    }
+    .booking-card.status-pending { border-left-color: var(--gold); }
+    .booking-card.status-confirmed { border-left-color: var(--sage); }
+    .booking-card.status-completed { border-left-color: #27ae60; }
+    .booking-card.status-urgent { border-left-color: var(--urgent); }
+    .booking-top { display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; flex-wrap:wrap; }
+    .booking-name { font-weight:600; font-size:0.95rem; }
+    .booking-date { font-size:0.85rem; color:var(--text-light); }
+    .booking-meta { display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem; }
+    .chip { padding:0.2rem 0.6rem; border-radius:10px; font-size:0.75rem; }
+    .chip-sage { background:#e8f2ea; color:var(--sage); }
+    .chip-urgent { background:#fef0ea; color:var(--urgent); }
+    .chip-gold { background:#fdf6e3; color:var(--gold); }
+    .chip-gray { background:#f0ede8; color:var(--text-light); }
+    .chip-green { background:#e8f5ed; color:#27ae60; }
+    .chip-free { background:#e0f0e5; color:#27ae60; }
+    .booking-actions { display:flex; gap:0.5rem; margin-top:0.8rem; flex-wrap:wrap; }
+    .action-btn { padding:0.35rem 0.8rem; border-radius:6px; border:none; font-size:0.78rem; cursor:pointer; }
+    .btn-confirm { background:#e8f2ea; color:var(--sage); }
+    .btn-confirm:hover { background:var(--sage); color:white; }
+    .btn-done { background:#e8f5ed; color:#27ae60; }
+    .btn-done:hover { background:#27ae60; color:white; }
+    .btn-cancel { background:#fef0ee; color:var(--danger); }
+    .btn-cancel:hover { background:var(--danger); color:white; }
+    .booking-receipt { font-size:0.78rem; color:var(--text-light); margin-top:0.4rem; }
+    .booking-receipt a { color:var(--sage); }
+
+    /* HOURS CALCULATOR */
+    .calc-box { background: linear-gradient(135deg, #f0f7f2, #e8f2ea); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+    .hours-big { font-size:3.5rem; font-weight:700; color:var(--sage); }
+    .hours-label { color:var(--text-light); font-size:0.9rem; margin-top:0.3rem; }
+
+    /* SLOTS MANAGEMENT */
+    .slots-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:0.8rem; }
+    .slot-item { background:white; border-radius:8px; padding:0.8rem; border:1.5px solid #e8e0d5; display:flex; justify-content:space-between; align-items:center; }
+    .slot-item.booked { border-color:#e8f2ea; background:#f8fdf9; }
+    .slot-item.urgent { border-color:#f5ebe4; }
+    .slot-del { background:none; border:none; color:#ccc; cursor:pointer; font-size:1.1rem; padding:0.2rem; }
+    .slot-del:hover { color:var(--danger); }
+    .slot-info { font-size:0.85rem; }
+    .slot-info .date { font-weight:600; }
+    .slot-info .time { color:var(--text-light); }
+
+    /* ADD SLOT FORM */
+    .add-slot-form { display:flex; gap:0.7rem; flex-wrap:wrap; align-items:flex-end; }
+    .add-slot-form .fg { display:flex; flex-direction:column; gap:0.3rem; }
+    .add-slot-form label { font-size:0.78rem; color:var(--text-light); }
+    .add-slot-form input, .add-slot-form select { padding:0.6rem; border:1.5px solid #e8e0d5; border-radius:6px; font-size:0.85rem; }
+    .add-slot-form input:focus, .add-slot-form select:focus { outline:none; border-color:var(--sage); }
+    .btn-add { padding:0.6rem 1.2rem; background:var(--sage); color:white; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; }
+    .btn-add:hover { background:#6a8870; }
+
+    /* CLIENTS */
+    .client-card { background:white; border-radius:10px; padding:1rem; box-shadow:0 1px 6px rgba(0,0,0,0.06); margin-bottom:0.8rem; }
+    .client-top { display:flex; justify-content:space-between; align-items:center; }
+    .client-name { font-weight:600; }
+    .client-tg { color:var(--sage); font-size:0.85rem; }
+    .sessions-bar { background:#e8e0d5; border-radius:10px; height:8px; margin:0.7rem 0; overflow:hidden; }
+    .sessions-fill { background:var(--sage); height:100%; border-radius:10px; transition:width 0.3s; }
+    .sessions-text { font-size:0.8rem; color:var(--text-light); }
+
+    .empty-state { text-align:center; padding:3rem; color:var(--text-light); }
+    .badge-count { background:var(--urgent); color:white; border-radius:10px; padding:0.1rem 0.4rem; font-size:0.7rem; margin-left:0.3rem; }
+
+    .loading { text-align:center; padding:2rem; color:var(--text-light); }
+    .spinner { display:inline-block; width:24px; height:24px; border:3px solid #e8e0d5; border-top-color:var(--sage); border-radius:50%; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    @media (max-width:600px) {
+      .stats-row { grid-template-columns:1fr 1fr; }
+      .add-slot-form { flex-direction:column; }
+      .tabs { overflow-x:auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h1>🌿 Алетея</h1>
+    <p>Адміністративна панель</p>
+    <input class="inp" type="password" id="adminPass" placeholder="Пароль" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn" onclick="login()">Увійти</button>
+    <div class="err-msg" id="loginErr">Невірний пароль</div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-wrap" id="adminWrap">
+  <div class="topbar">
+    <h1>🌿 Алетея — Адмін</h1>
+    <div class="topbar-right">
+      <span id="pendingBadge" style="display:none; background:var(--urgent); color:white; border-radius:20px; padding:0.2rem 0.7rem; font-size:0.8rem;"></span>
+      <button onclick="logout()">Вийти</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('bookings')">Бронювання</div>
+    <div class="tab" onclick="showTab('slots')">Слоти</div>
+    <div class="tab" onclick="showTab('clients')">Клієнти</div>
+    <div class="tab" onclick="showTab('hours')">Години практики</div>
+  </div>
+
+  <div class="main">
+
+    <!-- BOOKINGS TAB -->
+    <div class="panel active" id="tab-bookings">
+      <div class="stats-row" id="statsRow">
+        <div class="stat"><div class="num" id="statTotal">—</div><div class="lbl">Всього бронювань</div></div>
+        <div class="stat"><div class="num" id="statPending">—</div><div class="lbl">Очікують підтвердження</div></div>
+        <div class="stat"><div class="num" id="statConfirmed">—</div><div class="lbl">Підтверджено</div></div>
+        <div class="stat"><div class="num" id="statCompleted">—</div><div class="lbl">Проведено</div></div>
+      </div>
+
+      <div class="filters">
+        <button class="filter-btn active" onclick="filterBookings('all', this)">Всі</button>
+        <button class="filter-btn" onclick="filterBookings('pending', this)">Очікують</button>
+        <button class="filter-btn" onclick="filterBookings('confirmed', this)">Підтверджено</button>
+        <button class="filter-btn" onclick="filterBookings('completed', this)">Проведено</button>
+        <button class="filter-btn" onclick="filterBookings('urgent', this)">⚡ Термінові</button>
+      </div>
+
+      <div id="bookingsLoading" class="loading"><div class="spinner"></div></div>
+      <div class="bookings-list" id="bookingsList"></div>
+    </div>
+
+    <!-- SLOTS TAB -->
+    <div class="panel" id="tab-slots">
+      <div class="card">
+        <h2>➕ Додати слот</h2>
+        <div class="add-slot-form">
+          <div class="fg">
+            <label>Дата</label>
+            <input type="date" id="newSlotDate" min="">
+          </div>
+          <div class="fg">
+            <label>Час</label>
+            <input type="time" id="newSlotTime" value="11:00">
+          </div>
+          <div class="fg">
+            <label>Тип</label>
+            <select id="newSlotType">
+              <option value="regular">Звичайний</option>
+              <option value="urgent">⚡ Терміновий</option>
+            </select>
+          </div>
+          <button class="btn-add" onclick="addSlot()">Додати</button>
+        </div>
+
+        <!-- Bulk add -->
+        <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid #f0ede8;">
+          <p style="font-size:0.83rem; color:var(--text-light); margin-bottom:0.7rem;">Масове додавання (кілька часів одразу):</p>
+          <div class="add-slot-form">
+            <div class="fg">
+              <label>Дата</label>
+              <input type="date" id="bulkDate" min="">
+            </div>
+            <div class="fg" style="flex:2">
+              <label>Часи через кому (напр: 10:00, 13:00, 17:00)</label>
+              <input type="text" id="bulkTimes" placeholder="10:00, 13:00, 17:00">
+            </div>
+            <div class="fg">
+              <label>Тип</label>
+              <select id="bulkType">
+                <option value="regular">Звичайний</option>
+                <option value="urgent">⚡ Терміновий</option>
+              </select>
+            </div>
+            <button class="btn-add" onclick="addBulkSlots()">Додати всі</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📅 Доступні слоти</h2>
+        <div id="slotsListAdmin" class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- CLIENTS TAB -->
+    <div class="panel" id="tab-clients">
+      <div class="card">
+        <h2>Клієнти з пакетами</h2>
+        <div id="clientsListAdmin" class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- HOURS TAB -->
+    <div class="panel" id="tab-hours">
+      <div class="calc-box">
+        <div class="hours-big" id="totalHours">0</div>
+        <div class="hours-label">годин практики (проведені сесії)</div>
+        <div style="font-size:0.85rem; color:var(--text-light); margin-top:0.5rem;" id="totalSessionsCount"></div>
+      </div>
+
+      <div class="card">
+        <h2>📊 Статистика по місяцях</h2>
+        <div id="monthlyStats"></div>
+      </div>
+
+      <div class="card">
+        <h2>✅ Проведені сесії</h2>
+        <div id="completedList" class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── FIREBASE ───
+const firebaseConfig = {
+  apiKey: "AIzaSyAb01cYm0zJHhJ1vEDruw4APHqPo3TYK4I",
+  authDomain: "aletheia-booking.firebaseapp.com",
+  projectId: "aletheia-booking",
+  storageBucket: "aletheia-booking.firebasestorage.app",
+  messagingSenderId: "118890506561",
+  appId: "1:118890506561:web:0925dc72d8dadb856c19c0",
+  measurementId: "G-X1HKYG1T8X"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ─── AUTH ───
+const ADMIN_PASS = 'aletheia2024'; // змінити при потребі
+let allBookings = [];
+let currentFilter = 'all';
+
+function login() {
+  const pass = document.getElementById('adminPass').value;
+  if (pass === ADMIN_PASS) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminWrap').style.display = 'block';
+    loadAll();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+  }
+}
+function logout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminWrap').style.display = 'none';
+}
+
+// ─── TABS ───
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+
+  if (name === 'slots') loadSlotsAdmin();
+  if (name === 'clients') loadClientsAdmin();
+  if (name === 'hours') loadHours();
+}
+
+// ─── LOAD ALL ───
+async function loadAll() {
+  await loadBookings();
+}
+
+// ─── BOOKINGS ───
+async function loadBookings() {
+  try {
+    const snap = await db.collection('bookings').orderBy('createdAt', 'desc').get();
+    allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStats();
+    renderBookings(currentFilter);
+    document.getElementById('bookingsLoading').style.display = 'none';
+  } catch(e) {
+    console.error(e);
+    document.getElementById('bookingsLoading').innerHTML = 'Помилка завантаження';
+  }
+}
+
+function renderStats() {
+  const total = allBookings.length;
+  const pending = allBookings.filter(b => b.status === 'pending').length;
+  const confirmed = allBookings.filter(b => b.status === 'confirmed').length;
+  const completed = allBookings.filter(b => b.status === 'completed').length;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statConfirmed').textContent = confirmed;
+  document.getElementById('statCompleted').textContent = completed;
+
+  if (pending > 0) {
+    const badge = document.getElementById('pendingBadge');
+    badge.style.display = 'block';
+    badge.textContent = pending + ' нових';
+  }
+}
+
+function filterBookings(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBookings(filter);
+}
+
+function renderBookings(filter) {
+  let list = allBookings;
+  if (filter === 'pending') list = list.filter(b => b.status === 'pending');
+  else if (filter === 'confirmed') list = list.filter(b => b.status === 'confirmed');
+  else if (filter === 'completed') list = list.filter(b => b.status === 'completed');
+  else if (filter === 'urgent') list = list.filter(b => b.isUrgent);
+
+  const container = document.getElementById('bookingsList');
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-state">Немає бронювань</div>';
+    return;
+  }
+  container.innerHTML = list.map(b => renderBookingCard(b)).join('');
+}
+
+function renderBookingCard(b) {
+  const statusLabel = { pending: 'Очікує', confirmed: 'Підтверджено', completed: 'Проведено', cancelled: 'Скасовано' };
+  const statusClass = b.isUrgent ? 'urgent' : (b.status || 'pending');
+  const date = b.date ? new Date(b.date + 'T12:00:00').toLocaleDateString('uk-UA', { day:'numeric', month:'long' }) : '—';
+  const tg = b.clientTelegram || '';
+  const receiptHtml = b.receiptType === 'link' && b.receiptUrl
+    ? `<div class="booking-receipt">Чек: <a href="${b.receiptUrl}" target="_blank">${b.receiptUrl.substring(0,40)}...</a></div>`
+    : b.receiptType === 'package' ? `<div class="booking-receipt">✅ Сесія з пакету</div>`
+    : b.receiptType === 'screenshot' ? `<div class="booking-receipt">📸 Скриншот (перевір у TG)</div>` : '';
+
+  const actionButtons = [];
+  if (b.status === 'pending') {
+    actionButtons.push(`<button class="action-btn btn-confirm" onclick="updateBookingStatus('${b.id}', 'confirmed')">✓ Підтвердити</button>`);
+  }
+  if (b.status !== 'completed') {
+    actionButtons.push(`<button class="action-btn btn-done" onclick="markCompleted('${b.id}', '${b.clientTelegram || ''}', '${b.pkgId || ''}')">✅ Провести</button>`);
+  }
+  actionButtons.push(`<button class="action-btn btn-cancel" onclick="updateBookingStatus('${b.id}', 'cancelled')">✗ Скасувати</button>`);
+
+  const price = b.pkgPrice === 0 ? '<span class="chip chip-free">З пакету</span>' : `<span class="chip chip-gray">${(b.pkgPrice||0).toLocaleString('uk-UA')} грн</span>`;
+
+  return `
+    <div class="booking-card status-${statusClass}" id="bcard-${b.id}">
+      <div class="booking-top">
+        <div>
+          <div class="booking-name">${b.clientName || '—'}</div>
+          <div class="booking-date">${date} · ${b.selectedTime || ''}${b.isUrgent ? ' ⚡' : ''}</div>
+        </div>
+        <span class="chip ${b.status === 'completed' ? 'chip-green' : b.status === 'confirmed' ? 'chip-sage' : 'chip-gold'}">${statusLabel[b.status] || b.status}</span>
+      </div>
+      <div class="booking-meta">
+        ${tg ? `<span class="chip chip-sage">${tg}</span>` : ''}
+        <span class="chip ${b.isUrgent ? 'chip-urgent' : 'chip-gray'}">${b.pkgName || '—'}</span>
+        ${price}
+        ${b.usedPackageSession ? '<span class="chip chip-free">Пакетна сесія</span>' : ''}
+      </div>
+      ${b.clientPhone ? `<div style="font-size:0.8rem;color:var(--text-light);margin-top:0.4rem">📞 ${b.clientPhone}</div>` : ''}
+      ${b.clientComment ? `<div style="font-size:0.8rem;color:var(--text-light);margin-top:0.3rem;font-style:italic">"${b.clientComment}"</div>` : ''}
+      ${receiptHtml}
+      <div class="booking-actions">${actionButtons.join('')}</div>
+    </div>`;
+}
+
+async function updateBookingStatus(id, status) {
+  try {
+    await db.collection('bookings').doc(id).update({ status });
+    const idx = allBookings.findIndex(b => b.id === id);
+    if (idx >= 0) allBookings[idx].status = status;
+    renderStats();
+    renderBookings(currentFilter);
+  } catch(e) { alert('Помилка: ' + e.message); }
+}
+
+async function markCompleted(bookingId, telegramNick, pkgId) {
+  try {
+    await db.collection('bookings').doc(bookingId).update({
+      status: 'completed',
+      completedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const idx = allBookings.findIndex(b => b.id === bookingId);
+    if (idx >= 0) { allBookings[idx].status = 'completed'; allBookings[idx].completedAt = new Date(); }
+    renderStats();
+    renderBookings(currentFilter);
+  } catch(e) { alert('Помилка: ' + e.message); }
+}
+
+// ─── SLOTS ───
+async function loadSlotsAdmin() {
+  const container = document.getElementById('slotsListAdmin');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const snap = await db.collection('slots')
+      .where('date', '>=', today)
+      .orderBy('date').orderBy('time').get();
+    const slots = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    if (slots.length === 0) {
+      container.innerHTML = '<div class="empty-state">Немає слотів. Додайте вище.</div>';
+      return;
+    }
+    container.innerHTML = `<div class="slots-grid">${slots.map(s => `
+      <div class="slot-item ${s.status === 'booked' ? 'booked' : ''} ${s.isUrgent ? 'urgent' : ''}">
+        <div class="slot-info">
+          <div class="date">${new Date(s.date+'T12:00:00').toLocaleDateString('uk-UA', {day:'numeric',month:'short'})} ${s.isUrgent ? '⚡' : ''}</div>
+          <div class="time">${s.time} · <span style="color:${s.status==='booked'?'var(--sage)':'#ccc'}">${s.status==='booked'?'Заброньовано':'Вільний'}</span></div>
+        </div>
+        ${s.status !== 'booked' ? `<button class="slot-del" onclick="deleteSlot('${s.id}')" title="Видалити">✕</button>` : ''}
+      </div>`).join('')}</div>`;
+  } catch(e) { container.innerHTML = 'Помилка: ' + e.message; }
+}
+
+async function addSlot() {
+  const date = document.getElementById('newSlotDate').value;
+  const time = document.getElementById('newSlotTime').value;
+  const type = document.getElementById('newSlotType').value;
+  if (!date || !time) { alert('Вкажи дату і час'); return; }
+  try {
+    await db.collection('slots').add({
+      date, time, status: 'available',
+      isUrgent: type === 'urgent',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    loadSlotsAdmin();
+  } catch(e) { alert('Помилка: ' + e.message); }
+}
+
+async function addBulkSlots() {
+  const date = document.getElementById('bulkDate').value;
+  const timesRaw = document.getElementById('bulkTimes').value;
+  const type = document.getElementById('bulkType').value;
+  if (!date || !timesRaw) { alert('Вкажи дату і часи'); return; }
+  const times = timesRaw.split(',').map(t => t.trim()).filter(t => t);
+  try {
+    const batch = db.batch();
+    times.forEach(time => {
+      const ref = db.collection('slots').doc();
+      batch.set(ref, {
+        date, time, status: 'available',
+        isUrgent: type === 'urgent',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    await batch.commit();
+    document.getElementById('bulkTimes').value = '';
+    loadSlotsAdmin();
+  } catch(e) { alert('Помилка: ' + e.message); }
+}
+
+async function deleteSlot(id) {
+  if (!confirm('Видалити цей слот?')) return;
+  await db.collection('slots').doc(id).delete();
+  loadSlotsAdmin();
+}
+
+// ─── CLIENTS ───
+async function loadClientsAdmin() {
+  const container = document.getElementById('clientsListAdmin');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const snap = await db.collection('clients').get();
+    const clients = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    if (clients.length === 0) {
+      container.innerHTML = '<div class="empty-state">Немає клієнтів з пакетами</div>';
+      return;
+    }
+    container.innerHTML = clients.map(c => {
+      const pkg = c.activePackage;
+      if (!pkg) return '';
+      const pct = pkg.sessionsTotal > 0 ? Math.round((pkg.sessionsUsed || 0) / pkg.sessionsTotal * 100) : 0;
+      return `
+        <div class="client-card">
+          <div class="client-top">
+            <div>
+              <div class="client-name">${c.telegramNick || c.id}</div>
+              <div style="font-size:0.8rem;color:var(--text-light)">${pkg.pkgName} · куплено ${pkg.purchasedAt?.toDate ? pkg.purchasedAt.toDate().toLocaleDateString('uk-UA') : '—'}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:1.3rem;font-weight:700;color:var(--sage)">${pkg.sessionsRemaining}</div>
+              <div style="font-size:0.75rem;color:var(--text-light)">залишилось</div>
+            </div>
+          </div>
+          <div class="sessions-bar"><div class="sessions-fill" style="width:${pct}%"></div></div>
+          <div class="sessions-text">${pkg.sessionsUsed || 0} використано з ${pkg.sessionsTotal}</div>
+          <div style="margin-top:0.8rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="action-btn btn-confirm" onclick="adjustSessions('${c.id}', 1)">+ Додати сесію</button>
+            <button class="action-btn btn-cancel" onclick="adjustSessions('${c.id}', -1)">− Прибрати сесію</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) { container.innerHTML = 'Помилка: ' + e.message; }
+}
+
+async function adjustSessions(clientId, delta) {
+  try {
+    const doc = await db.collection('clients').doc(clientId).get();
+    const pkg = doc.data().activePackage;
+    const newRem = Math.max(0, (pkg.sessionsRemaining || 0) + delta);
+    await db.collection('clients').doc(clientId).update({
+      'activePackage.sessionsRemaining': newRem,
+      'activePackage.sessionsTotal': pkg.sessionsTotal + (delta > 0 ? delta : 0)
+    });
+    loadClientsAdmin();
+  } catch(e) { alert('Помилка: ' + e.message); }
+}
+
+// ─── HOURS ───
+async function loadHours() {
+  const completedSnap = await db.collection('bookings').where('status', '==', 'completed').get();
+  const completed = completedSnap.docs.map(d => ({id: d.id, ...d.data()}));
+
+  const totalSessions = completed.length;
+  const totalHours = totalSessions * 50 / 60; // 50 min per session
+
+  document.getElementById('totalHours').textContent = totalHours.toFixed(1);
+  document.getElementById('totalSessionsCount').textContent = `${totalSessions} сесій · по 50 хвилин кожна`;
+
+  // Monthly breakdown
+  const monthly = {};
+  completed.forEach(b => {
+    const month = b.date ? b.date.substring(0,7) : 'невідомо';
+    monthly[month] = (monthly[month] || 0) + 1;
+  });
+  const monthlyEl = document.getElementById('monthlyStats');
+  const months = Object.keys(monthly).sort().reverse();
+  if (months.length === 0) {
+    monthlyEl.innerHTML = '<div class="empty-state">Немає даних</div>';
+  } else {
+    monthlyEl.innerHTML = months.map(m => {
+      const count = monthly[m];
+      const hrs = (count * 50 / 60).toFixed(1);
+      const label = new Date(m + '-01').toLocaleDateString('uk-UA', {month:'long', year:'numeric'});
+      return `<div class="payment-row" style="padding:0.6rem 0;border-bottom:1px solid #f0ede8;display:flex;justify-content:space-between">
+        <span style="color:var(--text-light)">${label}</span>
+        <span style="font-weight:600">${count} сесій · ${hrs} год</span>
+      </div>`;
+    }).join('');
+  }
+
+  // List of completed sessions
+  const listEl = document.getElementById('completedList');
+  listEl.innerHTML = completed.length === 0
+    ? '<div class="empty-state">Немає проведених сесій</div>'
+    : `<div>${completed.map(b => `
+        <div style="padding:0.6rem 0;border-bottom:1px solid #f0ede8;display:flex;justify-content:space-between;font-size:0.88rem">
+          <div>
+            <strong>${b.clientName || '—'}</strong>
+            <span style="color:var(--text-light);margin-left:0.5rem">${b.clientTelegram || ''}</span>
+          </div>
+          <div style="color:var(--text-light)">${b.date ? new Date(b.date+'T12:00:00').toLocaleDateString('uk-UA') : '—'}</div>
+        </div>`).join('')}</div>`;
+}
+
+// ─── DATE DEFAULTS ───
+function setDateDefaults() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('newSlotDate').min = today;
+  document.getElementById('newSlotDate').value = today;
+  document.getElementById('bulkDate').min = today;
+  document.getElementById('bulkDate').value = today;
+}
+setDateDefaults();
+</script>
+</body>
+</html>

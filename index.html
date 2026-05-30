@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Алетея — Психологічні сесії</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --sage: #7c9a84;
+      --sage-light: #a8c4af;
+      --cream: #f7f3ee;
+      --warm: #e8ddd0;
+      --text: #3a3530;
+      --text-light: #6b6560;
+      --urgent: #c4704a;
+      --urgent-light: #f5ebe4;
+      --gold: #c9a84c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Georgia', serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: linear-gradient(135deg, #2c4a3e 0%, #4a6741 30%, #7c9a84 60%, #b8cfc0 100%);
+    }
+    .hero video {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: 0.45; z-index: 0;
+    }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(44,74,62,0.4), rgba(44,74,62,0.7));
+      z-index: 1;
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      text-align: center; color: white; padding: 2rem 1rem;
+    }
+    .hero-content h1 {
+      font-size: clamp(2rem, 6vw, 4rem);
+      font-weight: 300; letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    .hero-content .subtitle {
+      font-size: clamp(0.9rem, 2vw, 1.2rem);
+      opacity: 0.9; font-style: italic;
+      margin-bottom: 2rem;
+    }
+    .hero-btn {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.5);
+      color: white; padding: 0.8rem 2.5rem;
+      border-radius: 50px; font-size: 1rem;
+      cursor: pointer; backdrop-filter: blur(10px);
+      transition: all 0.3s; text-decoration: none;
+    }
+    .hero-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+
+    /* MAIN BOOKING */
+    .booking-section {
+      max-width: 800px; margin: 0 auto;
+      padding: 3rem 1rem 5rem;
+    }
+    .section-title {
+      text-align: center; font-size: 1.8rem;
+      font-weight: 300; color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .section-subtitle {
+      text-align: center; color: var(--text-light);
+      margin-bottom: 2rem; font-style: italic;
+    }
+
+    /* STEPS */
+    .steps-nav {
+      display: flex; justify-content: center;
+      gap: 0; margin-bottom: 2.5rem;
+      background: white; border-radius: 50px;
+      padding: 0.3rem; box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+      max-width: 500px; margin-left: auto; margin-right: auto;
+    }
+    .step-dot {
+      flex: 1; padding: 0.5rem;
+      border-radius: 50px; text-align: center;
+      font-size: 0.75rem; color: var(--text-light);
+      transition: all 0.3s;
+    }
+    .step-dot.active {
+      background: var(--sage); color: white; font-weight: 600;
+    }
+    .step-dot.done { color: var(--sage); }
+
+    .step { display: none; animation: fadeIn 0.4s ease; }
+    .step.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* INFO BANNER */
+    .info-banner {
+      background: #f0f7f2; border-left: 3px solid var(--sage);
+      border-radius: 8px; padding: 0.8rem 1rem;
+      margin-bottom: 1.5rem; font-size: 0.9rem;
+      color: var(--text-light);
+    }
+    .info-banner strong { color: var(--sage); }
+
+    /* URGENT BANNER */
+    .urgent-section {
+      background: var(--urgent-light);
+      border: 1px solid #e8c0a8; border-radius: 12px;
+      padding: 1.2rem; margin-bottom: 1.5rem;
+    }
+    .urgent-section h3 {
+      color: var(--urgent); font-size: 1rem;
+      margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    /* PACKAGES */
+    .packages-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem; margin-bottom: 1rem;
+    }
+    .pkg-card {
+      background: white; border: 2px solid #e8e0d5;
+      border-radius: 12px; padding: 1.2rem;
+      cursor: pointer; transition: all 0.25s;
+      position: relative;
+    }
+    .pkg-card:hover { border-color: var(--sage); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .pkg-card.selected { border-color: var(--sage); background: #f0f7f2; box-shadow: 0 4px 20px rgba(124,154,132,0.25); }
+    .pkg-card.urgent-pkg { border-color: #e8c0a8; }
+    .pkg-card.urgent-pkg:hover { border-color: var(--urgent); }
+    .pkg-card.urgent-pkg.selected { border-color: var(--urgent); background: var(--urgent-light); }
+    .pkg-card .badge {
+      position: absolute; top: -8px; right: 12px;
+      background: var(--urgent); color: white;
+      font-size: 0.65rem; padding: 2px 8px;
+      border-radius: 10px; font-weight: 600;
+    }
+    .pkg-card .pkg-name {
+      font-size: 0.85rem; color: var(--text-light);
+      margin-bottom: 0.3rem;
+    }
+    .pkg-card .pkg-price {
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--text); margin-bottom: 0.3rem;
+    }
+    .pkg-card .pkg-price span { font-size: 0.9rem; font-weight: 400; color: var(--text-light); }
+    .pkg-card .pkg-per { font-size: 0.78rem; color: var(--sage); }
+    .pkg-card .pkg-desc { font-size: 0.78rem; color: var(--text-light); margin-top: 0.5rem; }
+
+    /* CAT BANNER */
+    .cat-banner {
+      display: none;
+      background: linear-gradient(135deg, #fff8f0, #ffeedd);
+      border: 1px solid #f0d0a8; border-radius: 12px;
+      padding: 1rem 1.2rem; margin-bottom: 1.5rem;
+      animation: fadeIn 0.4s;
+    }
+    .cat-banner.show { display: flex; align-items: center; gap: 1rem; }
+    .cat-emoji { font-size: 2rem; flex-shrink: 0; }
+    .cat-text strong { color: #c4704a; display: block; font-size: 0.95rem; }
+    .cat-text span { font-size: 0.83rem; color: var(--text-light); }
+
+    /* FORM ELEMENTS */
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label {
+      display: block; font-size: 0.85rem;
+      color: var(--text-light); margin-bottom: 0.4rem;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 0.7rem 0.9rem;
+      border: 1.5px solid #e8e0d5; border-radius: 8px;
+      font-size: 0.95rem; background: white;
+      transition: border 0.2s; font-family: inherit;
+      color: var(--text);
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      outline: none; border-color: var(--sage);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+
+    /* DATE/SLOTS */
+    .dates-grid {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .date-btn {
+      padding: 0.5rem 1rem; border: 1.5px solid #e8e0d5;
+      border-radius: 8px; background: white;
+      cursor: pointer; font-size: 0.85rem;
+      transition: all 0.2s; color: var(--text);
+    }
+    .date-btn:hover { border-color: var(--sage); }
+    .date-btn.selected { background: var(--sage); color: white; border-color: var(--sage); }
+
+    .times-grid {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .time-btn {
+      padding: 0.5rem 1rem; border: 1.5px solid #e8e0d5;
+      border-radius: 8px; background: white;
+      cursor: pointer; font-size: 0.9rem;
+      transition: all 0.2s; color: var(--text);
+    }
+    .time-btn:hover { border-color: var(--sage); }
+    .time-btn.selected { background: var(--sage); color: white; border-color: var(--sage); }
+    .time-btn.urgent-time { border-color: #e8c0a8; }
+    .time-btn.urgent-time.selected { background: var(--urgent); border-color: var(--urgent); }
+
+    .no-slots {
+      text-align: center; padding: 2rem;
+      color: var(--text-light); font-style: italic;
+    }
+
+    /* PAYMENT */
+    .payment-card {
+      background: white; border: 1.5px solid #e8e0d5;
+      border-radius: 12px; padding: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+    .payment-card h3 { font-size: 1rem; margin-bottom: 1rem; color: var(--text); }
+    .payment-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 0.5rem 0;
+      border-bottom: 1px solid #f0ebe4; font-size: 0.9rem;
+    }
+    .payment-row:last-child { border-bottom: none; }
+    .payment-row .label { color: var(--text-light); }
+    .payment-row .value { font-weight: 600; color: var(--text); }
+    .copy-btn {
+      background: var(--sage); color: white;
+      border: none; border-radius: 6px;
+      padding: 0.3rem 0.7rem; font-size: 0.75rem;
+      cursor: pointer; margin-left: 0.5rem;
+    }
+
+    .receipt-options { display: flex; gap: 0.8rem; margin-bottom: 1rem; }
+    .receipt-opt {
+      flex: 1; padding: 0.7rem; border: 1.5px solid #e8e0d5;
+      border-radius: 8px; cursor: pointer; text-align: center;
+      font-size: 0.85rem; transition: all 0.2s; background: white;
+    }
+    .receipt-opt.selected { border-color: var(--sage); background: #f0f7f2; color: var(--sage); font-weight: 600; }
+
+    /* FREE SESSION BANNER */
+    .free-banner {
+      background: linear-gradient(135deg, #f0f7f2, #e0f0e5);
+      border: 1.5px solid var(--sage-light);
+      border-radius: 12px; padding: 1.2rem;
+      margin-bottom: 1.2rem; text-align: center;
+    }
+    .free-banner .checkmark { font-size: 2rem; margin-bottom: 0.5rem; }
+    .free-banner strong { color: var(--sage); display: block; font-size: 1rem; }
+    .free-banner span { font-size: 0.85rem; color: var(--text-light); }
+
+    /* BUTTONS */
+    .btn-primary {
+      display: block; width: 100%;
+      background: var(--sage); color: white;
+      border: none; border-radius: 50px;
+      padding: 0.9rem 2rem; font-size: 1rem;
+      cursor: pointer; transition: all 0.25s;
+      font-family: inherit;
+    }
+    .btn-primary:hover { background: #6a8870; transform: translateY(-1px); }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: transparent; color: var(--text-light);
+      border: 1.5px solid #e8e0d5; border-radius: 50px;
+      padding: 0.7rem 1.5rem; font-size: 0.9rem;
+      cursor: pointer; transition: all 0.25s;
+      font-family: inherit; margin-bottom: 0.5rem;
+    }
+    .btn-secondary:hover { border-color: var(--sage); color: var(--sage); }
+    .btn-row { display: flex; gap: 0.8rem; }
+
+    /* CONFIRMATION */
+    .confirm-box {
+      background: white; border-radius: 16px;
+      padding: 2rem; text-align: center;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+    }
+    .confirm-box .big-check { font-size: 4rem; margin-bottom: 1rem; }
+    .confirm-box h2 { font-size: 1.5rem; font-weight: 300; margin-bottom: 0.5rem; }
+    .confirm-details {
+      background: var(--cream); border-radius: 10px;
+      padding: 1rem; margin: 1.5rem 0; text-align: left;
+    }
+    .confirm-details .row {
+      display: flex; justify-content: space-between;
+      padding: 0.4rem 0; font-size: 0.9rem;
+      border-bottom: 1px solid #e8e0d5;
+    }
+    .confirm-details .row:last-child { border: none; }
+    .confirm-details .row .l { color: var(--text-light); }
+    .confirm-details .row .r { font-weight: 600; }
+    .next-booking-note {
+      background: #f0f7f2; border-radius: 8px;
+      padding: 0.8rem 1rem; margin-top: 1rem;
+      font-size: 0.83rem; color: var(--sage);
+      border-left: 3px solid var(--sage);
+    }
+    .telegram-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: #229ED9; color: white;
+      border: none; border-radius: 50px;
+      padding: 0.8rem 2rem; font-size: 0.95rem;
+      cursor: pointer; text-decoration: none;
+      margin-top: 1rem; transition: all 0.25s;
+    }
+    .telegram-btn:hover { background: #1a8bc4; }
+
+    /* LOADING */
+    .loading {
+      text-align: center; padding: 2rem;
+      color: var(--text-light);
+    }
+    .spinner {
+      display: inline-block; width: 30px; height: 30px;
+      border: 3px solid #e8e0d5; border-top-color: var(--sage);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin-bottom: 0.5rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ERRORS */
+    .error-msg {
+      background: #fef0ee; border: 1px solid #f5c0b8;
+      color: #c0392b; border-radius: 8px;
+      padding: 0.7rem 1rem; font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+
+    @media (max-width: 600px) {
+      .packages-grid { grid-template-columns: 1fr 1fr; }
+      .btn-row { flex-direction: column-reverse; }
+    }
+    @media (max-width: 380px) {
+      .packages-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <video autoplay muted loop playsinline id="bgVideo">
+    <!-- Відео підкладається тут при наявності URL -->
+  </video>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1>Алетея</h1>
+    <p class="subtitle">Психологічні сесії · Безпечний простір для тебе</p>
+    <a href="#booking" class="hero-btn" onclick="smoothScroll()">Забронювати сесію</a>
+  </div>
+</section>
+
+<!-- BOOKING -->
+<section class="booking-section" id="booking">
+  <h2 class="section-title">Бронювання</h2>
+  <p class="section-subtitle">Декілька простих кроків — і ми зустрінемось</p>
+
+  <!-- Steps nav -->
+  <div class="steps-nav" id="stepsNav">
+    <div class="step-dot active" id="dot1">1. Пакет</div>
+    <div class="step-dot" id="dot2">2. Час</div>
+    <div class="step-dot" id="dot3">3. Про тебе</div>
+    <div class="step-dot" id="dot4">4. Оплата</div>
+  </div>
+
+  <!-- STEP 1: Package -->
+  <div class="step active" id="step1">
+
+    <!-- Info about 2-3 sessions -->
+    <div class="info-banner">
+      💡 <strong>Хочеш 2–3 сесії?</strong> Немає пакету під таку кількість — просто забронюй окремо кожну по 1000 грн у зручний час
+    </div>
+
+    <!-- Urgent slots section -->
+    <div class="urgent-section" id="urgentSection" style="display:none">
+      <h3>⚡ Термінові слоти — зараз доступні</h3>
+      <p style="font-size:0.83rem; color:#8a5a40; margin-bottom:0.8rem;">Сесія протягом найближчих 24–48 годин. Ціна вища через терміновість.</p>
+      <div class="times-grid" id="urgentSlotsList"></div>
+    </div>
+
+    <h3 style="font-size:1rem; color:var(--text-light); margin-bottom:1rem;">Оберіть формат:</h3>
+
+    <div class="packages-grid" id="packagesGrid">
+      <!-- filled by JS -->
+    </div>
+
+    <div style="margin-top:1.5rem">
+      <button class="btn-primary" id="btnStep1Next" onclick="goStep2()" disabled>Далі →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Date & Time -->
+  <div class="step" id="step2">
+
+    <!-- Telegram nick -->
+    <div class="card">
+      <div class="form-group" style="margin-bottom:0.5rem">
+        <label>Твій нік у Telegram <span style="color:#aaa">(для перевірки пакету)</span></label>
+        <input type="text" id="telegramNick" placeholder="@твій_нік" oninput="checkPackage()">
+      </div>
+    </div>
+
+    <!-- Cat banner (package balance) -->
+    <div class="cat-banner" id="catBanner">
+      <div class="cat-emoji">🐱</div>
+      <div class="cat-text">
+        <strong id="catText">У тебе залишилось X сесій!</strong>
+        <span id="catSubtext">Використай їх на максималочку 🌿</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="slotsLoading" class="loading">
+        <div class="spinner"></div><br>Завантажую доступні часи...
+      </div>
+      <div id="slotsContent" style="display:none">
+        <h3 style="font-size:0.95rem; margin-bottom:1rem; color:var(--text);">Оберіть дату:</h3>
+        <div class="dates-grid" id="datesGrid"></div>
+        <div id="timesSection" style="display:none">
+          <h3 style="font-size:0.95rem; margin-bottom:0.8rem; color:var(--text);">Оберіть час:</h3>
+          <div class="times-grid" id="timesGrid"></div>
+        </div>
+        <div id="noSlotsMsg" class="no-slots" style="display:none">
+          Немає доступних слотів. Адміністратор додасть нові найближчим часом.
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goStep(1)">← Назад</button>
+      <button class="btn-primary" id="btnStep2Next" onclick="goStep3()" disabled style="flex:1">Далі →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Info -->
+  <div class="step" id="step3">
+    <div class="card">
+      <div class="form-group">
+        <label>Твоє ім'я *</label>
+        <input type="text" id="clientName" placeholder="Як тебе звати?" required>
+      </div>
+      <div class="form-group">
+        <label>Telegram нік (якщо ще не вводила) *</label>
+        <input type="text" id="clientTelegramFinal" placeholder="@нік" required>
+      </div>
+      <div class="form-group">
+        <label>Телефон <span style="color:#aaa">(необов'язково)</span></label>
+        <input type="tel" id="clientPhone" placeholder="+380...">
+      </div>
+      <div class="form-group">
+        <label>Email <span style="color:#aaa">(необов'язково)</span></label>
+        <input type="email" id="clientEmail" placeholder="email@...">
+      </div>
+      <div class="form-group">
+        <label>Коментар <span style="color:#aaa">(необов'язково)</span></label>
+        <textarea id="clientComment" placeholder="Що хочеш обговорити, про що турбуєшся..."></textarea>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goStep(2)">← Назад</button>
+      <button class="btn-primary" onclick="goStep4()" style="flex:1">Далі →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Payment -->
+  <div class="step" id="step4">
+
+    <div id="freeSessionBanner" class="free-banner" style="display:none">
+      <div class="checkmark">✅</div>
+      <strong>Сесія з пакету — оплата не потрібна!</strong>
+      <span id="freeSessionText">Залишається ще X сесій після цього бронювання</span>
+    </div>
+
+    <div id="paymentSection">
+      <div class="payment-card">
+        <h3>💳 Реквізити для оплати</h3>
+        <div class="payment-row">
+          <span class="label">Банк</span>
+          <span class="value" id="payBank">Monobank</span>
+        </div>
+        <div class="payment-row">
+          <span class="label">Отримувач</span>
+          <span class="value" id="payHolder">Тетяна Рисак</span>
+        </div>
+        <div class="payment-row">
+          <span class="label">IBAN</span>
+          <div style="display:flex; align-items:center; flex-wrap:wrap; gap:0.3rem">
+            <span class="value" id="payCard" style="font-size:0.8rem; word-break:break-all"></span>
+            <button class="copy-btn" onclick="copyCard()">Скопіювати</button>
+          </div>
+        </div>
+        <div class="payment-row">
+          <span class="label">Сума</span>
+          <span class="value" id="payAmount" style="color:var(--sage); font-size:1.2rem"></span>
+        </div>
+      </div>
+
+      <div class="payment-card" id="urgentNote" style="display:none; border-color:#e8c0a8;">
+        <p style="font-size:0.85rem; color:var(--urgent);">
+          ⭐ <strong>Термінова сесія</strong> — підвищена ціна через можливість зустрітись найближчим часом.
+          Після оплати підтвердження надійде в Telegram протягом 1–2 годин.
+        </p>
+      </div>
+
+      <div class="payment-card">
+        <h3>📎 Підтвердження оплати</h3>
+        <div class="receipt-options">
+          <div class="receipt-opt selected" id="optLink" onclick="selectReceiptType('link')">🔗 Посилання на чек</div>
+          <div class="receipt-opt" id="optScreenshot" onclick="selectReceiptType('screenshot')">📸 Скриншот</div>
+        </div>
+        <div id="receiptLinkSection">
+          <div class="form-group">
+            <label>Посилання на чек Monobank</label>
+            <input type="text" id="receiptUrl" placeholder="https://send.monobank.ua/...">
+          </div>
+        </div>
+        <div id="receiptScreenshotSection" style="display:none">
+          <p style="font-size:0.83rem; color:var(--text-light); margin-bottom:0.5rem;">
+            Надішли скриншот оплати в Telegram після бронювання
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div id="errorMsg" class="error-msg" style="display:none"></div>
+
+    <button class="btn-primary" id="btnConfirm" onclick="confirmBooking()">Підтвердити бронювання ✓</button>
+    <button class="btn-secondary" onclick="goStep(3)" style="margin-top:0.5rem; width:100%">← Назад</button>
+  </div>
+
+  <!-- STEP 5: Confirmation -->
+  <div class="step" id="step5">
+    <div class="confirm-box">
+      <div class="big-check">🌿</div>
+      <h2>Дякую!</h2>
+      <p style="color:var(--text-light); font-size:0.9rem; margin-bottom:1rem;">
+        Бронювання прийнято. Я напишу в Telegram після підтвердження.
+      </p>
+      <div class="confirm-details" id="confirmDetails"></div>
+
+      <div class="next-booking-note" id="pkgReminderNote" style="display:none">
+        📌 <strong>Нагадування:</strong> Наступного разу просто обери зручний час — оплачувати більше не потрібно. Сесії з твого пакету вже зараховані.
+      </div>
+
+      <a href="https://t.me/aletheia_psych" class="telegram-btn" target="_blank">
+        ✈ Написати в Telegram
+      </a>
+      <br>
+      <button class="btn-secondary" onclick="location.reload()" style="margin-top:0.8rem">Нове бронювання</button>
+    </div>
+  </div>
+
+</section>
+
+<script>
+// ─────────────────────────────────────────
+// FIREBASE INIT
+// ─────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAb01cYm0zJHhJ1vEDruw4APHqPo3TYK4I",
+  authDomain: "aletheia-booking.firebaseapp.com",
+  projectId: "aletheia-booking",
+  storageBucket: "aletheia-booking.firebasestorage.app",
+  messagingSenderId: "118890506561",
+  appId: "1:118890506561:web:0925dc72d8dadb856c19c0",
+  measurementId: "G-X1HKYG1T8X"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ─────────────────────────────────────────
+// PACKAGES CONFIG
+// ─────────────────────────────────────────
+const PACKAGES = [
+  {
+    id: 'single',
+    name: 'Разова сесія',
+    price: 1000,
+    sessions: 1,
+    isUrgent: false,
+    desc: '50 хвилин · індивідуальна робота',
+    perSession: null
+  },
+  {
+    id: 'pkg4',
+    name: 'Пакет 4 сесії',
+    price: 3600,
+    sessions: 4,
+    isUrgent: false,
+    desc: 'Рекомендовано для початку',
+    perSession: 900
+  },
+  {
+    id: 'pkg8',
+    name: 'Пакет 8 сесій',
+    price: 6800,
+    sessions: 8,
+    isUrgent: false,
+    desc: 'Глибока робота — найпопулярніший',
+    perSession: 850
+  },
+  {
+    id: 'pkg12',
+    name: 'Пакет 12 сесій',
+    price: 9600,
+    sessions: 12,
+    isUrgent: false,
+    desc: 'Тривала підтримка та зміни',
+    perSession: 800
+  },
+  {
+    id: 'urgent',
+    name: 'Термінова сесія ⭐',
+    price: 1500,
+    sessions: 1,
+    isUrgent: true,
+    desc: 'Протягом 24–48 годин',
+    perSession: null
+  }
+];
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let state = {
+  selectedPkg: null,
+  selectedSlotId: null,
+  selectedDate: null,
+  selectedTime: null,
+  isUrgentSlot: false,
+  clientData: {},
+  receiptType: 'link',
+  availableSlots: [],
+  clientPackage: null, // from Firestore clients collection
+  usePackageSession: false,
+  paymentSettings: { bank: 'Monobank', card: '', holder: 'Тетяна Рисак' }
+};
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+async function init() {
+  loadPackages();
+  loadPaymentSettings();
+  checkUrgentSlots();
+}
+
+function loadPackages() {
+  const grid = document.getElementById('packagesGrid');
+  grid.innerHTML = '';
+  PACKAGES.filter(p => !p.isUrgent).forEach(pkg => {
+    const card = document.createElement('div');
+    card.className = 'pkg-card';
+    card.id = 'pkg_' + pkg.id;
+    card.onclick = () => selectPackage(pkg.id);
+    card.innerHTML = `
+      <div class="pkg-name">${pkg.name}</div>
+      <div class="pkg-price">${pkg.price.toLocaleString('uk-UA')} <span>грн</span></div>
+      ${pkg.perSession ? `<div class="pkg-per">${pkg.perSession} грн/сесія</div>` : ''}
+      <div class="pkg-desc">${pkg.desc}</div>
+      ${pkg.sessions > 1 ? `<div style="font-size:0.78rem;margin-top:0.4rem;color:var(--sage)">${pkg.sessions} сесій</div>` : ''}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function checkUrgentSlots() {
+  try {
+    const snap = await db.collection('slots')
+      .where('isUrgent', '==', true)
+      .where('status', '==', 'available')
+      .get();
+
+    if (!snap.empty) {
+      document.getElementById('urgentSection').style.display = 'block';
+      const list = document.getElementById('urgentSlotsList');
+      list.innerHTML = '';
+      snap.docs.forEach(doc => {
+        const s = doc.data();
+        const btn = document.createElement('button');
+        btn.className = 'time-btn urgent-time';
+        btn.textContent = `${s.date ? formatDateShort(s.date) : ''} ${s.time}`;
+        btn.onclick = () => selectUrgentSlot(doc.id, s);
+        list.appendChild(btn);
+      });
+    }
+  } catch(e) { console.log('urgent slots check:', e); }
+}
+
+async function loadPaymentSettings() {
+  try {
+    const doc = await db.collection('settings').doc('payment').get();
+    if (doc.exists) {
+      const d = doc.data();
+      state.paymentSettings = { bank: d.bank || 'Monobank', card: d.card || '', holder: d.holder || '' };
+    }
+  } catch(e) {}
+}
+
+// ─────────────────────────────────────────
+// PACKAGE SELECTION
+// ─────────────────────────────────────────
+function selectPackage(pkgId) {
+  state.selectedPkg = PACKAGES.find(p => p.id === pkgId);
+  state.isUrgentSlot = false;
+  document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('selected'));
+  const el = document.getElementById('pkg_' + pkgId);
+  if (el) el.classList.add('selected');
+  document.getElementById('btnStep1Next').disabled = false;
+}
+
+function selectUrgentSlot(slotId, slotData) {
+  state.selectedPkg = PACKAGES.find(p => p.id === 'urgent');
+  state.selectedSlotId = slotId;
+  state.selectedDate = slotData.date;
+  state.selectedTime = slotData.time;
+  state.isUrgentSlot = true;
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btnStep1Next').disabled = false;
+}
+
+// ─────────────────────────────────────────
+// STEP NAVIGATION
+// ─────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  document.querySelectorAll('.step-dot').forEach((d, i) => {
+    d.classList.remove('active', 'done');
+    if (i + 1 < n) d.classList.add('done');
+    if (i + 1 === n) d.classList.add('active');
+  });
+  document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function goStep2() {
+  goStep(2);
+  if (!state.isUrgentSlot) {
+    await loadAvailableSlots();
+  } else {
+    document.getElementById('slotsLoading').style.display = 'none';
+    document.getElementById('slotsContent').style.display = 'block';
+    document.getElementById('noSlotsMsg').style.display = 'none';
+    document.getElementById('timesSection').style.display = 'none';
+    document.getElementById('datesGrid').innerHTML = `
+      <div style="background:#fff0ea;border-radius:8px;padding:0.8rem;font-size:0.85rem;color:var(--urgent)">
+        ⚡ Термінова сесія: <strong>${formatDateShort(state.selectedDate)} о ${state.selectedTime}</strong>
+      </div>`;
+    document.getElementById('btnStep2Next').disabled = false;
+  }
+  // pre-fill telegram if entered on step 1
+  const nick = document.getElementById('telegramNick').value;
+  if (nick) checkPackage();
+}
+
+function goStep3() {
+  const nick = document.getElementById('telegramNick').value.trim();
+  if (nick) {
+    document.getElementById('clientTelegramFinal').value = nick;
+  }
+  goStep(3);
+}
+
+async function goStep4() {
+  const name = document.getElementById('clientName').value.trim();
+  const tg = document.getElementById('clientTelegramFinal').value.trim();
+  if (!name) { alert('Будь ласка, введи своє ім\'я'); return; }
+  if (!tg) { alert('Будь ласка, введи нік у Telegram'); return; }
+
+  state.clientData = {
+    clientName: name,
+    clientTelegram: tg.startsWith('@') ? tg : '@' + tg,
+    clientPhone: document.getElementById('clientPhone').value.trim(),
+    clientEmail: document.getElementById('clientEmail').value.trim(),
+    clientComment: document.getElementById('clientComment').value.trim()
+  };
+
+  // Check if this person has active package sessions to use
+  await checkIfCanUsePackage(state.clientData.clientTelegram);
+
+  goStep(4);
+  renderPaymentStep();
+}
+
+async function checkIfCanUsePackage(telegramNick) {
+  if (!state.selectedPkg || state.selectedPkg.sessions > 1) {
+    // They're buying a new package or urgent, no free sessions
+    state.usePackageSession = false;
+    return;
+  }
+  if (!telegramNick) { state.usePackageSession = false; return; }
+  try {
+    const nick = telegramNick.replace('@','').toLowerCase();
+    const doc = await db.collection('clients').doc(nick).get();
+    if (doc.exists) {
+      const d = doc.data();
+      if (d.activePackage && d.activePackage.sessionsRemaining > 0) {
+        state.clientPackage = d.activePackage;
+        state.usePackageSession = true;
+      }
+    }
+  } catch(e) {}
+}
+
+function renderPaymentStep() {
+  const pkg = state.selectedPkg;
+  const p = state.paymentSettings;
+
+  document.getElementById('payBank').textContent = p.bank;
+  document.getElementById('payHolder').textContent = p.holder;
+  document.getElementById('payCard').textContent = p.card;
+  document.getElementById('payAmount').textContent = (pkg ? pkg.price.toLocaleString('uk-UA') : '') + ' грн';
+
+  document.getElementById('urgentNote').style.display = (pkg && pkg.isUrgent) ? 'block' : 'none';
+
+  if (state.usePackageSession && !state.selectedPkg.isUrgent && state.selectedPkg.sessions === 1) {
+    document.getElementById('freeSessionBanner').style.display = 'block';
+    const rem = state.clientPackage.sessionsRemaining - 1;
+    document.getElementById('freeSessionText').textContent =
+      `Після цього бронювання залишиться ще ${rem} сес${rem === 1 ? 'ія' : 'ій'} у твоєму пакеті`;
+    document.getElementById('paymentSection').style.display = 'none';
+  } else {
+    document.getElementById('freeSessionBanner').style.display = 'none';
+    document.getElementById('paymentSection').style.display = 'block';
+  }
+}
+
+// ─────────────────────────────────────────
+// SLOTS LOADING
+// ─────────────────────────────────────────
+async function loadAvailableSlots() {
+  document.getElementById('slotsLoading').style.display = 'block';
+  document.getElementById('slotsContent').style.display = 'none';
+
+  try {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    let query = db.collection('slots')
+      .where('status', '==', 'available')
+      .where('date', '>=', todayStr)
+      .orderBy('date')
+      .orderBy('time');
+
+    // If not urgent package, exclude urgent slots
+    if (!state.selectedPkg?.isUrgent) {
+      query = db.collection('slots')
+        .where('status', '==', 'available')
+        .where('date', '>=', todayStr)
+        .orderBy('date')
+        .orderBy('time');
+    }
+
+    const snap = await query.get();
+    state.availableSlots = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(s => !s.isUrgent); // regular slots only in main flow
+
+    document.getElementById('slotsLoading').style.display = 'none';
+    document.getElementById('slotsContent').style.display = 'block';
+
+    if (state.availableSlots.length === 0) {
+      document.getElementById('noSlotsMsg').style.display = 'block';
+      document.getElementById('datesGrid').innerHTML = '';
+      return;
+    }
+
+    renderDates();
+  } catch(e) {
+    console.error(e);
+    document.getElementById('slotsLoading').style.display = 'none';
+    document.getElementById('slotsContent').style.display = 'block';
+    document.getElementById('noSlotsMsg').style.display = 'block';
+  }
+}
+
+function renderDates() {
+  const dates = [...new Set(state.availableSlots.map(s => s.date))];
+  const grid = document.getElementById('datesGrid');
+  grid.innerHTML = '';
+  dates.forEach(date => {
+    const btn = document.createElement('button');
+    btn.className = 'date-btn';
+    btn.textContent = formatDate(date);
+    btn.onclick = () => selectDate(date, btn);
+    grid.appendChild(btn);
+  });
+  document.getElementById('timesSection').style.display = 'none';
+  document.getElementById('noSlotsMsg').style.display = 'none';
+}
+
+function selectDate(date, btnEl) {
+  state.selectedDate = date;
+  state.selectedSlotId = null;
+  state.selectedTime = null;
+  document.getElementById('btnStep2Next').disabled = true;
+
+  document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('selected'));
+  btnEl.classList.add('selected');
+
+  const slots = state.availableSlots.filter(s => s.date === date);
+  const timesGrid = document.getElementById('timesGrid');
+  timesGrid.innerHTML = '';
+  slots.forEach(slot => {
+    const btn = document.createElement('button');
+    btn.className = 'time-btn';
+    btn.textContent = slot.time;
+    btn.onclick = () => selectTime(slot, btn);
+    timesGrid.appendChild(btn);
+  });
+  document.getElementById('timesSection').style.display = 'block';
+}
+
+function selectTime(slot, btnEl) {
+  state.selectedSlotId = slot.id;
+  state.selectedTime = slot.time;
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+  btnEl.classList.add('selected');
+  document.getElementById('btnStep2Next').disabled = false;
+}
+
+// ─────────────────────────────────────────
+// TELEGRAM PACKAGE CHECK
+// ─────────────────────────────────────────
+let checkTimeout;
+function checkPackage() {
+  clearTimeout(checkTimeout);
+  checkTimeout = setTimeout(async () => {
+    const raw = document.getElementById('telegramNick').value.trim();
+    if (!raw || raw.length < 3) {
+      document.getElementById('catBanner').classList.remove('show');
+      return;
+    }
+    const nick = raw.replace('@','').toLowerCase();
+    try {
+      const doc = await db.collection('clients').doc(nick).get();
+      if (doc.exists) {
+        const d = doc.data();
+        if (d.activePackage && d.activePackage.sessionsRemaining > 0) {
+          const rem = d.activePackage.sessionsRemaining;
+          document.getElementById('catText').textContent = `У тебе залишилось ${rem} сес${rem === 1 ? 'ія' : 'ій'} у пакеті!`;
+          document.getElementById('catSubtext').textContent = `Пакет «${d.activePackage.pkgName}» — використай їх на максималочку 🌿`;
+          document.getElementById('catBanner').classList.add('show');
+          state.clientPackage = d.activePackage;
+        } else {
+          document.getElementById('catBanner').classList.remove('show');
+          state.clientPackage = null;
+        }
+      } else {
+        document.getElementById('catBanner').classList.remove('show');
+        state.clientPackage = null;
+      }
+    } catch(e) {}
+  }, 600);
+}
+
+// ─────────────────────────────────────────
+// RECEIPT TYPE
+// ─────────────────────────────────────────
+function selectReceiptType(type) {
+  state.receiptType = type;
+  document.getElementById('optLink').classList.toggle('selected', type === 'link');
+  document.getElementById('optScreenshot').classList.toggle('selected', type === 'screenshot');
+  document.getElementById('receiptLinkSection').style.display = type === 'link' ? 'block' : 'none';
+  document.getElementById('receiptScreenshotSection').style.display = type === 'screenshot' ? 'block' : 'none';
+}
+
+// ─────────────────────────────────────────
+// CONFIRM BOOKING
+// ─────────────────────────────────────────
+async function confirmBooking() {
+  const btn = document.getElementById('btnConfirm');
+  const errorDiv = document.getElementById('errorMsg');
+  errorDiv.style.display = 'none';
+
+  // Validation
+  if (!state.usePackageSession) {
+    if (state.receiptType === 'link') {
+      const url = document.getElementById('receiptUrl').value.trim();
+      if (!url) {
+        errorDiv.textContent = 'Будь ласка, вкажи посилання на чек або обери "Скриншот"';
+        errorDiv.style.display = 'block'; return;
+      }
+    }
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Зберігаю...';
+
+  try {
+    const pkg = state.selectedPkg;
+    const tg = state.clientData.clientTelegram;
+    const receiptUrl = state.receiptType === 'link' ? document.getElementById('receiptUrl').value.trim() : '';
+
+    // Create booking
+    const bookingData = {
+      ...state.clientData,
+      date: state.selectedDate,
+      slotId: state.selectedSlotId,
+      pkgId: pkg.id,
+      pkgName: pkg.name,
+      pkgPrice: state.usePackageSession ? 0 : pkg.price,
+      receiptType: state.usePackageSession ? 'package' : state.receiptType,
+      receiptUrl: receiptUrl,
+      status: 'pending',
+      isUrgent: pkg.isUrgent || false,
+      usedPackageSession: state.usePackageSession,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    const bookingRef = await db.collection('bookings').add(bookingData);
+
+    // Mark slot as booked
+    if (state.selectedSlotId) {
+      await db.collection('slots').doc(state.selectedSlotId).update({
+        status: 'booked',
+        bookingId: bookingRef.id
+      });
+    }
+
+    // Update client package if used
+    if (state.usePackageSession && state.clientPackage) {
+      const nick = tg.replace('@','').toLowerCase();
+      const newRemaining = state.clientPackage.sessionsRemaining - 1;
+      await db.collection('clients').doc(nick).update({
+        'activePackage.sessionsRemaining': newRemaining,
+        'activePackage.sessionsUsed': firebase.firestore.FieldValue.increment(1),
+        'activePackage.lastBookingId': bookingRef.id,
+        'activePackage.lastBookingDate': state.selectedDate
+      });
+    }
+
+    // If buying new package (pkg.sessions > 1), create/update client record
+    if (pkg.sessions > 1 && !state.usePackageSession) {
+      const nick = tg.replace('@','').toLowerCase();
+      await db.collection('clients').doc(nick).set({
+        telegramNick: tg,
+        activePackage: {
+          pkgId: pkg.id,
+          pkgName: pkg.name,
+          sessionsTotal: pkg.sessions,
+          sessionsRemaining: pkg.sessions - 1, // first session is current one
+          sessionsUsed: 1,
+          purchasedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastBookingId: bookingRef.id,
+          lastBookingDate: state.selectedDate
+        },
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+
+    showConfirmation(bookingRef.id, pkg, state.usePackageSession);
+  } catch(e) {
+    console.error(e);
+    errorDiv.textContent = 'Помилка збереження. Спробуй ще раз або напиши в Telegram.';
+    errorDiv.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Підтвердити бронювання ✓';
+  }
+}
+
+function showConfirmation(bookingId, pkg, usedPackage) {
+  goStep(5);
+
+  const details = document.getElementById('confirmDetails');
+  details.innerHTML = `
+    <div class="row"><span class="l">Дата</span><span class="r">${formatDate(state.selectedDate)}</span></div>
+    <div class="row"><span class="l">Час</span><span class="r">${state.selectedTime}</span></div>
+    <div class="row"><span class="l">Формат</span><span class="r">${pkg.name}</span></div>
+    <div class="row"><span class="l">Оплата</span><span class="r">${usedPackage ? '✅ З пакету' : pkg.price.toLocaleString('uk-UA') + ' грн'}</span></div>
+    <div class="row"><span class="l">Підтвердження</span><span class="r">У Telegram найближчим часом</span></div>
+  `;
+
+  // Show package reminder if bought new package
+  if (pkg.sessions > 1) {
+    document.getElementById('pkgReminderNote').style.display = 'block';
+  } else {
+    document.getElementById('pkgReminderNote').style.display = 'none';
+  }
+}
+
+// ─────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('uk-UA', { weekday: 'short', day: 'numeric', month: 'long' });
+}
+function formatDateShort(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' });
+}
+function copyCard() {
+  const card = document.getElementById('payCard').textContent;
+  navigator.clipboard.writeText(card).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Скопійовано!';
+    setTimeout(() => btn.textContent = 'Скопіювати', 2000);
+  });
+}
+function smoothScroll() {
+  event.preventDefault();
+  document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ─────────────────────────────────────────
+// START
+// ─────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
