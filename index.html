@@ -1022,21 +1022,18 @@ async function confirmPackageBooking() {
     });
     await updateDoc(doc(db, "slots", S.selSlotId), { status: "booked", bookingId: bkRef.id });
     if (S.clientData.usedPackageDoc) await usePackageSession(S.clientData.usedPackageDoc);
-    // Рахуємо залишок сесій після списання
+    // Надсилаємо через загальну tgNotify — plain text, з обробкою помилок
     const remAfter = S.activePackage ? (S.activePackage.sessionsRemaining - 1) : "?";
     const urgentNote = S.clientData.isUrgentSurcharge ? "\n⚡ Термінова сесія — доплата 450 грн" : "";
-    fetch(`https://api.telegram.org/bot8326407894:AAEoJI1SP7m_hnwZQmdIBuN38dQ8c8Can1w/sendMessage`, {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ chat_id:"8171399054", text:
-        "📦 Новий запис (пакет)\n" +
-        "Ім'я: "+S.clientData.name+"\n" +
-        "Telegram: "+S.clientData.telegram+"\n" +
-        "Час: "+S.selDate+" "+S.selSlotTime+"\n" +
-        "Пакет: "+S.clientData.pkgName+"\n" +
-        "Залишилось сесій після цього: "+remAfter+
-        urgentNote
-      })
-    }).catch(()=>{});
+    const bkForTg = {
+      date: S.selDate, time: S.selSlotTime,
+      clientName: S.clientData.name, clientTelegram: S.clientData.telegram,
+      pkgName: S.clientData.pkgName + " (з пакету)",
+      pkgPrice: S.clientData.isUrgentSurcharge ? 450 : 0,
+      clientComment: (S.clientData.comment||"") + urgentNote + "\nЗалишилось сесій після цього: "+remAfter,
+      receiptType: "package", receiptUrl: ""
+    };
+    await tgNotify(bkForTg, null);
     const [y,m,d] = S.selDate.split("-");
     document.getElementById("confirm-details").innerHTML =
       "<p>Дата: <strong>"+parseInt(d)+" "+MONTHS[parseInt(m)-1]+" "+y+"</strong></p><p>Час: <strong>"+S.selSlotTime+"</strong></p><p>Оплата: <strong>З пакету</strong></p>";
@@ -1495,35 +1492,45 @@ async function confirmBooking() {
 async function tgNotify(bk, file) {
   if (!TG_TOKEN || TG_TOKEN.includes("ВАШ")) return;
   const [y,m,d]=bk.date.split("-");
-  const dateFmt=`${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}`;
-  const caption=[
-    "🗓 *НОВЕ БРОНЮВАННЯ!*","",
-    `👤 *Ім'я:* ${bk.clientName}`,
-    bk.clientTelegram?`✈️ *Telegram:* ${bk.clientTelegram}`:"",
-    `📅 *Дата:* ${dateFmt}`,
-    `⏰ *Час:* ${bk.time}`,
-    `📦 *Пакет:* ${bk.pkgName}`,
-    `💰 *Сума:* ${bk.pkgPrice.toLocaleString("uk-UA")} грн`,
-    bk.clientComment?`💬 *Коментар:* ${bk.clientComment}`:"","",
-    bk.receiptType==="link"?`🔗 *Квитанція:* ${bk.receiptUrl}`:"📷 *Квитанція:* фотодивись вище",
-    "","_Перевір в адмін-панелі (admin.html)_"
-  ].filter(Boolean).join("\n");
+  const dObj=new Date(parseInt(y),parseInt(m)-1,parseInt(d));
+  const dayName=WDAYS[dObj.getDay()];
+  const dateFmt=dayName+", "+parseInt(d)+" "+MONTHS[parseInt(m)-1]+" "+y;
+  // Plain text — БЕЗ parse_mode, щоб спецсимволи в іменах не ламали запит
+  const txt=[
+    "🗓 НОВЕ БРОНЮВАННЯ!",
+    "",
+    "👤 Ім'я: "+(bk.clientName||"─"),
+    bk.clientTelegram?"✈️ Telegram: "+bk.clientTelegram:"",
+    "📅 Дата: "+dateFmt,
+    "⏰ Час: "+(bk.time||"─"),
+    "📦 Пакет: "+(bk.pkgName||"─"),
+    "💰 Сума: "+(bk.pkgPrice||0).toLocaleString("uk-UA")+" грн",
+    bk.clientComment?"💬 Коментар: "+bk.clientComment:"",
+    "",
+    bk.receiptType==="link"?"🔗 Квитанція: "+bk.receiptUrl:"📷 Квитанція: фото вище",
+    "",
+    "👉 Перевір в адмін-панелі"
+  ].filter(x=>x!==undefined&&x!==null).join("\n");
 
   try {
+    let res;
     if (file) {
       const fd=new FormData();
       fd.append("chat_id",TG_CHAT_ID);
       fd.append("photo",file,"receipt.jpg");
-      fd.append("caption",caption);
-      fd.append("parse_mode","Markdown");
-      await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`,{method:"POST",body:fd});
+      fd.append("caption",txt);
+      res=await fetch("https://api.telegram.org/bot"+TG_TOKEN+"/sendPhoto",{method:"POST",body:fd});
     } else {
-      await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({chat_id:TG_CHAT_ID,text:caption,parse_mode:"Markdown"})
+      res=await fetch("https://api.telegram.org/bot"+TG_TOKEN+"/sendMessage",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({chat_id:TG_CHAT_ID,text:txt})
       });
     }
-  } catch(e){ console.warn("TG error (non-critical):",e); }
+    const json=await res.json();
+    if(!json.ok){console.error("TG API error:",json.description,json);}
+    else{console.log("TG sent OK");}
+  } catch(e){console.error("TG fetch error:",e);}
 }
 
 // ─── SUCCESS PAGE ────────────────────────────────────────────
