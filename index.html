@@ -939,6 +939,12 @@ async function checkClientPackage() {
       document.getElementById("tg-pkg-active-text").innerHTML =
         "<strong>🐱 У тебе залишилось " + rem + " " + plural + " в пакеті!</strong><br>" +
         "Пакет «" + pkg.packageName + "» — оплата не потрібна 🌿 Просто обери час і натисни — я все підтягну по твоєму Telegram!";
+      // Якщо остання сесія — чорний котик з попередженням
+      if (rem === 1) {
+        document.getElementById("tg-pkg-active-text").innerHTML =
+          "<strong>🐈‍⬛ Це твоя ОСТАННЯ сесія в пакеті!</strong><br>" +
+          "Пакет «" + pkg.packageName + "» — оплата зараз не потрібна, але після цієї сесії пакет закінчиться. Якщо хочеш продовжити — оформи новий 🌿";
+      }
       activeDiv.style.display = "block";
       // Автоматично виставляємо пакет у прихованому select
       const sel = document.getElementById("f-pkg");
@@ -1523,11 +1529,16 @@ async function tgNotify(bk, file) {
 // ─── SUCCESS PAGE ────────────────────────────────────────────
 function showSuccess(bk) {
   const [y,m,d]=bk.date.split("-");
+  const dObj = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+  const dayName = WDAYS[dObj.getDay()]; // день тижня
+  const priceText = bk.pkgPrice > 0
+    ? `${bk.pkgPrice.toLocaleString("uk-UA")} грн`
+    : (bk.isUrgentSurcharge ? "450 грн (доплата за термінову з пакету)" : "З пакету 🌿");
   document.getElementById("confirm-details").innerHTML=`
-    <div>📅 <b>Дата та час:</b> ${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}, ${bk.time}</div>
+    <div>📅 <b>Дата та час:</b> ${dayName}, ${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y} о ${bk.time}</div>
     <div>👤 <b>Ім'я:</b> ${bk.clientName}</div>
     <div>📦 <b>Пакет:</b> ${bk.pkgName}</div>
-    <div>💰 <b>Сума:</b> ${bk.pkgPrice.toLocaleString("uk-UA")} грн</div>
+    <div>💰 <b>Сума:</b> ${priceText}</div>
     <div>📌 <b>Статус:</b> <span style="color:#1e6b40;font-weight:600">✅ Підтверджено</span></div>
   `;
   // Показуємо нотатку про наступне бронювання для пакетів

@@ -229,6 +229,7 @@ header{
   <div class="nav-tabs">
     <div class="nav-tab active" id="nt-bookings" onclick="showTab('bookings')">📋 Всі записи</div>
     <div class="nav-tab"        id="nt-slots"    onclick="showTab('slots')">🗓 Слоти</div>
+    <div class="nav-tab"        id="nt-packages" onclick="showTab('packages')">📦 Пакети</div>
     <div class="nav-tab"        id="nt-hours"    onclick="showTab('hours')">⏱ Години практики</div>
     <div class="nav-tab"        id="nt-settings" onclick="showTab('settings')">⚙️ Налаштування</div>
   </div>
@@ -244,6 +245,15 @@ header{
     <!-- ── TAB: ALL BOOKINGS ── -->
     <div id="tab-bookings" class="tab-panel active">
       <div id="all-list"><div class="loading"><div class="spinner"></div>Завантаження…</div></div>
+    </div>
+
+    <!-- ── TAB: PACKAGES ── -->
+    <div id="tab-packages" class="tab-panel">
+      <div class="settings-form" style="margin-bottom:16px">
+        <h3>📦 Активні пакети клієнтів</h3>
+        <p style="font-size:.85rem;color:var(--muted);margin-top:6px;line-height:1.6">Клієнти, які оплатили пакет і мають залишок сесій. Сортування: найменше залишилось — першими.</p>
+      </div>
+      <div id="packages-list"><div class="loading"><div class="spinner"></div>Завантаження…</div></div>
     </div>
 
     <!-- ── TAB: HOURS ── -->
@@ -463,11 +473,12 @@ async function initAdmin(){
 
 // ─── TABS ─────────────────────────────────────────────────────
 function showTab(t){
-  ["bookings","slots","hours","settings"].forEach(x=>{
+  ["bookings","slots","packages","hours","settings"].forEach(x=>{
     const tp=document.getElementById(`tab-${x}`); if(tp) tp.classList.toggle("active",x===t);
     const nt=document.getElementById(`nt-${x}`);  if(nt) nt.classList.toggle("active",x===t);
   });
   if(t==="hours") loadHours();
+  if(t==="packages") loadPackages();
 }
 
 // ─── BOOKINGS ────────────────────────────────────────────────
@@ -698,6 +709,65 @@ function savePw(){
   toast("✅ Пароль змінено");
   document.getElementById("s-newpw").value="";
   document.getElementById("s-newpw2").value="";
+}
+
+// ─── PACKAGES TAB ─────────────────────────────────────────────
+async function loadPackages(){
+  const el=document.getElementById("packages-list");
+  if(!db){el.innerHTML="<p style='color:var(--muted);padding:16px'>Firebase не підключено</p>";return;}
+  try{
+    const snap=await getDocs(collection(db,"clientPackages"));
+    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+    // Тільки активні (є залишок) + сортуємо: менше залишилось — першими
+    const active=all.filter(p=>(p.sessionsRemaining||0)>0)
+      .sort((a,b)=>(a.sessionsRemaining||0)-(b.sessionsRemaining||0));
+    const finished=all.filter(p=>(p.sessionsRemaining||0)===0)
+      .sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+
+    if(!all.length){
+      el.innerHTML=`<div class="empty-state"><div class="ico">📦</div>Пакетів ще немає</div>`;
+      return;
+    }
+
+    const renderCard=(p,isFinished)=>{
+      const rem=p.sessionsRemaining||0;
+      const total=p.sessionsTotal||0;
+      const used=p.sessionsUsed||0;
+      const pct=total>0?Math.round((used/total)*100):0;
+      const barColor=rem===0?"#ccc":rem===1?"#e05050":rem<=3?"#e0a030":"#1e6b40";
+      const dateStr=p.createdAt?p.createdAt.slice(0,10):"─";
+      return`<div class="bk-card" style="${isFinished?"opacity:.55":""}">
+        <div class="bk-head">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.3rem">${rem===0?"✅":rem===1?"⚠️":"📦"}</span>
+            <div>
+              <div style="font-weight:600;font-size:1rem">${p.telegram||"─"}</div>
+              <div style="font-size:.8rem;color:var(--muted)">${p.packageName||"─"} · куплено ${dateStr}</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:1.6rem;font-weight:700;color:${barColor};line-height:1">${rem}</div>
+            <div style="font-size:.75rem;color:var(--muted)">з ${total} сесій</div>
+          </div>
+        </div>
+        <div style="background:#f0ece6;border-radius:6px;height:8px;overflow:hidden;margin-bottom:8px">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:6px;transition:width .3s"></div>
+        </div>
+        <div style="font-size:.8rem;color:var(--muted)">Використано: ${used} · Залишилось: ${rem}${rem===1?" ⚠️ остання сесія!":""}</div>
+      </div>`;
+    };
+
+    let html="";
+    if(active.length){
+      html+=`<div style="font-size:.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Активні — ${active.length}</div>`;
+      html+=active.map(p=>renderCard(p,false)).join("");
+    }
+    if(finished.length){
+      html+=`<div style="font-size:.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">Завершені — ${finished.length}</div>`;
+      html+=finished.map(p=>renderCard(p,true)).join("");
+    }
+    el.innerHTML=html;
+  }catch(e){console.error(e);el.innerHTML="<p style='color:red;padding:16px'>Помилка завантаження</p>";}
 }
 
 // ─── HOURS CALCULATOR ────────────────────────────────────────
