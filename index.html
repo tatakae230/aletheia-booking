@@ -1142,9 +1142,15 @@ async function loadSlots(yr, mo) {
       const q = query(collection(db,"slots"),
         where("date",">=",from), where("date","<=",to));
       const snap = await getDocs(q);
+      const now = new Date();
       snap.forEach(d => {
         const v = { id:d.id, ...d.data() };
         if (v.status !== "available") return;
+        // Прибираємо слоти що вже минули по часу
+        if (v.date && v.time) {
+          const slotDt = new Date(v.date + "T" + v.time + ":00");
+          if (slotDt <= now) return;
+        }
         if (!S.slots[v.date]) S.slots[v.date] = [];
         S.slots[v.date].push(v);
       });
