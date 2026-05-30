@@ -449,6 +449,10 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
   <!-- CALENDAR -->
   <div class="section">
     <div class="section-title">Оберіть дату та час</div>
+    <div style="background:linear-gradient(135deg,#fff8f0,#ffeedd);border:1.5px solid #f0c890;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:.82rem;color:#7a4a00;line-height:1.6;display:flex;align-items:flex-start;gap:10px">
+      <span style="font-size:1.4rem;flex-shrink:0">🐱</span>
+      <span>💡 <strong>Вже маєш пакет?</strong> Просто обери зручний час і перейди далі — на наступному кроці введи свій Telegram-нік, і я одразу побачу скільки сесій у тебе залишилось. <strong>Оплачувати більше не потрібно!</strong></span>
+    </div>
     <div class="cal-wrapper">
       <div class="cal-head">
         <button onclick="chgMonth(-1)">‹</button>
@@ -914,25 +918,33 @@ async function checkClientPackage() {
   if (!db) return;
   const tg = document.getElementById("f-tg").value.trim();
   const activeDiv = document.getElementById("tg-pkg-active");
-  const hintDiv = document.getElementById("tg-pkg-hint");
-  if (!tg || tg.length < 2) { activeDiv.style.display = "none"; return; }
+  if (!tg || tg.length < 2) { activeDiv.style.display = "none"; S.activePackage = null; return; }
   const handle = tg.startsWith("@") ? tg : "@" + tg;
   try {
-    const { getDocs: _getDocs, query: _query, collection: _coll, where: _where } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    const snap = await _getDocs(_query(_coll(db, "clientPackages"), _where("telegram", "==", handle), _where("sessionsRemaining", ">", 0)));
-    if (!snap.empty) {
-      const pkg = snap.docs[0].data();
-      const pkgDocId = snap.docs[0].id;
-      S.activePackage = { docId: pkgDocId, ...pkg };
+    // ⚠️ Тільки один where щоб уникнути потреби composite index у Firestore!
+    const snap = await getDocs(query(collection(db, "clientPackages"), where("telegram", "==", handle)));
+    // Фільтруємо по sessionsRemaining в JS
+    const active = snap.docs.filter(d => (d.data().sessionsRemaining || 0) > 0);
+    if (active.length > 0) {
+      // Беремо найновіший активний пакет
+      active.sort((a,b) => (b.data().createdAt||"").localeCompare(a.data().createdAt||""));
+      const pkgDoc = active[0];
+      const pkg = pkgDoc.data();
+      S.activePackage = { docId: pkgDoc.id, ...pkg };
       const rem = pkg.sessionsRemaining;
       const plural = rem === 1 ? "сесія" : rem < 5 ? "сесії" : "сесій";
       document.getElementById("tg-pkg-active-text").innerHTML =
-        "<strong>У тебе залишилось " + rem + " " + plural + " в пакеті!</strong><br>" +
-        "Пакет «" + pkg.packageName + "» — оплата не потрібна, використай їх на максималочку 🌿";
+        "<strong>🐱 У тебе залишилось " + rem + " " + plural + " в пакеті!</strong><br>" +
+        "Пакет «" + pkg.packageName + "» — оплата не потрібна 🌿 Просто обери час і натисни — я все підтягну по твоєму Telegram!";
       activeDiv.style.display = "block";
-      // Pre-select matching package in form
+      // Автоматично виставляємо пакет у прихованому select
       const sel = document.getElementById("f-pkg");
-      sel.value = pkg.packageId + "|" + pkg.packagePrice + "|" + pkg.packageName;
+      const val = pkg.packageId + "|" + pkg.packagePrice + "|" + pkg.packageName;
+      for (const o of sel.options) { if (o.value === val) { sel.value = val; break; } }
+      // Також синхронізуємо S.selPkg
+      if (!S.selPkg || S.selPkg.id !== pkg.packageId) {
+        S.selPkg = { id: pkg.packageId, price: 0, name: pkg.packageName };
+      }
     } else {
       S.activePackage = null;
       activeDiv.style.display = "none";
@@ -960,10 +972,9 @@ function onPkgSelectChange() {
 // ── SAVE CLIENT PACKAGE after pack purchase ─────────────────────
 async function saveClientPackage(telegram, pkgId, pkgName, pkgPrice, sessions) {
   if (!db || !telegram || !pkgId.startsWith("pack")) return;
-  const { setDoc, doc: _doc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
   const handle = telegram.startsWith("@") ? telegram : "@" + telegram;
-  const docId = handle.replace("@", "") + "_" + pkgId + "_" + Date.now();
-  await setDoc(_doc(db, "clientPackages", docId), {
+  // Використовуємо addDoc (вже імпортований) — не потребує composite index
+  await addDoc(collection(db, "clientPackages"), {
     telegram: handle,
     packageId: pkgId,
     packageName: pkgName,
@@ -973,6 +984,7 @@ async function saveClientPackage(telegram, pkgId, pkgName, pkgPrice, sessions) {
     sessionsUsed: 1,
     createdAt: new Date().toISOString()
   });
+  console.log("✅ Пакет збережено для", handle, "залишилось сесій:", sessions - 1);
 }
 
 // ── USE ONE SESSION FROM PACKAGE ────────────────────────────────
@@ -1502,19 +1514,19 @@ function copyVal(id,btn){
   let catTimer = null, bubbleTimer = null;
 
   const CAT_MESSAGES = [
-    "мяу! хороший вибір 🐾",
+    "мяу! чудово! 🐾",
     "чудово! я поряд 🌿",
-    "нфіксую! ти молодець ✨",
+    "фіксую! ти молодець ✨",
     "так тримати! мур-мур 💛",
     "яка гарна дата! 🐱",
     "підтримую тебе лапкою! 🐾",
     "мяу! все буде добре 🌿",
     "ти на правильному шляху ✨",
-    "клацнула — котик раді! 🐱",
+    "клацнула — котик радий! 🐱",
   ];
 
   const ELEMENT_MESSAGES = {
-    ".pkg-card": ["мяу! хороший пакет 🐾", "чудовий вибір! 🌿"],
+    ".pkg-card": ["мяу! чудовий пакет 🐾", "відмінний вибір! 🌿"],
     ".cal-day.has-slots": ["ой, є вільний час! 🐱", "хороша дата! лапку ставлю 🐾"],
     ".slot-btn": ["цей час підходить! мур 💛", "чудово! фіксую лапкою 🐾"],
     ".btn": ["натисни! я вже скачу 🐱", "вперед! підтримую 🌿"],
@@ -1552,20 +1564,26 @@ function copyVal(id,btn){
     const el = e.target;
     const x = e.clientX, y = e.clientY;
 
-    // Find matching message
+    // Спеціальні повідомлення для полів вводу
     let msg = null;
-    for (const [sel, msgs] of Object.entries(ELEMENT_MESSAGES)) {
-      if (el.closest(sel.split(".").filter(Boolean).map(c=>"."+c).join(""))) {
-        msg = msgs[Math.floor(Math.random() * msgs.length)];
-        break;
+    if (el.id === "f-name" || el.closest("label[for='f-name']")) {
+      const nameMessages = ["вау, яке гарне ім'я! 🌿", "чудове ім'я! мур-мур 🐱", "ім'я як музика! ✨"];
+      msg = nameMessages[Math.floor(Math.random() * nameMessages.length)];
+    } else if (el.id === "f-tg" || el.closest("label[for='f-tg']")) {
+      const tgMessages = ["теж хочу такий нік! 🐱", "крутий нік, заздрю! 🐾", "нік — вогонь! ✨"];
+      msg = tgMessages[Math.floor(Math.random() * tgMessages.length)];
+    } else {
+      for (const [sel, msgs] of Object.entries(ELEMENT_MESSAGES)) {
+        if (el.closest(sel.split(".").filter(Boolean).map(c=>"."+c).join(""))) {
+          msg = msgs[Math.floor(Math.random() * msgs.length)];
+          break;
+        }
       }
     }
-    // For buttons and interactive elements
     if (!msg && (el.tagName === "BUTTON" || el.tagName === "INPUT" || el.classList.contains("slot-btn") || el.classList.contains("cal-day"))) {
       msg = CAT_MESSAGES[Math.floor(Math.random() * CAT_MESSAGES.length)];
     }
 
-    // Always show cat on any meaningful click
     if (el.tagName === "BUTTON" || el.tagName === "INPUT" || el.closest(".pkg-card") || el.closest(".slot-btn") || el.closest(".cal-day") || el.closest(".tab-btn") || el.closest(".btn") || el.closest(".copy-btn")) {
       showCat(x, y, msg || CAT_MESSAGES[Math.floor(Math.random() * CAT_MESSAGES.length)]);
     }
