@@ -249,7 +249,7 @@ header{
 }
 #link-input:focus{border-color:var(--accent)}
 .consent-wrap{margin-bottom:18px}
-.consent-label{display:flex;gap:11px;align-items:flex-start;cursor:pointer;font-family:sans-serif;font-size:.85rem;color:var(--muted);line-height:1.6}
+.consent-label{display:flex;gap:11px;align-items:flex-start;cursor:pointer;font-family:sans-serif;font-size:.85rem;color:#fff;line-height:1.6;text-shadow:0 1px 3px rgba(0,0,0,0.3)}
 .consent-label input{margin-top:3px;flex-shrink:0;accent-color:var(--accent)}
 #upload-prog{display:none;text-align:center;margin-top:12px;font-family:sans-serif;font-size:.87rem;color:var(--muted)}
 
@@ -1061,8 +1061,9 @@ function showInlinePkgChooser() {
   if (!sec) return;
   sec.style.display = "block";
   const [y,m,d] = S.selDate.split("-");
+  const _dObj = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
   document.getElementById("chosen-slot-label").textContent =
-    parseInt(d) + " " + MONTHS[parseInt(m)-1] + " " + y + ", " + S.selSlotTime;
+    WDAYS[_dObj.getDay()] + ", " + parseInt(d) + " " + MONTHS[parseInt(m)-1] + " " + y + ", " + S.selSlotTime;
   updateInlinePkgChooser();
   setTimeout(() => sec.scrollIntoView({ behavior:"smooth", block:"start" }), 80);
 }
@@ -1286,8 +1287,9 @@ function pickPkg(card) {
 function updateBar() {
   const bar = document.getElementById("sticky-bar");
   if (S.selSlotId && S.view==="home") {
-    const [,m,d]=S.selDate.split("-");
-    document.getElementById("bar-slot").textContent=`📅 ${parseInt(d)} ${MONTHS[parseInt(m)-1]}, ${S.selSlotTime}`;
+    const [_y2,m,d]=S.selDate.split("-");
+    const _barD=new Date(parseInt(_y2),parseInt(m)-1,parseInt(d));
+    document.getElementById("bar-slot").textContent=`📅 ${WDAYS[_barD.getDay()]}, ${parseInt(d)} ${MONTHS[parseInt(m)-1]}, ${S.selSlotTime}`;
     const dispPrice = (S.isUrgent && S.urgentPrice) ? S.urgentPrice : (S.selPkg ? S.selPkg.price : null);
     document.getElementById("bar-pkg").textContent = S.selPkg
       ? `${S.selPkg.name} · ${dispPrice ? dispPrice.toLocaleString("uk-UA") : S.selPkg.price.toLocaleString("uk-UA")} грн${S.isUrgent?" ⚡ Термінова":""}`
