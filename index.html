@@ -1321,7 +1321,7 @@ function gotoForm() {
 }
 
 // ─── FORM SUBMIT ─────────────────────────────────────────────
-function submitForm(e) {
+async function submitForm(e) {
   e.preventDefault();
   const pkgVal=document.getElementById("f-pkg").value;
   if(!pkgVal){toast("Оберіть пакет");return;}
@@ -1329,6 +1329,12 @@ function submitForm(e) {
   const tgRaw = document.getElementById("f-tg").value.trim();
   if (!tgRaw) { toast("Введіть ваш Telegram"); document.getElementById("f-tg").focus(); return; }
   const tgHandle = tgRaw.startsWith("@") ? tgRaw : "@"+tgRaw;
+  // ⚡ ВАЖЛИВО: завжди чекаємо відповідь Firebase перед рішенням про оплату
+  // Це усуває баг де людина натискала "Далі" ще до того як завершився запит
+  const btn = document.querySelector("#bk-form button[type=submit]");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ Перевіряємо…"; }
+  await checkClientPackage();
+  if (btn) { btn.disabled = false; btn.textContent = "Далі – до оплати →"; }
   // Визначаємо фінальну ціну і чи треба оплата
   let finalPrice;
   const hasPkg = !!(S.activePackage && S.activePackage.docId);
