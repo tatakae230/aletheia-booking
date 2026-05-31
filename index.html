@@ -1272,10 +1272,6 @@ function pickSlot(sl, el) {
   if (isWithin12h(S.selDate, sl.time)) {
     _pendingUrgentSlot = sl;
     _pendingUrgentEl = el;
-    // Показуємо різну версію модалки для власників пакету
-    const hasPkg = !!(S.activePackage && S.activePackage.docId);
-    document.getElementById("urgent-body-regular").style.display = hasPkg ? "none" : "block";
-    document.getElementById("urgent-body-package").style.display = hasPkg ? "block" : "none";
     document.getElementById("urgent-modal").style.display = "flex";
     return;
   }
