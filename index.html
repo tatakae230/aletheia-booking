@@ -919,25 +919,15 @@ function acceptUrgent() {
   document.getElementById("urgent-modal").style.display = "none";
   if (_pendingUrgentSlot && _pendingUrgentEl) {
     S.isUrgent = true;
-    S.urgentIsPackageSurcharge = !!(S.activePackage && S.activePackage.docId);
-    S.urgentPrice = S.urgentIsPackageSurcharge ? 450 : 1450;
+    // Пакет і ціну визначимо пізніше — після того як людина введе TG у формі
+    S.urgentPrice = null;
+    S.urgentIsPackageSurcharge = false;
     document.querySelectorAll(".slot-btn.sel").forEach(x => x.classList.remove("sel"));
     _pendingUrgentEl.classList.add("sel");
     S.selSlotId = _pendingUrgentSlot.id;
     S.selSlotTime = _pendingUrgentSlot.time;
-    // Автоматично виставляємо пакет — без зайвого вибору
-    if (S.urgentIsPackageSurcharge && S.activePackage) {
-      S.selPkg = { id: S.activePackage.packageId, price: 450, name: S.activePackage.packageName };
-    } else {
-      S.selPkg = { id: "single", price: 1450, name: "Разова сесія" };
-    }
-    // Синхронізуємо прихований select
-    const sel = document.getElementById("f-pkg");
-    for (const o of sel.options) {
-      if (o.value.startsWith(S.selPkg.id + "|")) { sel.value = o.value; break; }
-    }
     updateBar();
-    // Одразу на форму — без вибору пакету
+    // Одразу на форму — ціна уточниться після введення TG
     gotoForm();
   }
 }
@@ -1399,6 +1389,15 @@ async function submitForm(e) {
   if (btn) { btn.disabled = true; btn.textContent = "⏳ Перевіряємо…"; }
   await checkClientPackage();
   if (btn) { btn.disabled = false; btn.textContent = "Далі – до оплати →"; }
+  // Для термінових — тепер знаємо чи є пакет, визначаємо ціну
+  if (S.isUrgent) {
+    S.urgentIsPackageSurcharge = !!(S.activePackage && S.activePackage.docId);
+    S.urgentPrice = S.urgentIsPackageSurcharge ? 450 : 1450;
+    // Якщо пакет у select ще не виставлено — auto-select single
+    if (!document.getElementById("f-pkg").value) {
+      document.getElementById("f-pkg").value = "single|1000|Разова сесія";
+    }
+  }
   // Визначаємо фінальну ціну і чи треба оплата
   let finalPrice;
   const hasPkg = !!(S.activePackage && S.activePackage.docId);
