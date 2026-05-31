@@ -510,6 +510,10 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
   </div>
   <div class="form-wrap">
     <div class="info-banner" id="form-banner"></div>
+    <!-- Банер термінової сесії — ціна уточнюється після введення TG -->
+    <div id="urgent-form-banner" style="display:none;border-radius:12px;overflow:hidden;margin-bottom:18px">
+      <div id="urgent-form-inner" style="padding:14px 18px;font-family:sans-serif;font-size:.88rem;line-height:1.65"></div>
+    </div>
     <form id="bk-form" onsubmit="submitForm(event)">
       <div class="fg">
         <label>Ім'я *</label>
@@ -967,6 +971,8 @@ async function checkClientPackage() {
       ? "Далі – до бронювання →"
       : "Далі – до оплати →";
   }
+  // Оновлюємо банер термінової сесії з правильною ціною
+  updateUrgentFormBanner();
 }
 
 function onPkgSelectChange() {
@@ -1121,7 +1127,8 @@ Object.assign(window, {
   pickPkg, chgMonth, goto, gotoForm, submitForm,
   switchTab, onFile, clearFile, copyVal, confirmBooking,
   checkClientPackage, onPkgSelectChange, declineUrgent, acceptUrgent, confirmPackageBooking,
-  scrollToCalendar, showInlinePkgChooser, updateInlinePkgChooser, selectInlinePkg, refreshBookBtn
+  scrollToCalendar, showInlinePkgChooser, updateInlinePkgChooser, selectInlinePkg, refreshBookBtn,
+  updateUrgentFormBanner
 });
 
 // ─── INIT ────────────────────────────────────────────────────
@@ -1325,7 +1332,27 @@ function gotoForm() {
   const [y,m,d]=S.selDate.split("-");
   document.getElementById("form-banner").innerHTML=
     `✅ Обраний час: <strong>${parseInt(d)} ${MONTHS_GEN[parseInt(m)-1]} ${y}, ${S.selSlotTime}</strong>`;
+  // Показуємо банер термінової сесії (без ціни — вона уточниться після TG)
+  updateUrgentFormBanner();
   goto("form");
+}
+
+function updateUrgentFormBanner() {
+  const banner = document.getElementById("urgent-form-banner");
+  const inner  = document.getElementById("urgent-form-inner");
+  if (!S.isUrgent) { banner.style.display = "none"; return; }
+  const hasPkg = !!(S.activePackage && S.activePackage.docId);
+  if (hasPkg) {
+    banner.style.display = "block";
+    inner.style.background = "#fff8f0";
+    inner.style.border = "1.5px solid #f0c890";
+    inner.innerHTML = "⚡ <strong>Термінова сесія</strong> — у тебе є пакет, тому потрібна лише доплата <strong>450 грн</strong>. Сесія спишеться з пакету як зазвичай 🌿";
+  } else {
+    banner.style.display = "block";
+    inner.style.background = "#fff8e6";
+    inner.style.border = "1.5px solid #f0d060";
+    inner.innerHTML = "⚡ <strong>Термінова сесія</strong> — до початку менше 10 годин. Вартість: <strong>1 450 грн</strong> замість 1 000 грн. Психологиня має знати заздалегідь, щоб бути повністю присутньою. Якщо хочеш уникнути доплати — обери інший час ↩️";
+  }
 }
 
 // ─── FORM SUBMIT ─────────────────────────────────────────────
@@ -1678,34 +1705,21 @@ function copyVal(id,btn){
 })();
 </script>
 
-<!-- URGENT SESSION MODAL -->
+<!-- URGENT SESSION MODAL — тільки попередження, без ціни -->
 <div id="urgent-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.5);align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:18px;padding:32px 28px;max-width:440px;width:92%;box-shadow:0 12px 50px rgba(0,0,0,0.25)">
-    <div style="font-size:2rem;text-align:center;margin-bottom:12px">⚡</div>
-    <h3 id="urgent-title" style="text-align:center;margin-bottom:6px;font-size:1.1rem;color:#1e1a14">⚡ Термінова сесія</h3>
-    <p style="text-align:center;font-size:.76rem;color:#999;letter-spacing:.05em;font-family:sans-serif;margin-bottom:12px">термінове бронювання · менше 10 годин</p>
-    <div id="urgent-body-regular">
-      <p style="font-size:.88rem;color:#5a4a3a;line-height:1.65;margin-bottom:14px">До обраної сесії залишилось менше 10 годин — це вважається emergency slot. Психолог має знати заздалегідь, що зустріч відбудеться — це дозволяє повноцінно підготуватися і бути присутнім.</p>
-      <p style="font-size:.88rem;color:#5a4a3a;line-height:1.65;margin-bottom:18px">Термінове бронювання оплачується за тарифом <strong>1 450 грн</strong> замість 1 000 грн.</p>
-      <div style="background:#fff8e6;border:1px solid #f0d080;border-radius:10px;padding:12px 14px;font-size:.82rem;color:#7a5a00;margin-bottom:22px">
-        💡 Щоб уникнути доплати — бронюй заздалегідь, не менш ніж за 10 годин до сесії.
-      </div>
-      <div style="display:flex;gap:10px">
-        <button onclick="declineUrgent()" style="flex:1;padding:11px;border:1px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;font-size:.9rem;color:#666">Обрати інший час</button>
-        <button onclick="acceptUrgent()" style="flex:1;padding:11px;border:none;border-radius:10px;background:#8b6636;color:#fff;cursor:pointer;font-size:.9rem;font-weight:600">Бронювати за 1 450 грн</button>
-      </div>
+  <div style="background:#fff;border-radius:18px;padding:32px 28px;max-width:420px;width:92%;box-shadow:0 12px 50px rgba(0,0,0,0.25)">
+    <div style="font-size:2.2rem;text-align:center;margin-bottom:10px">⚡</div>
+    <h3 style="text-align:center;margin-bottom:6px;font-size:1.1rem;color:#1e1a14">Термінова сесія</h3>
+    <p style="text-align:center;font-size:.76rem;color:#999;letter-spacing:.05em;font-family:sans-serif;margin-bottom:18px">менше 10 годин до початку</p>
+    <p style="font-size:.9rem;color:#5a4a3a;line-height:1.7;margin-bottom:18px">
+      До обраної сесії залишилось <strong>менше 10 годин</strong>. Психологиня має знати заздалегідь, що зустріч відбудеться — це важливо для повноцінної підготовки і присутності.
+    </p>
+    <div style="background:#fff8e6;border:1px solid #f0d080;border-radius:10px;padding:11px 14px;font-size:.82rem;color:#7a5a00;margin-bottom:22px">
+      💡 Вартість буде уточнена на наступному кроці — після введення Telegram-ніку.
     </div>
-    <div id="urgent-body-package" style="display:none">
-      <p style="font-size:.88rem;color:#5a4a3a;line-height:1.65;margin-bottom:14px">Дуже шкода, але мушу попередити 💛 Ти обрала термінову сесію — менше 10 годин до початку.</p>
-      <p style="font-size:.88rem;color:#5a4a3a;line-height:1.65;margin-bottom:14px">У тебе вже є пакет сесій, і ця зустріч <strong>спишеться з пакету як звичайна сесія</strong>. Але оскільки це термінова сесія, є невелика доплата — <strong>лише 450 грн</strong> замість стандартної різниці в 450 грн від звичайної ціни.</p>
-      <div style="background:#fff8f0;border:1.5px solid #f0c890;border-radius:10px;padding:12px 14px;font-size:.82rem;color:#7a4a00;margin-bottom:22px;display:flex;gap:8px;align-items:flex-start">
-        <span>🐱</span>
-        <span>Не хвилюйся! Заплати лише <strong>450 грн</strong> і ми одразу забронюємо твою термінову сесію. Сесія спишеться з пакету як зазвичай 🌿</span>
-      </div>
-      <div style="display:flex;gap:10px">
-        <button onclick="declineUrgent()" style="flex:1;padding:11px;border:1px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;font-size:.9rem;color:#666">Обрати інший час</button>
-        <button onclick="acceptUrgent()" style="flex:1;padding:11px;border:none;border-radius:10px;background:#8b6636;color:#fff;cursor:pointer;font-size:.9rem;font-weight:600">Доплатити 450 грн і бронювати</button>
-      </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="declineUrgent()" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;font-size:.9rem;color:#666">← Обрати інший час</button>
+      <button onclick="acceptUrgent()" style="flex:1;padding:12px;border:none;border-radius:10px;background:#8b6636;color:#fff;cursor:pointer;font-size:.95rem;font-weight:600">Продовжити →</button>
     </div>
   </div>
 </div>
