@@ -6,90 +6,36 @@
 <title>Адмін-панель | Aletheia</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f5f2ee;
-  --card:#fff;
-  --text:#1e1a14;
-  --muted:#7d6e5e;
-  --accent:#8b6636;
-  --accent-bg:#fdf4e7;
-  --accent-hover:#6e5028;
-  --border:#ddd3c6;
-  --success:#1e6b40;
-  --success-bg:#eaf5ee;
-  --warn:#c07a10;
-  --warn-bg:#fff8e6;
-  --danger:#b83030;
-  --danger-bg:#fdeaea;
-  --radius:12px;
-}
+:root{--bg:#f5f2ee;--card:#fff;--text:#1e1a14;--muted:#7d6e5e;--accent:#8b6636;--accent-bg:#fdf4e7;--accent-hover:#6e5028;--border:#ddd3c6;--success:#1e6b40;--success-bg:#eaf5ee;--warn:#c07a10;--warn-bg:#fff8e6;--danger:#b83030;--danger-bg:#fdeaea;--radius:12px;}
 body{font-family:sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 a{color:var(--accent)}
-
-/* ─── LOGIN ─── */
-#view-login{
-  min-height:100vh;display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,#faf6f1 0%,#ede5da 100%)
-}
-.login-box{
-  background:var(--card);border:1px solid var(--border);border-radius:18px;
-  padding:48px 40px;max-width:380px;width:100%;text-align:center;
-  box-shadow:0 8px 40px rgba(0,0,0,0.1)
-}
+#view-login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#faf6f1 0%,#ede5da 100%)}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:48px 40px;max-width:380px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.1)}
 .login-logo{font-size:1.4rem;font-family:Georgia,serif;margin-bottom:6px;letter-spacing:.04em}
 .login-sub{font-size:.82rem;color:var(--muted);margin-bottom:32px}
 .login-box h2{font-size:1.15rem;font-weight:600;margin-bottom:22px}
-.login-box input{
-  width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;
-  font-size:1rem;outline:none;margin-bottom:14px;transition:border-color .18s
-}
+.login-box input{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:1rem;outline:none;margin-bottom:14px;transition:border-color .18s}
 .login-box input:focus{border-color:var(--accent)}
 .login-err{color:var(--danger);font-size:.85rem;margin-bottom:12px;display:none}
-
-/* ─── LAYOUT ─── */
 #view-admin{display:none;min-height:100vh}
-header{
-  background:var(--card);border-bottom:1px solid var(--border);
-  padding:14px 24px;display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.05)
-}
+header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
 .hdr-left{display:flex;align-items:center;gap:12px}
-.logo-ico{width:32px;height:32px;background:var(--accent);border-radius:50%;
-  color:#fff;display:flex;align-items:center;justify-content:center;font-style:italic;font-family:Georgia,serif}
+.logo-ico{width:32px;height:32px;background:var(--accent);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-style:italic;font-family:Georgia,serif}
 .hdr-title{font-weight:600;font-size:1rem}
 .hdr-sub{font-size:.75rem;color:var(--muted)}
-.logout-btn{background:none;border:1px solid var(--border);border-radius:8px;
-  padding:7px 14px;cursor:pointer;font-size:.83rem;color:var(--muted)}
+.logout-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:7px 14px;cursor:pointer;font-size:.83rem;color:var(--muted)}
 .logout-btn:hover{background:var(--bg)}
-
-/* ─── NAV TABS ─── */
-.nav-tabs{
-  background:var(--card);border-bottom:1px solid var(--border);
-  display:flex;overflow-x:auto;padding:0 16px;
-}
-.nav-tab{
-  padding:14px 18px;cursor:pointer;font-size:.88rem;font-weight:500;
-  border-bottom:2.5px solid transparent;color:var(--muted);white-space:nowrap;
-  transition:all .18s
-}
+.nav-tabs{background:var(--card);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;padding:0 16px;}
+.nav-tab{padding:14px 18px;cursor:pointer;font-size:.88rem;font-weight:500;border-bottom:2.5px solid transparent;color:var(--muted);white-space:nowrap;transition:all .18s}
 .nav-tab:hover{color:var(--text)}
 .nav-tab.active{border-bottom-color:var(--accent);color:var(--accent)}
-
-/* ─── CONTENT ─── */
 .content{max-width:900px;margin:0 auto;padding:28px 20px}
 .tab-panel{display:none}.tab-panel.active{display:block}
-
-/* ─── CARDS & STATS ─── */
 .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center}
 .stat-num{font-size:2rem;font-weight:700;color:var(--accent);line-height:1}
 .stat-lbl{font-size:.8rem;color:var(--muted);margin-top:6px}
-
-/* ─── BOOKING CARDS ─── */
-.bk-card{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:20px;margin-bottom:14px;transition:box-shadow .15s
-}
+.bk-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px;transition:box-shadow .15s}
 .bk-card:hover{box-shadow:0 4px 18px rgba(0,0,0,0.07)}
 .bk-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .bk-time{font-size:1.05rem;font-weight:600}
@@ -102,104 +48,49 @@ header{
 .bk-field{font-size:.87rem}
 .bk-field .lbl{display:block;font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
 .bk-actions{display:flex;gap:8px;flex-wrap:wrap}
-.act-btn{
-  padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.83rem;
-  font-weight:500;border:none;transition:all .18s
-}
-.act-confirm{background:var(--success-bg);color:var(--success)}
-.act-confirm:hover{background:#c8e8d5}
+.act-btn{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.83rem;font-weight:500;border:none;transition:all .18s}
 .act-cancel{background:var(--danger-bg);color:var(--danger)}
 .act-cancel:hover{background:#f8d0d0}
-.act-view{background:var(--accent-bg);color:var(--accent)}
-.act-view:hover{background:#f5e4c0}
-
-/* ─── SLOTS MANAGEMENT ─── */
-.add-slot-form{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:22px;margin-bottom:24px
-}
+.add-slot-form{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:24px}
 .add-slot-form h3{font-size:1.05rem;font-weight:600;margin-bottom:16px}
 .form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
 .fg{flex:1;min-width:140px}
 .fg label{display:block;font-size:.8rem;font-weight:600;margin-bottom:6px;color:var(--text)}
-.fg input,.fg select{
-  width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;
-  font-size:.95rem;outline:none;background:#fff;transition:border-color .18s
-}
+.fg input,.fg select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:.95rem;outline:none;background:#fff;transition:border-color .18s}
 .fg input:focus,.fg select:focus{border-color:var(--accent)}
 .quick-times{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
-.qt{
-  padding:7px 14px;border:1px solid var(--border);border-radius:7px;
-  background:#fff;cursor:pointer;font-size:.83rem;transition:all .15s
-}
+.qt{padding:7px 14px;border:1px solid var(--border);border-radius:7px;background:#fff;cursor:pointer;font-size:.83rem;transition:all .15s}
 .qt:hover{border-color:var(--accent);background:var(--accent-bg)}
 .qt.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
-
 .slots-list-title{font-size:.95rem;font-weight:600;margin-bottom:14px;color:var(--text)}
 .slots-month-group{margin-bottom:24px}
 .slots-month-label{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px;font-weight:600}
-.slot-item{
-  display:flex;align-items:center;justify-content:space-between;
-  background:var(--card);border:1px solid var(--border);border-radius:9px;
-  padding:12px 16px;margin-bottom:7px
-}
+.slot-item{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px 16px;margin-bottom:7px}
 .slot-info{font-size:.9rem}
 .slot-info .dt{font-weight:600}
 .slot-info .st{font-size:.78rem;margin-top:2px;color:var(--muted)}
-.slot-del{
-  background:none;border:1px solid var(--border);border-radius:7px;
-  padding:5px 12px;cursor:pointer;font-size:.78rem;color:var(--danger);
-  transition:all .15s
-}
+.slot-del{background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:.78rem;color:var(--danger);transition:all .15s}
 .slot-del:hover{background:var(--danger-bg);border-color:var(--danger)}
-
-/* ─── SETTINGS ─── */
-.settings-form{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px
-}
+.settings-form{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
 .settings-form h3{font-size:1.05rem;font-weight:600;margin-bottom:18px}
-
-/* ─── GENERAL ─── */
-.btn{
-  background:var(--accent);color:#fff;border:none;border-radius:9px;
-  padding:12px 22px;font-size:.93rem;cursor:pointer;font-weight:500;transition:background .18s
-}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:12px 22px;font-size:.93rem;cursor:pointer;font-weight:500;transition:background .18s}
 .btn:hover{background:var(--accent-hover)}
 .btn:disabled{background:#ccc;cursor:not-allowed}
-.empty-state{
-  text-align:center;padding:48px 24px;color:var(--muted);font-size:.9rem;
-  background:var(--card);border:1px dashed var(--border);border-radius:var(--radius)
-}
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted);font-size:.9rem;background:var(--card);border:1px dashed var(--border);border-radius:var(--radius)}
 .empty-state .ico{font-size:2.5rem;margin-bottom:12px}
 .loading{text-align:center;padding:36px;color:var(--muted)}
 .spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.toast{
-  position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;
-  padding:10px 20px;border-radius:10px;font-size:.87rem;z-index:999;
-  opacity:0;transition:opacity .3s;pointer-events:none
-}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:10px 20px;border-radius:10px;font-size:.87rem;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
-.badge{padding:3px 9px;border-radius:5px;font-size:.75rem;font-weight:600}
-.chip{
-  display:inline-block;padding:2px 9px;border-radius:12px;font-size:.75rem;
-  font-weight:600;background:var(--accent-bg);color:var(--accent);margin-left:6px
-}
-
-@media(max-width:600px){
-  .content{padding:16px 14px}
-  .form-row{flex-direction:column}
-  .bk-grid{grid-template-columns:1fr 1fr}
-}
+.chip{display:inline-block;padding:2px 9px;border-radius:12px;font-size:.75rem;font-weight:600;background:var(--accent-bg);color:var(--accent);margin-left:6px}
+@media(max-width:600px){.content{padding:16px 14px}.form-row{flex-direction:column}.bk-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 
 <div id="toast" class="toast"></div>
 
-<!-- ══════════════════════════════════════
-     LOGIN
-══════════════════════════════════════ -->
 <div id="view-login">
   <div class="login-box">
     <div class="login-logo">aletheia</div>
@@ -211,9 +102,6 @@ header{
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     ADMIN PANEL
-══════════════════════════════════════ -->
 <div id="view-admin">
   <header>
     <div class="hdr-left">
@@ -228,26 +116,22 @@ header{
 
   <div class="nav-tabs">
     <div class="nav-tab active" id="nt-bookings" onclick="showTab('bookings')">📋 Всі записи</div>
-    <div class="nav-tab"        id="nt-slots"    onclick="showTab('slots')">🗓 Слоти</div>
-    <div class="nav-tab"        id="nt-packages" onclick="showTab('packages')">📦 Пакети</div>
-    <div class="nav-tab"        id="nt-hours"    onclick="showTab('hours')">⏱ Години практики</div>
-    <div class="nav-tab"        id="nt-settings" onclick="showTab('settings')">⚙️ Налаштування</div>
+    <div class="nav-tab" id="nt-slots" onclick="showTab('slots')">🗓 Слоти</div>
+    <div class="nav-tab" id="nt-packages" onclick="showTab('packages')">📦 Пакети</div>
+    <div class="nav-tab" id="nt-hours" onclick="showTab('hours')">⏱ Години практики</div>
+    <div class="nav-tab" id="nt-settings" onclick="showTab('settings')">⚙️ Налаштування</div>
   </div>
 
   <div class="content">
-
-    <!-- STATS -->
     <div class="stats-row">
       <div class="stat-card"><div class="stat-num" id="st-total">0</div><div class="stat-lbl">Всього записів</div></div>
       <div class="stat-card"><div class="stat-num" id="st-slots">0</div><div class="stat-lbl">Вільних слотів</div></div>
     </div>
 
-    <!-- ── TAB: ALL BOOKINGS ── -->
     <div id="tab-bookings" class="tab-panel active">
       <div id="all-list"><div class="loading"><div class="spinner"></div>Завантаження…</div></div>
     </div>
 
-    <!-- ── TAB: PACKAGES ── -->
     <div id="tab-packages" class="tab-panel">
       <div class="settings-form" style="margin-bottom:16px">
         <h3>📦 Активні пакети клієнтів</h3>
@@ -256,7 +140,6 @@ header{
       <div id="packages-list"><div class="loading"><div class="spinner"></div>Завантаження…</div></div>
     </div>
 
-    <!-- ── TAB: HOURS ── -->
     <div id="tab-hours" class="tab-panel">
       <div class="settings-form" style="text-align:center;padding:32px">
         <div style="font-size:3.5rem;font-weight:700;color:var(--accent);line-height:1" id="hours-total">0</div>
@@ -264,24 +147,20 @@ header{
         <div style="font-size:.82rem;color:var(--muted);margin-top:4px" id="hours-sessions-count"></div>
       </div>
       <div class="settings-form">
-        <h3>✅ Проведені сесії</h3>
+        <div style="background:var(--warn-bg);border:1px solid #e8c060;border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:.83rem;color:#7a5000;line-height:1.6">
+          📊 <strong>Базові години:</strong> 122 год (01.04.2025–31.05.2026, 61 нд × 2 сесії) + сесії з Firebase
+        </div>
+        <h3>✅ Проведені сесії (Firebase)</h3>
         <div id="hours-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
 
-    <!-- ── TAB: SLOTS ── -->
     <div id="tab-slots" class="tab-panel">
       <div class="add-slot-form">
         <h3>➕ Додати вільний слот</h3>
         <div class="form-row">
-          <div class="fg">
-            <label>Дата</label>
-            <input type="date" id="sl-date">
-          </div>
-          <div class="fg">
-            <label>Час (вручну)</label>
-            <input type="time" id="sl-time">
-          </div>
+          <div class="fg"><label>Дата</label><input type="date" id="sl-date"></div>
+          <div class="fg"><label>Час (вручну)</label><input type="time" id="sl-time"></div>
           <button class="btn" onclick="addSlot()" style="height:42px;align-self:flex-end">Додати слот</button>
         </div>
         <div>
@@ -289,103 +168,70 @@ header{
           <div class="quick-times" id="quick-times"></div>
         </div>
         <div style="margin-top:14px">
-          <button class="btn" onclick="addBatch()" style="font-size:.85rem;padding:10px 18px">
-            📅 Додати одразу кілька слотів для обраної дати
-          </button>
+          <button class="btn" onclick="addBatch()" style="font-size:.85rem;padding:10px 18px">📅 Додати одразу кілька слотів для обраної дати</button>
         </div>
       </div>
       <div class="slots-list-title">Вільні слоти <span class="chip" id="slots-count-chip">0</span></div>
       <div id="slots-list-el"><div class="loading"><div class="spinner"></div></div></div>
     </div>
 
-    <!-- ── TAB: SETTINGS ── -->
     <div id="tab-settings" class="tab-panel">
       <div class="settings-form">
         <h3>💳 Реквізити для оплати</h3>
-        <div class="fg" style="margin-bottom:14px">
-          <label>Номер картки</label>
-          <input id="s-card" type="text" placeholder="0000 0000 0000 0000">
-        </div>
-        <div class="fg" style="margin-bottom:14px">
-          <label>Банк</label>
-          <input id="s-bank" type="text" placeholder="Monobank">
-        </div>
-        <div class="fg" style="margin-bottom:18px">
-          <label>Ім'я одержувача</label>
-          <input id="s-holder" type="text" placeholder="Тетяна А.">
-        </div>
+        <div class="fg" style="margin-bottom:14px"><label>Номер картки</label><input id="s-card" type="text" placeholder="0000 0000 0000 0000"></div>
+        <div class="fg" style="margin-bottom:14px"><label>Банк</label><input id="s-bank" type="text" placeholder="Monobank"></div>
+        <div class="fg" style="margin-bottom:18px"><label>Ім'я одержувача</label><input id="s-holder" type="text" placeholder="Тетяна А."></div>
         <button class="btn" onclick="saveSettings()">Зберегти реквізити</button>
       </div>
       <div class="settings-form">
         <h3>🔐 Змінити пароль адмін-панелі</h3>
-        <div class="fg" style="margin-bottom:14px">
-          <label>Новий пароль</label>
-          <input id="s-newpw" type="password" placeholder="Мінімум 6 символів">
-        </div>
-        <div class="fg" style="margin-bottom:18px">
-          <label>Повторити пароль</label>
-          <input id="s-newpw2" type="password" placeholder="">
-        </div>
+        <div class="fg" style="margin-bottom:14px"><label>Новий пароль</label><input id="s-newpw" type="password" placeholder="Мінімум 6 символів"></div>
+        <div class="fg" style="margin-bottom:18px"><label>Повторити пароль</label><input id="s-newpw2" type="password" placeholder=""></div>
         <button class="btn" onclick="savePw()">Змінити пароль</button>
       </div>
       <div class="settings-form">
         <h3>ℹ️ Посилання для клієнтів</h3>
         <p style="font-size:.88rem;color:var(--muted);line-height:1.6">
-          Посилання на сторінку бронювання (файл <code>index.html</code>)надсилайте своїм клієнтам після першої ознайомчої сесії.<br><br>
           Telegram: <a href="https://t.me/alet_psyche" target="_blank">@alet_psyche</a>
         </p>
       </div>
     </div>
-
-  </div><!-- end content -->
-</div><!-- end view-admin -->
+  </div>
+</div>
 
 <script type="module">
-// ─────────────────────────────────────────────────────────────
-//  🔧 КОНФІГУРАЦІЯТА САМА ЩО В index.html
-// ─────────────────────────────────────────────────────────────
 const FIREBASE = {
-  apiKey:            "AIzaSyAb01cYmOzJHhJ1vEDruw4APHqPo3TYK4I",
-  authDomain:        "aletheia-booking.firebaseapp.com",
-  projectId:         "aletheia-booking",
-  storageBucket:     "aletheia-booking.firebasestorage.app",
-  messagingSenderId: "118890506561",
-  appId:             "1:118890506561:web:0925dc72d8dadb856c19c0"
+  apiKey:"AIzaSyAb01cYmOzJHhJ1vEDruw4APHqPo3TYK4I",
+  authDomain:"aletheia-booking.firebaseapp.com",
+  projectId:"aletheia-booking",
+  storageBucket:"aletheia-booking.firebasestorage.app",
+  messagingSenderId:"118890506561",
+  appId:"1:118890506561:web:0925dc72d8dadb856c19c0"
 };
-const DEFAULT_PW = "aletheia2024"; // початковий пароль – змініть в налаштуваннях!
-// ─────────────────────────────────────────────────────────────
+const DEFAULT_PW = "aletheia2024";
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, collection, addDoc, getDocs, query,
-  where, updateDoc, deleteDoc, doc, getDoc, setDoc,
-  orderBy, serverTimestamp
+  where, updateDoc, deleteDoc, doc, getDoc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let db;
-try {
-  const app = initializeApp(FIREBASE);
-  db = getFirestore(app);
-} catch(e){ console.warn("Firebase not configured"); }
+try { const app = initializeApp(FIREBASE); db = getFirestore(app); } catch(e){ console.warn("Firebase not configured"); }
 
 const MONTHS = ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"];
 const MONTHS_GEN = ["січня","лютого","березня","квітня","травня","червня","липня","серпня","вересня","жовтня","листопада","грудня"];
 const WDAYS  = ["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const QUICK  = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"];
 let quickSel = new Set();
-
-
-// RESCHEDULE
 let _reschBkId = null, _reschOldSlotId = null, _reschNewSlotId = null;
 
 function openReschedule(bkId, oldSlotId) {
-  _reschBkId = bkId;
-  _reschOldSlotId = oldSlotId;
-  _reschNewSlotId = null;
+  _reschBkId = bkId; _reschOldSlotId = oldSlotId; _reschNewSlotId = null;
   const avail = allSlots.filter(s => s.status === "available" && s.id !== oldSlotId);
   const container = document.getElementById("reschedule-slots");
-  if (avail.length === 0) {
-    container.innerHTML = '<p style="color:#b00;font-size:.88rem">Немає вільних слотів. Спочатку додайте нові слоти.</p>';
+  if (!avail.length) {
+    container.innerHTML = '<p style="color:#b00;font-size:.88rem">Немає вільних слотів.</p>';
   } else {
     container.innerHTML = avail.map(s => {
       const d = s.date ? s.date.split("-") : [];
@@ -400,18 +246,15 @@ function openReschedule(bkId, oldSlotId) {
   document.getElementById("reschedule-confirm-btn").style.opacity = "0.5";
   document.getElementById("reschedule-modal").style.display = "flex";
 }
-
 function selectReschSlot(slotId) {
   _reschNewSlotId = slotId;
   document.getElementById("reschedule-confirm-btn").disabled = false;
   document.getElementById("reschedule-confirm-btn").style.opacity = "1";
 }
-
 function closeReschedule() {
   document.getElementById("reschedule-modal").style.display = "none";
   _reschBkId = null; _reschOldSlotId = null; _reschNewSlotId = null;
 }
-
 async function confirmReschedule() {
   if (!_reschNewSlotId) return;
   const newSlot = allSlots.find(s => s.id === _reschNewSlotId);
@@ -422,23 +265,16 @@ async function confirmReschedule() {
   if (db) {
     if (_reschOldSlotId) await updateDoc(doc(db,"slots",_reschOldSlotId), {status:"available", bookingId:null});
     await updateDoc(doc(db,"slots",_reschNewSlotId), {status:"booked", bookingId:_reschBkId});
-    await updateDoc(doc(db,"bookings",_reschBkId), {
-      slotId: _reschNewSlotId,
-      slotDate: newSlot.date,
-      slotTime: newSlot.time,
-      rescheduledAt: new Date().toISOString()
-    });
+    await updateDoc(doc(db,"bookings",_reschBkId), { slotId:_reschNewSlotId, slotDate:newSlot.date, slotTime:newSlot.time, rescheduledAt:new Date().toISOString() });
   }
-  toast("🔄 Час сесії перенесено на " + dateStr + " о " + newSlot.time);
+  toast("🔄 Перенесено на " + dateStr + " о " + newSlot.time);
   closeReschedule();
   await Promise.all([loadBookings(), loadSlots()]);
 }
 
 Object.assign(window,{doLogin,doLogout,showTab,addSlot,addBatch,deleteSlot,confirmBk,cancelBk,deleteBk,completeBk,openReschedule,selectReschSlot,closeReschedule,confirmReschedule,saveSettings,savePw});
 
-// ─── AUTH ─────────────────────────────────────────────────────
 const getAdminPw = () => localStorage.getItem("adminPw")||DEFAULT_PW;
-
 function doLogin(){
   const pw=document.getElementById("pw-input").value;
   if(pw===getAdminPw()){
@@ -452,27 +288,19 @@ function doLogin(){
     document.getElementById("pw-input").focus();
   }
 }
-function doLogout(){
-  localStorage.removeItem("adminAuth");
-  location.reload();
-}
+function doLogout(){ localStorage.removeItem("adminAuth"); location.reload(); }
 
-// Auto-login if session active
 if(localStorage.getItem("adminAuth")==="1"){
   document.getElementById("view-login").style.display="none";
   document.getElementById("view-admin").style.display="block";
   document.addEventListener("DOMContentLoaded",initAdmin);
-} else {
-  document.getElementById("pw-input").focus();
-}
+} else { document.getElementById("pw-input").focus(); }
 
-// ─── INIT ─────────────────────────────────────────────────────
 async function initAdmin(){
   buildQuickTimes();
   await Promise.all([loadBookings(), loadSlots(), loadSettings()]);
 }
 
-// ─── TABS ─────────────────────────────────────────────────────
 function showTab(t){
   ["bookings","slots","packages","hours","settings"].forEach(x=>{
     const tp=document.getElementById(`tab-${x}`); if(tp) tp.classList.toggle("active",x===t);
@@ -482,7 +310,6 @@ function showTab(t){
   if(t==="packages") loadPackages();
 }
 
-// ─── BOOKINGS ────────────────────────────────────────────────
 let allBookings=[];
 async function loadBookings(){
   if(!db){renderBookings([],"all-list","all");return;}
@@ -494,20 +321,14 @@ async function loadBookings(){
     renderBookings(allBookings,"all-list","all");
   }catch(e){console.error(e);}
 }
-
 function updateStats(){
   document.getElementById("st-total").textContent = allBookings.filter(b=>b.status!=="cancelled").length;
 }
-
 function renderBookings(arr, containerId, mode){
   const el=document.getElementById(containerId);
-  if(!arr.length){
-    el.innerHTML=`<div class="empty-state"><div class="ico">${mode==="pending"?"🎉":"📭"}</div>${mode==="pending"?"Немає нових бронювань – все перевірено!":"Записів поки немає"}</div>`;
-    return;
-  }
+  if(!arr.length){ el.innerHTML=`<div class="empty-state"><div class="ico">📭</div>Записів поки немає</div>`; return; }
   el.innerHTML=arr.map(b=>bkCard(b)).join("");
 }
-
 function bkCard(b){
   const [y,m,d]=(b.date||"--").split("-");
   const dateFmt=b.date?`${parseInt(d)} ${MONTHS_GEN[parseInt(m)-1]} ${y||""}`:"─";
@@ -518,8 +339,7 @@ function bkCard(b){
     : (b.receiptUrl&&b.receiptUrl!=="(фото відправлено в Telegram)"
         ? `<a href="${b.receiptUrl}" target="_blank" style="color:var(--accent)">📷 Фото квитанції</a>`
         : `<span style="color:var(--muted)">📷 Відправлено в Telegram</span>`);
-  return `
-<div class="bk-card" id="bk-${b.id}">
+  return `<div class="bk-card" id="bk-${b.id}">
   <div class="bk-head">
     <div class="bk-time">📅 ${dateFmt}, ${b.time||"─"}</div>
     <span class="bk-status ${cls[b.status]||"s-pending"}">${statusMap[b.status]||b.status}</span>
@@ -535,61 +355,40 @@ function bkCard(b){
   </div>
   <div class="bk-actions">
     ${b.status!=="cancelled"&&b.status!=="completed"?`<button class="act-btn" style="background:#e8f0ff;color:#2050a0;border:1px solid #b0c8f5;font-weight:600" onclick="completeBk('${b.id}')">🏁 Провести сесію</button>`:""}
-    ${b.status!=="cancelled"&&b.status!=="completed"?`<button class="act-btn act-cancel" onclick="cancelBk('${b.id}','${b.slotId}')">↩️ Скасувати (повернути слот)</button>`:""}
-    ${b.status!=="cancelled"&&b.status!=="completed"?`<button class="act-btn" style="background:#e8f5ff;color:#2060a0;border:1px solid #b0d8f5" onclick="openReschedule('${b.id}','${b.slotId}')">🔄 Перенести час</button>`:""}
-    <button class="act-btn" style="background:#fff0f0;color:#b00;border:1px solid #f5c0c0" onclick="deleteBk('${b.id}','${b.slotId}')">🗑 Видалити запис</button>
+    ${b.status!=="cancelled"&&b.status!=="completed"?`<button class="act-btn act-cancel" onclick="cancelBk('${b.id}','${b.slotId||b.id}')">↩️ Скасувати</button>`:""}
+    ${b.status!=="cancelled"&&b.status!=="completed"?`<button class="act-btn" style="background:#e8f5ff;color:#2060a0;border:1px solid #b0d8f5" onclick="openReschedule('${b.id}','${b.slotId||""}')">🔄 Перенести</button>`:""}
+    <button class="act-btn" style="background:#fff0f0;color:#b00;border:1px solid #f5c0c0" onclick="deleteBk('${b.id}','${b.slotId||""}')">🗑 Видалити</button>
   </div>
 </div>`;
 }
 
-// ── Повернути сесію в пакет клієнта ─────────────────────────
 async function returnPackageSession(clientTelegram){
   if(!db||!clientTelegram) return;
   try{
     const snap=await getDocs(query(collection(db,"clientPackages"),where("telegram","==",clientTelegram)));
     if(snap.empty) return;
-    // Беремо найновіший пакет клієнта
     const sorted=snap.docs.sort((a,b)=>(b.data().createdAt||"").localeCompare(a.data().createdAt||""));
     const pkgDoc=sorted[0];
     const rem=pkgDoc.data().sessionsRemaining||0;
     const used=pkgDoc.data().sessionsUsed||0;
-    await updateDoc(doc(db,"clientPackages",pkgDoc.id),{
-      sessionsRemaining: rem+1,
-      sessionsUsed: Math.max(0,used-1)
-    });
-    console.log("↩️ Сесія повернена в пакет для",clientTelegram);
+    await updateDoc(doc(db,"clientPackages",pkgDoc.id),{sessionsRemaining:rem+1,sessionsUsed:Math.max(0,used-1)});
   }catch(e){console.error("returnPackageSession error",e);}
 }
 
 async function completeBk(bkId){
   const bk=allBookings.find(b=>b.id===bkId);
-  // Крок 1: чи була присутня?
-  const present=confirm("Клієнт БУВ присутній на сесії?\n\nОК = ✅ Була присутня\nСкасувати = ❌ Не була присутня");
-
+  const present=confirm("Клієнт БУВ присутній?\n\nОК = ✅ Так\nСкасувати = ❌ Ні");
   let note, returnSession=false;
   if(present){
     note="✅ Була присутня";
   } else {
-    // Крок 2: чи попередила за 24 год?
-    const warned=confirm("Клієнт попередив про відсутність за 24+ годин?\n\nОК = ✅ Так, попередила — сесія повертається\nСкасувати = ❌ Ні, no-show — сесія згорає");
-    if(warned){
-      note="❌ Не була присутня · попередила — сесія повернена";
-      returnSession=true;
-    } else {
-      note="❌ Не була присутня · no-show — сесія згоріла";
-    }
+    const warned=confirm("Попередила за 24+ годин?\n\nОК = ✅ Так — сесія повертається\nСкасувати = ❌ Ні — no-show");
+    if(warned){ note="❌ Не була · попередила — сесія повернена"; returnSession=true; }
+    else { note="❌ Не була · no-show — сесія згоріла"; }
   }
-
   if(db){
-    await updateDoc(doc(db,"bookings",bkId),{
-      status:"completed",
-      completedAt:new Date().toISOString(),
-      presenceNote:note
-    });
-    // Повертаємо сесію якщо клієнт попередив і бронювання було з пакету
-    if(returnSession && bk && bk.usedPackage && bk.clientTelegram){
-      await returnPackageSession(bk.clientTelegram);
-    }
+    await updateDoc(doc(db,"bookings",bkId),{status:"completed",completedAt:new Date().toISOString(),presenceNote:note});
+    if(returnSession && bk?.usedPackage && bk?.clientTelegram) await returnPackageSession(bk.clientTelegram);
   }
   toast("🏁 "+note);
   await loadBookings();
@@ -597,50 +396,36 @@ async function completeBk(bkId){
 
 async function confirmBk(bkId,slotId){
   if(!confirm("Підтвердити цей запис?"))return;
-  if(db){
-    await updateDoc(doc(db,"bookings",bkId),{status:"confirmed"});
-    if(slotId) await updateDoc(doc(db,"slots",slotId),{status:"booked"});
-  }
+  if(db){ await updateDoc(doc(db,"bookings",bkId),{status:"confirmed"}); if(slotId) await updateDoc(doc(db,"slots",slotId),{status:"booked"}); }
   toast("✅ Запис підтверджено");
   await loadBookings();
 }
 
 async function cancelBk(bkId,slotId){
   const bk=allBookings.find(b=>b.id===bkId);
-  if(!confirm("Скасувати цей запис?\n\nЯкщо запис був з пакету — сесія повернеться клієнту автоматично."))return;
+  if(!confirm("Скасувати цей запис?"))return;
   if(db){
     await updateDoc(doc(db,"bookings",bkId),{status:"cancelled",cancelledAt:new Date().toISOString()});
     if(slotId) await updateDoc(doc(db,"slots",slotId),{status:"available",bookingId:null});
-    // ↩️ Повертаємо сесію якщо бронювання було з пакету
-    if(bk&&bk.usedPackage&&bk.clientTelegram){
-      await returnPackageSession(bk.clientTelegram);
-      toast("↩️ Запис скасовано – слот і сесія в пакеті повернені");
-    } else {
-      toast("Запис скасовано – слот повернено");
-    }
+    if(bk?.usedPackage&&bk?.clientTelegram){ await returnPackageSession(bk.clientTelegram); toast("↩️ Скасовано – слот і сесія повернені"); }
+    else toast("Скасовано – слот повернено");
   }
   await Promise.all([loadBookings(),loadSlots()]);
 }
 
 async function deleteBk(bkId,slotId){
   const bk=allBookings.find(b=>b.id===bkId);
-  if(!confirm("Видалити цей запис?\n\nЯкщо запис був з пакету — сесія повернеться клієнту."))return;
+  if(!confirm("Видалити цей запис?"))return;
   if(db){
     const {deleteDoc:_del}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
     await _del(doc(db,"bookings",bkId));
     if(slotId) await updateDoc(doc(db,"slots",slotId),{status:"available",bookingId:null});
-    // ↩️ Повертаємо сесію якщо бронювання було з пакету
-    if(bk&&bk.usedPackage&&bk.clientTelegram){
-      await returnPackageSession(bk.clientTelegram);
-      toast("🗑 Запис видалено – сесія в пакеті повернена");
-    } else {
-      toast("🗑 Запис видалено");
-    }
+    if(bk?.usedPackage&&bk?.clientTelegram){ await returnPackageSession(bk.clientTelegram); toast("🗑 Видалено – сесія повернена"); }
+    else toast("🗑 Запис видалено");
   }
   await Promise.all([loadBookings(),loadSlots()]);
 }
 
-// ─── SLOTS ────────────────────────────────────────────────────
 let allSlots=[];
 async function loadSlots(){
   if(!db){renderSlotsList([]);return;}
@@ -660,18 +445,9 @@ async function loadSlots(){
 
 function renderSlotsList(arr){
   const el=document.getElementById("slots-list-el");
-  if(!arr.length){
-    el.innerHTML=`<div class="empty-state"><div class="ico">🗓</div>Вільних слотів немає. Додайте через форму вище.</div>`;
-    return;
-  }
-  // Group by month
+  if(!arr.length){ el.innerHTML=`<div class="empty-state"><div class="ico">🗓</div>Вільних слотів немає.</div>`; return; }
   const groups={};
-  arr.forEach(s=>{
-    const [y,m]=s.date.split("-");
-    const key=`${y}-${m}`;
-    if(!groups[key])groups[key]=[];
-    groups[key].push(s);
-  });
+  arr.forEach(s=>{ const [y,m]=s.date.split("-"); const key=`${y}-${m}`; if(!groups[key])groups[key]=[]; groups[key].push(s); });
   el.innerHTML=Object.entries(groups).map(([key,slots])=>{
     const [y,m]=key.split("-");
     return `<div class="slots-month-group">
@@ -679,7 +455,7 @@ function renderSlotsList(arr){
       ${slots.map(s=>{
         const [,sm,sd]=s.date.split("-");
         const dObj=new Date(parseInt(y),parseInt(sm)-1,parseInt(sd));
-        const sLabel={available:"Вільно",pending:"⏳ Очікує оплати",booked:"✅ Заброньовано"}[s.status]||s.status;
+        const sLabel={available:"Вільно",pending:"⏳ Очікує",booked:"✅ Заброньовано"}[s.status]||s.status;
         return `<div class="slot-item">
           <div class="slot-info">
             <div class="dt">${WDAYS[dObj.getDay()]}, ${parseInt(sd)} ${MONTHS_GEN[parseInt(sm)-1]} · ${s.time}</div>
@@ -736,12 +512,11 @@ async function addBatch(){
 
 async function deleteSlot(id){
   if(!confirm("Видалити цей слот?"))return;
-  if(db) await deleteDoc(doc(db,"slots",id));
+  if(db){ const {deleteDoc:_d}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"); await _d(doc(db,"slots",id)); }
   toast("Слот видалено");
   await loadSlots();
 }
 
-// ─── SETTINGS ─────────────────────────────────────────────────
 async function loadSettings(){
   if(!db)return;
   try{
@@ -773,38 +548,26 @@ function savePw(){
   document.getElementById("s-newpw2").value="";
 }
 
-// ─── PACKAGES TAB ─────────────────────────────────────────────
 async function loadPackages(){
   const el=document.getElementById("packages-list");
   if(!db){el.innerHTML="<p style='color:var(--muted);padding:16px'>Firebase не підключено</p>";return;}
   try{
     const snap=await getDocs(collection(db,"clientPackages"));
     const all=snap.docs.map(d=>({id:d.id,...d.data()}));
-    // Тільки активні (є залишок) + сортуємо: менше залишилось — першими
-    const active=all.filter(p=>(p.sessionsRemaining||0)>0)
-      .sort((a,b)=>(a.sessionsRemaining||0)-(b.sessionsRemaining||0));
-    const finished=all.filter(p=>(p.sessionsRemaining||0)===0)
-      .sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
-
-    if(!all.length){
-      el.innerHTML=`<div class="empty-state"><div class="ico">📦</div>Пакетів ще немає</div>`;
-      return;
-    }
-
+    const active=all.filter(p=>(p.sessionsRemaining||0)>0).sort((a,b)=>(a.sessionsRemaining||0)-(b.sessionsRemaining||0));
+    const finished=all.filter(p=>(p.sessionsRemaining||0)===0).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+    if(!all.length){ el.innerHTML=`<div class="empty-state"><div class="ico">📦</div>Пакетів ще немає</div>`; return; }
     const renderCard=(p,isFinished)=>{
-      const rem=p.sessionsRemaining||0;
-      const total=p.sessionsTotal||0;
-      const used=p.sessionsUsed||0;
+      const rem=p.sessionsRemaining||0, total=p.sessionsTotal||0, used=p.sessionsUsed||0;
       const pct=total>0?Math.round((used/total)*100):0;
       const barColor=rem===0?"#ccc":rem===1?"#e05050":rem<=3?"#e0a030":"#1e6b40";
-      const dateStr=p.createdAt?p.createdAt.slice(0,10):"─";
       return`<div class="bk-card" style="${isFinished?"opacity:.55":""}">
         <div class="bk-head">
           <div style="display:flex;align-items:center;gap:10px">
             <span style="font-size:1.3rem">${rem===0?"✅":rem===1?"⚠️":"📦"}</span>
             <div>
               <div style="font-weight:600;font-size:1rem">${p.telegram||"─"}</div>
-              <div style="font-size:.8rem;color:var(--muted)">${p.packageName||"─"} · куплено ${dateStr}</div>
+              <div style="font-size:.8rem;color:var(--muted)">${p.packageName||"─"} · куплено ${p.createdAt?p.createdAt.slice(0,10):"─"}</div>
             </div>
           </div>
           <div style="text-align:right">
@@ -813,70 +576,59 @@ async function loadPackages(){
           </div>
         </div>
         <div style="background:#f0ece6;border-radius:6px;height:8px;overflow:hidden;margin-bottom:8px">
-          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:6px;transition:width .3s"></div>
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:6px"></div>
         </div>
-        <div style="font-size:.8rem;color:var(--muted)">Використано: ${used} · Залишилось: ${rem}${rem===1?" ⚠️ остання сесія!":""}</div>
+        <div style="font-size:.8rem;color:var(--muted)">Використано: ${used} · Залишилось: ${rem}${rem===1?" ⚠️":""}</div>
       </div>`;
     };
-
     let html="";
-    if(active.length){
-      html+=`<div style="font-size:.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Активні — ${active.length}</div>`;
-      html+=active.map(p=>renderCard(p,false)).join("");
-    }
-    if(finished.length){
-      html+=`<div style="font-size:.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">Завершені — ${finished.length}</div>`;
-      html+=finished.map(p=>renderCard(p,true)).join("");
-    }
+    if(active.length){ html+=`<div style="font-size:.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Активні — ${active.length}</div>`; html+=active.map(p=>renderCard(p,false)).join(""); }
+    if(finished.length){ html+=`<div style="font-size:.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">Завершені — ${finished.length}</div>`; html+=finished.map(p=>renderCard(p,true)).join(""); }
     el.innerHTML=html;
   }catch(e){console.error(e);el.innerHTML="<p style='color:red;padding:16px'>Помилка завантаження</p>";}
 }
 
-// ─── HOURS CALCULATOR ────────────────────────────────────────
+// ─── HOURS — з базовими 122 годинами (01.04.2025–31.05.2026) ──
 async function loadHours(){
   if(!db){document.getElementById("hours-list").innerHTML="<p style='color:var(--muted)'>Firebase не підключено</p>";return;}
   try{
     const snap=await getDocs(query(collection(db,"bookings"),where("status","==","completed")));
     const completed=snap.docs.map(d=>({id:d.id,...d.data()}));
     completed.sort((a,b)=>(b.completedAt||"").localeCompare(a.completedAt||""));
-    const totalMin=completed.length*60;
-    const hrs=Math.floor(totalMin/60);
-    const mins=totalMin%60;
-    // Показуємо у форматі "Xг Yхв" або просто "X год"
-    const hoursDisplay = mins > 0 ? `${hrs}г ${mins}хв` : `${hrs}`;
-    document.getElementById("hours-total").textContent=hoursDisplay;
-    document.getElementById("hours-sessions-count").textContent=`${completed.length} сесій · по 60 хвилин кожна · разом ${totalMin} хвилин (${hrs} год)`;
+
+    // ✅ Базові 122 сесії: 01.04.2025–31.05.2026, 61 неділь × 2 сесії
+    const BASE_SESSIONS = 122;
+    const totalSessions = completed.length + BASE_SESSIONS;
+    const totalMin = totalSessions * 60;
+    const hrs = Math.floor(totalMin / 60);
+
+    document.getElementById("hours-total").textContent = hrs;
+    document.getElementById("hours-sessions-count").textContent =
+      `${totalSessions} сесій всього (${BASE_SESSIONS} базових + ${completed.length} у Firebase) · ${hrs} год практики`;
+
     const listEl=document.getElementById("hours-list");
-    if(!completed.length){listEl.innerHTML=`<div class="empty-state"><div class="ico">🌱</div>Ще немає проведених сесій</div>`;return;}
-    listEl.innerHTML=`
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:.88rem">
-          <thead>
-            <tr style="border-bottom:2px solid var(--border);text-align:left">
-              <th style="padding:8px 12px;color:var(--muted);font-weight:600">Дата</th>
-              <th style="padding:8px 12px;color:var(--muted);font-weight:600">Клієнт</th>
-              <th style="padding:8px 12px;color:var(--muted);font-weight:600">Telegram</th>
-              <th style="padding:8px 12px;color:var(--muted);font-weight:600">Пакет</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${completed.map(b=>{
-              const [y,m,d]=(b.date||"--").split("-");
-              const df=b.date?`${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}`:"─";
-              return`<tr style="border-bottom:1px solid var(--border)">
-                <td style="padding:9px 12px">${df}</td>
-                <td style="padding:9px 12px">${b.clientName||"─"}</td>
-                <td style="padding:9px 12px">${b.clientTelegram?`<a href="https://t.me/${b.clientTelegram.replace('@','')}" target="_blank">${b.clientTelegram}</a>`:"─"}</td>
-                <td style="padding:9px 12px">${b.pkgName||"─"}</td>
-              </tr>`;
-            }).join("")}
-          </tbody>
-        </table>
-      </div>`;
+    if(!completed.length){listEl.innerHTML=`<div class="empty-state"><div class="ico">🌱</div>Ще немає проведених сесій у Firebase</div>`;return;}
+    listEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.88rem">
+      <thead><tr style="border-bottom:2px solid var(--border);text-align:left">
+        <th style="padding:8px 12px;color:var(--muted);font-weight:600">Дата</th>
+        <th style="padding:8px 12px;color:var(--muted);font-weight:600">Клієнт</th>
+        <th style="padding:8px 12px;color:var(--muted);font-weight:600">Telegram</th>
+        <th style="padding:8px 12px;color:var(--muted);font-weight:600">Пакет</th>
+      </tr></thead>
+      <tbody>${completed.map(b=>{
+        const [y,m,d]=(b.date||"--").split("-");
+        const df=b.date?`${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}`:"─";
+        return`<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:9px 12px">${df}</td>
+          <td style="padding:9px 12px">${b.clientName||"─"}</td>
+          <td style="padding:9px 12px">${b.clientTelegram?`<a href="https://t.me/${b.clientTelegram.replace('@','')}" target="_blank">${b.clientTelegram}</a>`:"─"}</td>
+          <td style="padding:9px 12px">${b.pkgName||"─"}</td>
+        </tr>`;
+      }).join("")}</tbody>
+    </table></div>`;
   }catch(e){console.error(e);}
 }
 
-// ─── UTILS ────────────────────────────────────────────────────
 function fmtDate(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
 function toast(msg){
   const t=document.getElementById("toast");
