@@ -416,6 +416,16 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
 
     </div>
 
+    <!-- КНОПКА ДЛЯ ВЛАСНИКІВ ПАКЕТУ -->
+    <div onclick="goWithPackage()" style="margin-top:14px;background:linear-gradient(135deg,#fff8f0,#ffeedd);border:2px dashed #d4a870;border-radius:14px;padding:16px 20px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:border-color .18s" onmouseover="this.style.borderColor='#8b6636'" onmouseout="this.style.borderColor='#d4a870'">
+      <span style="font-size:1.6rem;flex-shrink:0">🐱</span>
+      <div style="flex:1">
+        <div style="font-family:sans-serif;font-size:.95rem;font-weight:700;color:#7a4a00">Вже маю пакет сесій</div>
+        <div style="font-family:sans-serif;font-size:.8rem;color:#a07040;margin-top:2px">Просто обери зручний час — система підтягне твій пакет по Telegram-ніку 🌿</div>
+      </div>
+      <span style="font-size:1.2rem;color:#8b6636">↓</span>
+    </div>
+
     <div id="pkg-cta" style="display:none;margin-top:14px;border-radius:12px;overflow:hidden">
       <div style="background:rgba(139,102,54,0.92);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <div>
@@ -1057,6 +1067,17 @@ async function confirmPackageBooking() {
 
 
 
+// КНОПКА "ВЖЕ МАЮ ПАКЕТ" — скролить до календаря без вибору пакету
+function goWithPackage() {
+  // Знімаємо виділення з пакетів — не треба обирати
+  document.querySelectorAll(".pkg-card.selected").forEach(c=>c.classList.remove("selected"));
+  S.selPkg = null;
+  document.getElementById("pkg-cta").style.display = "none";
+  // Скролимо до календаря
+  const el = document.querySelector(".cal-wrapper");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 // SCROLL TO CALENDAR
 function scrollToCalendar() {
   const el = document.querySelector(".cal-wrapper");
@@ -1128,7 +1149,7 @@ Object.assign(window, {
   switchTab, onFile, clearFile, copyVal, confirmBooking,
   checkClientPackage, onPkgSelectChange, declineUrgent, acceptUrgent, confirmPackageBooking,
   scrollToCalendar, showInlinePkgChooser, updateInlinePkgChooser, selectInlinePkg, refreshBookBtn,
-  updateUrgentFormBanner
+  updateUrgentFormBanner, goWithPackage
 });
 
 // ─── INIT ────────────────────────────────────────────────────
