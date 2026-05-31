@@ -369,6 +369,7 @@ try {
 } catch(e){ console.warn("Firebase not configured"); }
 
 const MONTHS = ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"];
+const MONTHS_GEN = ["січня","лютого","березня","квітня","травня","червня","липня","серпня","вересня","жовтня","листопада","грудня"];
 const WDAYS  = ["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const QUICK  = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"];
 let quickSel = new Set();
@@ -509,7 +510,7 @@ function renderBookings(arr, containerId, mode){
 
 function bkCard(b){
   const [y,m,d]=(b.date||"--").split("-");
-  const dateFmt=b.date?`${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y||""}`:"─";
+  const dateFmt=b.date?`${parseInt(d)} ${MONTHS_GEN[parseInt(m)-1]} ${y||""}`:"─";
   const statusMap={pending:"⏳ Очікує підтвердження",confirmed:"✅ Підтверджено",cancelled:"❌ Скасовано",completed:"🏁 Проведено"};
   const cls={pending:"s-pending",confirmed:"s-confirmed",cancelled:"s-cancelled",completed:"s-completed"};
   const rcpt=b.receiptType==="link"
@@ -530,6 +531,7 @@ function bkCard(b){
     <div class="bk-field"><span class="lbl">Сума</span>${b.pkgPrice?b.pkgPrice.toLocaleString("uk-UA")+" грн":"─"}</div>
     <div class="bk-field"><span class="lbl">Квитанція</span>${rcpt}</div>
     ${b.clientComment?`<div class="bk-field" style="grid-column:1/-1"><span class="lbl">Коментар</span>${b.clientComment}</div>`:""}
+    ${b.presenceNote?`<div class="bk-field" style="grid-column:1/-1"><span class="lbl">Присутність</span><strong>${b.presenceNote}</strong></div>`:""}
   </div>
   <div class="bk-actions">
     ${b.status!=="cancelled"&&b.status!=="completed"?`<button class="act-btn" style="background:#e8f0ff;color:#2050a0;border:1px solid #b0c8f5;font-weight:600" onclick="completeBk('${b.id}')">🏁 Провести сесію</button>`:""}
@@ -540,12 +542,37 @@ function bkCard(b){
 </div>`;
 }
 
+// ── Повернути сесію в пакет клієнта ─────────────────────────
+async function returnPackageSession(clientTelegram){
+  if(!db||!clientTelegram) return;
+  try{
+    const snap=await getDocs(query(collection(db,"clientPackages"),where("telegram","==",clientTelegram)));
+    if(snap.empty) return;
+    // Беремо найновіший пакет клієнта
+    const sorted=snap.docs.sort((a,b)=>(b.data().createdAt||"").localeCompare(a.data().createdAt||""));
+    const pkgDoc=sorted[0];
+    const rem=pkgDoc.data().sessionsRemaining||0;
+    const used=pkgDoc.data().sessionsUsed||0;
+    await updateDoc(doc(db,"clientPackages",pkgDoc.id),{
+      sessionsRemaining: rem+1,
+      sessionsUsed: Math.max(0,used-1)
+    });
+    console.log("↩️ Сесія повернена в пакет для",clientTelegram);
+  }catch(e){console.error("returnPackageSession error",e);}
+}
+
 async function completeBk(bkId){
-  if(!confirm("Позначити цю сесію як проведену?"))return;
+  // Питаємо про присутність
+  const present=confirm("Клієнт БУВ присутній на сесії?\n\nОК = Була присутня ✅\nСкасувати = Не була присутня ❌");
+  const note=present?"✅ Була присутня":"❌ Не була присутня";
   if(db){
-    await updateDoc(doc(db,"bookings",bkId),{status:"completed",completedAt:new Date().toISOString()});
+    await updateDoc(doc(db,"bookings",bkId),{
+      status:"completed",
+      completedAt:new Date().toISOString(),
+      presenceNote:note
+    });
   }
-  toast("🏁 Сесія позначена як проведена");
+  toast("🏁 Сесія проведена · "+note);
   await loadBookings();
 }
 
@@ -558,23 +585,39 @@ async function confirmBk(bkId,slotId){
   toast("✅ Запис підтверджено");
   await loadBookings();
 }
+
 async function cancelBk(bkId,slotId){
-  if(!confirm("Скасувати цей запис і повернути слот у доступні?"))return;
+  const bk=allBookings.find(b=>b.id===bkId);
+  if(!confirm("Скасувати цей запис?\n\nЯкщо запис був з пакету — сесія повернеться клієнту автоматично."))return;
   if(db){
-    await updateDoc(doc(db,"bookings",bkId),{status:"cancelled"});
+    await updateDoc(doc(db,"bookings",bkId),{status:"cancelled",cancelledAt:new Date().toISOString()});
     if(slotId) await updateDoc(doc(db,"slots",slotId),{status:"available",bookingId:null});
+    // ↩️ Повертаємо сесію якщо бронювання було з пакету
+    if(bk&&bk.usedPackage&&bk.clientTelegram){
+      await returnPackageSession(bk.clientTelegram);
+      toast("↩️ Запис скасовано – слот і сесія в пакеті повернені");
+    } else {
+      toast("Запис скасовано – слот повернено");
+    }
   }
-  toast("Запис скасовано – слот повернено");
   await Promise.all([loadBookings(),loadSlots()]);
 }
+
 async function deleteBk(bkId,slotId){
-  if(!confirm("Видалити цей запис повністю? Слот стане вільним знову."))return;
+  const bk=allBookings.find(b=>b.id===bkId);
+  if(!confirm("Видалити цей запис?\n\nЯкщо запис був з пакету — сесія повернеться клієнту."))return;
   if(db){
-    const {deleteDoc} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    await deleteDoc(doc(db,"bookings",bkId));
+    const {deleteDoc:_del}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await _del(doc(db,"bookings",bkId));
     if(slotId) await updateDoc(doc(db,"slots",slotId),{status:"available",bookingId:null});
+    // ↩️ Повертаємо сесію якщо бронювання було з пакету
+    if(bk&&bk.usedPackage&&bk.clientTelegram){
+      await returnPackageSession(bk.clientTelegram);
+      toast("🗑 Запис видалено – сесія в пакеті повернена");
+    } else {
+      toast("🗑 Запис видалено");
+    }
   }
-  toast("🗑 Запис видалено");
   await Promise.all([loadBookings(),loadSlots()]);
 }
 
@@ -620,7 +663,7 @@ function renderSlotsList(arr){
         const sLabel={available:"Вільно",pending:"⏳ Очікує оплати",booked:"✅ Заброньовано"}[s.status]||s.status;
         return `<div class="slot-item">
           <div class="slot-info">
-            <div class="dt">${WDAYS[dObj.getDay()]}, ${parseInt(sd)} ${MONTHS[parseInt(sm)-1]}${s.time}</div>
+            <div class="dt">${WDAYS[dObj.getDay()]}, ${parseInt(sd)} ${MONTHS_GEN[parseInt(sm)-1]} · ${s.time}</div>
             <div class="st">${sLabel}</div>
           </div>
           ${s.status==="available"?`<button class="slot-del" onclick="deleteSlot('${s.id}')">✕ Видалити</button>`:"<span></span>"}

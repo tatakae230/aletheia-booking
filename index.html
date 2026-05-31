@@ -524,7 +524,7 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
             <div id="tg-pkg-active-text"></div>
           </div>
         </div>
-        <input id="f-tg" type="text" required placeholder="@username" autocomplete="off" onblur="checkClientPackage()">
+        <input id="f-tg" type="text" placeholder="@username (обов'язково для пакету)" autocomplete="off" onblur="checkClientPackage()">
       </div>
       <div style="display:none">
       <div class="fg">
@@ -880,6 +880,7 @@ const S = {
 };
 
 const MONTHS = ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"];
+const MONTHS_GEN = ["січня","лютого","березня","квітня","травня","червня","липня","серпня","вересня","жовтня","листопада","грудня"];
 const WDAYS  = ["Неділя","Понеділок","Вівторок","Середа","Четвер","Пʼятниця","Субота"];
 
 // expose to HTML onclick
@@ -959,6 +960,13 @@ async function checkClientPackage() {
       activeDiv.style.display = "none";
     }
   } catch(e) { console.warn("checkClientPackage error", e); }
+  // Оновлюємо текст кнопки залежно від пакету
+  const submitBtn = document.querySelector("#bk-form button[type=submit]");
+  if (submitBtn && submitBtn.textContent !== "⏳ Перевіряємо…") {
+    submitBtn.textContent = (S.activePackage && S.activePackage.docId)
+      ? "Далі – до бронювання →"
+      : "Далі – до оплати →";
+  }
 }
 
 function onPkgSelectChange() {
@@ -1036,7 +1044,7 @@ async function confirmPackageBooking() {
     await tgNotify(bkForTg, null);
     const [y,m,d] = S.selDate.split("-");
     document.getElementById("confirm-details").innerHTML =
-      "<p>Дата: <strong>"+parseInt(d)+" "+MONTHS[parseInt(m)-1]+" "+y+"</strong></p><p>Час: <strong>"+S.selSlotTime+"</strong></p><p>Оплата: <strong>З пакету</strong></p>";
+      "<p>Дата: <strong>"+parseInt(d)+" "+MONTHS_GEN[parseInt(m)-1]+" "+y+"</strong></p><p>Час: <strong>"+S.selSlotTime+"</strong></p><p>Оплата: <strong>З пакету</strong></p>";
     goto("success");
   } catch(e) { console.error(e); toast("Помилка бронювання"); }
 }
@@ -1063,7 +1071,7 @@ function showInlinePkgChooser() {
   const [y,m,d] = S.selDate.split("-");
   const _dObj = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
   document.getElementById("chosen-slot-label").textContent =
-    WDAYS[_dObj.getDay()] + ", " + parseInt(d) + " " + MONTHS[parseInt(m)-1] + " " + y + ", " + S.selSlotTime;
+    WDAYS[_dObj.getDay()] + ", " + parseInt(d) + " " + MONTHS_GEN[parseInt(m)-1] + " " + y + ", " + S.selSlotTime;
   updateInlinePkgChooser();
   setTimeout(() => sec.scrollIntoView({ behavior:"smooth", block:"start" }), 80);
 }
@@ -1213,7 +1221,7 @@ function renderSlots(ds) {
   const lbl  = document.getElementById("slots-label");
   const [y,m,d] = ds.split("-");
   const dObj = new Date(parseInt(y),parseInt(m)-1,parseInt(d));
-  lbl.textContent = `${WDAYS[dObj.getDay()]}, ${parseInt(d)} ${MONTHS[parseInt(m)-1]}`;
+  lbl.textContent = `${WDAYS[dObj.getDay()]}, ${parseInt(d)} ${MONTHS_GEN[parseInt(m)-1]}`;
   const arr = S.slots[ds]||[];
   if (!arr.length) {
     grid.innerHTML = `<div class="no-slots">На цей день поки немає вільних слотів</div>`;
@@ -1289,7 +1297,7 @@ function updateBar() {
   if (S.selSlotId && S.view==="home") {
     const [_y2,m,d]=S.selDate.split("-");
     const _barD=new Date(parseInt(_y2),parseInt(m)-1,parseInt(d));
-    document.getElementById("bar-slot").textContent=`📅 ${WDAYS[_barD.getDay()]}, ${parseInt(d)} ${MONTHS[parseInt(m)-1]}, ${S.selSlotTime}`;
+    document.getElementById("bar-slot").textContent=`📅 ${WDAYS[_barD.getDay()]}, ${parseInt(d)} ${MONTHS_GEN[parseInt(m)-1]}, ${S.selSlotTime}`;
     const dispPrice = (S.isUrgent && S.urgentPrice) ? S.urgentPrice : (S.selPkg ? S.selPkg.price : null);
     document.getElementById("bar-pkg").textContent = S.selPkg
       ? `${S.selPkg.name} · ${dispPrice ? dispPrice.toLocaleString("uk-UA") : S.selPkg.price.toLocaleString("uk-UA")} грн${S.isUrgent?" ⚡ Термінова":""}`
@@ -1316,7 +1324,7 @@ function gotoForm() {
   }
   const [y,m,d]=S.selDate.split("-");
   document.getElementById("form-banner").innerHTML=
-    `✅ Обраний час: <strong>${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}, ${S.selSlotTime}</strong>`;
+    `✅ Обраний час: <strong>${parseInt(d)} ${MONTHS_GEN[parseInt(m)-1]} ${y}, ${S.selSlotTime}</strong>`;
   goto("form");
 }
 
@@ -1327,8 +1335,9 @@ async function submitForm(e) {
   if(!pkgVal){toast("Оберіть пакет");return;}
   const [pId,pPrice,pName]=pkgVal.split("|");
   const tgRaw = document.getElementById("f-tg").value.trim();
-  if (!tgRaw) { toast("Введіть ваш Telegram"); document.getElementById("f-tg").focus(); return; }
-  const tgHandle = tgRaw.startsWith("@") ? tgRaw : "@"+tgRaw;
+  const isPkg = pId === "pack8" || pId === "pack12";
+  if (!tgRaw && isPkg) { toast("Для пакету Telegram обов'язковий"); document.getElementById("f-tg").focus(); return; }
+  const tgHandle = tgRaw ? (tgRaw.startsWith("@") ? tgRaw : "@"+tgRaw) : "";
   // ⚡ ВАЖЛИВО: завжди чекаємо відповідь Firebase перед рішенням про оплату
   // Це усуває баг де людина натискала "Далі" ще до того як завершився запит
   const btn = document.querySelector("#bk-form button[type=submit]");
@@ -1383,7 +1392,7 @@ async function submitForm(e) {
   else if (S.isUrgent) urgentLabel = " ⭐ Термінова сесія";
 
   document.getElementById("pay-banner").innerHTML =
-    `✅ Ви бронюєте: <strong>${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}, ${S.selSlotTime}</strong> – ${pName}${urgentLabel}`;
+    `✅ Ви бронюєте: <strong>${parseInt(d)} ${MONTHS_GEN[parseInt(m)-1]} ${y}, ${S.selSlotTime}</strong> – ${pName}${urgentLabel}`;
   document.getElementById("disp-card").textContent   = paySettings.card;
   document.getElementById("disp-bank").textContent   = paySettings.bank;
   document.getElementById("disp-holder").textContent = paySettings.holder;
@@ -1502,7 +1511,7 @@ async function tgNotify(bk, file) {
   const [y,m,d]=bk.date.split("-");
   const dObj=new Date(parseInt(y),parseInt(m)-1,parseInt(d));
   const dayName=WDAYS[dObj.getDay()];
-  const dateFmt=dayName+", "+parseInt(d)+" "+MONTHS[parseInt(m)-1]+" "+y;
+  const dateFmt=dayName+", "+parseInt(d)+" "+MONTHS_GEN[parseInt(m)-1]+" "+y;
   // Plain text — БЕЗ parse_mode, щоб спецсимволи в іменах не ламали запит
   const txt=[
     "🗓 НОВЕ БРОНЮВАННЯ!",
@@ -1550,7 +1559,7 @@ function showSuccess(bk) {
     ? `${bk.pkgPrice.toLocaleString("uk-UA")} грн`
     : (bk.isUrgentSurcharge ? "450 грн (доплата за термінову з пакету)" : "З пакету 🌿");
   document.getElementById("confirm-details").innerHTML=`
-    <div>📅 <b>Дата та час:</b> ${dayName}, ${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y} о ${bk.time}</div>
+    <div>📅 <b>Дата та час:</b> ${dayName}, ${parseInt(d)} ${MONTHS_GEN[parseInt(m)-1]} ${y} о ${bk.time}</div>
     <div>👤 <b>Ім'я:</b> ${bk.clientName}</div>
     <div>📦 <b>Пакет:</b> ${bk.pkgName}</div>
     <div>💰 <b>Сума:</b> ${priceText}</div>
