@@ -562,17 +562,36 @@ async function returnPackageSession(clientTelegram){
 }
 
 async function completeBk(bkId){
-  // Питаємо про присутність
-  const present=confirm("Клієнт БУВ присутній на сесії?\n\nОК = Була присутня ✅\nСкасувати = Не була присутня ❌");
-  const note=present?"✅ Була присутня":"❌ Не була присутня";
+  const bk=allBookings.find(b=>b.id===bkId);
+  // Крок 1: чи була присутня?
+  const present=confirm("Клієнт БУВ присутній на сесії?\n\nОК = ✅ Була присутня\nСкасувати = ❌ Не була присутня");
+
+  let note, returnSession=false;
+  if(present){
+    note="✅ Була присутня";
+  } else {
+    // Крок 2: чи попередила за 24 год?
+    const warned=confirm("Клієнт попередив про відсутність за 24+ годин?\n\nОК = ✅ Так, попередила — сесія повертається\nСкасувати = ❌ Ні, no-show — сесія згорає");
+    if(warned){
+      note="❌ Не була присутня · попередила — сесія повернена";
+      returnSession=true;
+    } else {
+      note="❌ Не була присутня · no-show — сесія згоріла";
+    }
+  }
+
   if(db){
     await updateDoc(doc(db,"bookings",bkId),{
       status:"completed",
       completedAt:new Date().toISOString(),
       presenceNote:note
     });
+    // Повертаємо сесію якщо клієнт попередив і бронювання було з пакету
+    if(returnSession && bk && bk.usedPackage && bk.clientTelegram){
+      await returnPackageSession(bk.clientTelegram);
+    }
   }
-  toast("🏁 Сесія проведена · "+note);
+  toast("🏁 "+note);
   await loadBookings();
 }
 
