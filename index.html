@@ -683,7 +683,7 @@ async function checkClientPackage() {
       const plural = rem === 1 ? "сесія" : rem < 5 ? "сесії" : "сесій";
       document.getElementById("tg-pkg-active-text").innerHTML =
         (rem === 1
-          ? "<strong>🐈‍⬛ Остання сесія в пакеті</strong><br>Ця зустріч з пакету — платити зараз не потрібно 🌿 Після неї пакет завершиться. Якщо захочеш продовжити — напиши в <a href='https://t.me/alet_psyche' target='_blank' style='color:#8b6636'>Telegram</a>, підберемо варіант 💛"
+          ? "<strong>🐈‍⬛ Остання сесія в пакеті</strong><br>Ця зустріч з пакету — платити зараз не потрібно 🌿 Після неї пакет завершиться. Повертайся та обери зручний для тебе пакет 🌿"
           : "<strong>🐱 Залишилось " + rem + " " + plural + " в пакеті</strong><br>Пакет «" + pkg.packageName + "» — просто обери час, оплачувати не потрібно 🌿");
       activeDiv.style.display = "block";
       const sel = document.getElementById("f-pkg");
@@ -942,7 +942,7 @@ async function submitForm(e) {
       "<p>Час: <strong>" + S.selSlotTime + "</strong></p>" +
       "<p>Пакет: <strong>" + pkg.packageName + "</strong></p>" +
       "<p>Залишилось: <strong>" + pkg.sessionsRemaining + " сесій</strong></p>" +
-      "<p>Оплата: <strong>З пакету (безкоштовно)</strong></p>";
+      "<p>Оплата: <strong>З пакету</strong></p>";
     goto("confirm-pkg");
     return;
   }
@@ -1060,9 +1060,12 @@ async function confirmBooking() {
     });
     await updateDoc(doc(db, "slots", S.selSlotId), { status: "pending", bookingId: bkRef.id });
 
-    if (S.clientData.pkgId?.startsWith("pack")) {
+    if (S.clientData.pkgId?.startsWith("pack") && !S.clientData.usedPackageDoc) {
       const sessions = S.clientData.pkgId === "pack8" ? 8 : 12;
-      await saveClientPackage(S.clientData.telegram, S.clientData.pkgId, S.clientData.pkgName.replace(" ⚡",""), S.clientData.pkgPrice, sessions);
+      const cleanName = S.clientData.pkgName.replace(/ *⚡? *термін\.? *доплата/gi,'').replace(/\s+/g,' ').trim();
+      await saveClientPackage(S.clientData.telegram, S.clientData.pkgId, cleanName, S.clientData.pkgPrice, sessions);
+    } else if (S.clientData.pkgId?.startsWith("pack") && S.clientData.usedPackageDoc) {
+      await usePackageSession(S.clientData.usedPackageDoc);
     }
 
     await tgNotify({
