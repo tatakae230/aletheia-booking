@@ -287,10 +287,12 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
         <span class="pkg-tab-arrow">↓</span>
       </button>
       <button class="pkg-tab popular-tab" id="ptab-pack8" onclick="selectPkgTab(this,'pack8',7100,'Пакет 8 сесій',8)">
+        <span style="font-size:.68rem;color:var(--muted);font-family:sans-serif;font-weight:400">Пакет 8 сесій</span>
         <span class="pkg-tab-name">Глибинна робота</span>
         <span class="pkg-tab-arrow">↓</span>
       </button>
       <button class="pkg-tab" id="ptab-pack12" onclick="selectPkgTab(this,'pack12',11000,'Пакет 12 сесій',12)">
+        <span style="font-size:.68rem;color:var(--muted);font-family:sans-serif;font-weight:400">Пакет 12 сесій</span>
         <span class="pkg-tab-name">Шлях до себе</span>
         <span class="pkg-tab-arrow">↓</span>
       </button>
@@ -1262,29 +1264,58 @@ function chgMonth(d) {
   if (!cat) return;
   const messages = [
     "гарний час 🕐","гарний день для терапії 🌿","теж хочу на терапію 🐱",
-    "пакет топ 💛","прикольний нік ✨","гарне ім'я 🌸","так тримати! 🐾",
-    "це важливий крок 🌱","ти молодець 💪","мудре рішення 🧠",
-    "підтримую! 🐱","гарний вибір ✨","час — найкращий подарунок 🕐",
-    "зустріч буде класна 🌿","Тетяна вже чекає 🐱","хоробрий крок 💛",
-    "пишаюсь тобою 🐾","йдемо! 🚀","відмінно! ⭐"
+    "пакет топ 💛","так тримати! 🐾","це важливий крок 🌱","ти молодець 💪",
+    "мудре рішення 🧠","підтримую! 🐱","гарний вибір ✨",
+    "час — найкращий подарунок 🕐","зустріч буде класна 🌿",
+    "Тетяна вже чекає 🐱","хоробрий крок 💛","йдемо! 🚀","відмінно! ⭐"
   ];
   let timeout = null;
-  document.addEventListener("click", e => {
-    if (e.target.closest("button,a,input,select,textarea,label")) {
-      cat.style.display = "block";
-      cat.style.left = (e.clientX - 20) + "px";
-      cat.style.top  = (e.clientY - 20) + "px";
-      cat.style.animation = "none";
-      void cat.offsetWidth;
-      cat.style.animation = "catPop .4s ease forwards, floatyCat 1.8s .4s ease forwards";
-      if (bubble) {
-        bubble.style.left = (e.clientX - 60) + "px";
-        bubble.style.top  = (e.clientY - 50) + "px";
-        bubble.textContent = messages[Math.floor(Math.random() * messages.length)];
-        bubble.style.opacity = "1";
-        if (timeout) clearTimeout(timeout);
-        timeout = setTimeout(() => { bubble.style.opacity = "0"; cat.style.display = "none"; }, 1800);
+
+  // Контекстні повідомлення для конкретних полів
+  function showCatAt(x, y, msg) {
+    cat.style.display = "block";
+    cat.style.left = (x - 20) + "px";
+    cat.style.top  = (y - 20) + "px";
+    cat.style.animation = "none";
+    void cat.offsetWidth;
+    cat.style.animation = "catPop .4s ease forwards, floatyCat 1.8s .4s ease forwards";
+    if (bubble) {
+      bubble.style.left = (x - 60) + "px";
+      bubble.style.top  = (y - 50) + "px";
+      bubble.textContent = msg;
+      bubble.style.opacity = "1";
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => { bubble.style.opacity = "0"; cat.style.display = "none"; }, 2200);
+    }
+  }
+
+  // Поле імені — кіт хвалить ім'я
+  const nameInput = document.getElementById("f-name");
+  if (nameInput) {
+    nameInput.addEventListener("input", () => {
+      const v = nameInput.value.trim();
+      if (v.length >= 2) {
+        const r = nameInput.getBoundingClientRect();
+        showCatAt(r.right - 10, r.top + window.scrollY, "гарне ім'я 🌸");
       }
+    });
+  }
+
+  // Поле TG — кіт хвалить нік
+  const tgInput = document.getElementById("f-tg");
+  if (tgInput) {
+    tgInput.addEventListener("input", () => {
+      const v = tgInput.value.trim();
+      if (v.length >= 3) {
+        const r = tgInput.getBoundingClientRect();
+        showCatAt(r.right - 10, r.top + window.scrollY, "прикольний нік ✨");
+      }
+    });
+  }
+
+  document.addEventListener("click", e => {
+    if (e.target.closest("button,a,input[type=checkbox],select,label")) {
+      showCatAt(e.clientX, e.clientY + window.scrollY, messages[Math.floor(Math.random() * messages.length)]);
     }
   });
 })();
