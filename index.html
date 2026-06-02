@@ -68,6 +68,8 @@ header{
   font-family:sans-serif;outline:none;
   box-shadow:0 2px 10px rgba(0,0,0,0.06)
 }
+.pkg-tab-main{display:block;font-size:.64rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;opacity:.6;line-height:1.3;margin-bottom:1px}
+.pkg-tab-sub{display:block;font-size:.88rem;font-weight:700;line-height:1.2}
 .pkg-tab:hover{border-color:var(--accent);background:rgba(255,255,255,0.95);box-shadow:0 4px 16px rgba(139,102,54,0.15);transform:translateY(-1px)}
 .pkg-tab.active{border-color:var(--accent);background:var(--accent-bg);box-shadow:0 4px 20px rgba(139,102,54,0.4),0 0 0 3px rgba(139,102,54,0.2);font-weight:700}
 .pkg-tab.popular-tab{border-color:#c8a045;background:rgba(253,248,220,0.7)}
@@ -288,11 +290,11 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
         <span class="pkg-tab-arrow">↓</span>
       </button>
       <button class="pkg-tab popular-tab" id="ptab-pack8" onclick="selectPkgTab(this,'pack8',7100,'Пакет 8 наших зустрічей',8)">
-        <span class="pkg-tab-name">Пакет 8 наших зустрічей</span>
+        <span class="pkg-tab-main">Пакет</span><span class="pkg-tab-sub">8 наших зустрічей</span>
         <span class="pkg-tab-arrow">↓</span>
       </button>
       <button class="pkg-tab" id="ptab-pack12" onclick="selectPkgTab(this,'pack12',11000,'Пакет 12 наших зустрічей',12)">
-        <span class="pkg-tab-name">Пакет 12 наших зустрічей</span>
+        <span class="pkg-tab-main">Пакет</span><span class="pkg-tab-sub">12 наших зустрічей</span>
         <span class="pkg-tab-arrow">↓</span>
       </button>
     </div>
@@ -307,7 +309,7 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
 
     <!-- Already have a package -->
     <div onclick="goWithPackage()" style="margin-top:8px;background:linear-gradient(135deg,rgba(255,248,240,0.85),rgba(255,238,221,0.85));border:2px dashed #d4a870;border-radius:14px;padding:14px 20px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:border-color .18s" onmouseover="this.style.borderColor='#8b6636'" onmouseout="this.style.borderColor='#d4a870'">
-      <span style="font-size:1.4rem;flex-shrink:0">🐱</span>
+      
       <div style="flex:1">
         <div style="font-family:sans-serif;font-size:.92rem;font-weight:700;color:#7a4a00">Вже маю пакет сесій</div>
         <div style="font-family:sans-serif;font-size:.78rem;color:#a07040;margin-top:2px">Просто обери зручний час — система підтягне твій пакет по Telegram-ніку 🌿</div>
@@ -368,7 +370,7 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
 
 <!-- PKG WARNING BAR -->
 <div id="pkg-warning">
-  🐱 Упс! Ти забула/забув вибрати варіант, який тобі підходить ↑
+  ✅ Упс! Ти забула/забув вибрати варіант, який тобі підходить ↑
 </div>
 
 <!-- Sticky "Book" bar -->
@@ -404,7 +406,7 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
         <div id="tg-pkg-hint" style="display:none;font-size:.8rem;background:#fff8e6;border:1px solid #f0d080;border-radius:8px;padding:8px 12px;margin-bottom:8px;color:#7a5a00">📩 Для пакетів Telegram обов'язковий — саме через нього ти зможеш бронювати наступні сесії без додаткової оплати.</div>
         <div id="tg-pkg-active" style="display:none;font-size:.88rem;background:linear-gradient(135deg,#fff8f0,#ffeedd);border:1.5px solid #f0c890;border-radius:12px;padding:12px 16px;margin-bottom:8px;color:#7a4a00;line-height:1.6">
           <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:1.8rem;flex-shrink:0">🐱</span>
+            
             <div id="tg-pkg-active-text"></div>
           </div>
         </div>
@@ -683,8 +685,8 @@ async function checkClientPackage() {
       const plural = rem === 1 ? "сесія" : rem < 5 ? "сесії" : "сесій";
       document.getElementById("tg-pkg-active-text").innerHTML =
         (rem === 1
-          ? "<strong>🐈‍⬛ Остання сесія в пакеті</strong><br>Ця зустріч з пакету — платити зараз не потрібно 🌿 Після неї пакет завершиться. Повертайся та обери зручний для тебе пакет 🌿"
-          : "<strong>🐱 Залишилось " + rem + " " + plural + " в пакеті</strong><br>Пакет «" + pkg.packageName + "» — просто обери час, оплачувати не потрібно 🌿");
+          ? "<strong>⚠️ Остання сесія в пакеті</strong><br>Ця зустріч з пакету — платити зараз не потрібно 🌿 Після неї пакет завершиться. Повертайся та обери зручний для тебе пакет 🌿"
+          : "<strong>✅ Залишилось " + rem + " " + plural + " в пакеті</strong><br>Пакет «" + pkg.packageName + "» — просто обери час, оплачувати не потрібно 🌿");
       activeDiv.style.display = "block";
       const sel = document.getElementById("f-pkg");
       if (sel) {
@@ -718,6 +720,9 @@ function onPkgSelectChange() {
 async function saveClientPackage(telegram, pkgId, pkgName, pkgPrice, sessions) {
   if (!db || !telegram || !pkgId.startsWith("pack")) return;
   const handle = telegram.startsWith("@") ? telegram : "@" + telegram;
+  // Перевіряємо дублікати
+  const _ex = await getDocs(query(collection(db,"clientPackages"),where("telegram","==",handle)));
+  if(_ex.docs.some(d=>d.data().packageId===pkgId&&(d.data().sessionsRemaining||0)>0)){console.log("dup prevented");return;}
   await addDoc(collection(db, "clientPackages"), {
     telegram: handle, packageId: pkgId, packageName: pkgName, packagePrice: pkgPrice,
     sessionsTotal: sessions, sessionsRemaining: sessions - 1, sessionsUsed: 1,
@@ -934,7 +939,7 @@ async function submitForm(e) {
     S.clientData = {
       name, telegram: tg.startsWith("@") ? tg : "@" + tg, comment,
       pkgId: pkg.packageId, pkgName: pkg.packageName, pkgPrice: 0,
-      usedPackageDoc: pkg.docId, isUrgentSurcharge: false
+      usedPackageDoc: pkg.docId, isUrgentSurcharge: !!S.isUrgent
     };
     const [y,m,d] = S.selDate.split("-");
     document.getElementById("pkg-confirm-details").innerHTML =
@@ -1260,67 +1265,7 @@ function chgMonth(d) {
 }
 
 // ── WHITE CAT ─────────────────────────────────────────────────
-(function initWhiteCat() { return; //
-  const cat = document.getElementById("white-cat");
-  const bubble = document.getElementById("white-cat-bubble");
-  if (!cat) return;
-  const messages = [
-    "гарний час 🕐","гарний день для терапії 🌿","теж хочу на терапію 🐱",
-    "пакет топ 💛","так тримати! 🐾","це важливий крок 🌱","ти молодець 💪",
-    "мудре рішення 🧠","підтримую! 🐱","гарний вибір ✨",
-    "час — найкращий подарунок 🕐","зустріч буде класна 🌿",
-    "Тетяна вже чекає 🐱","хоробрий крок 💛","йдемо! 🚀","відмінно! ⭐"
-  ];
-  let timeout = null;
-
-  // Контекстні повідомлення для конкретних полів
-  function showCatAt(x, y, msg) {
-    cat.style.display = "block";
-    cat.style.left = (x - 20) + "px";
-    cat.style.top  = (y - 20) + "px";
-    cat.style.animation = "none";
-    void cat.offsetWidth;
-    cat.style.animation = "catPop .4s ease forwards, floatyCat 1.8s .4s ease forwards";
-    if (bubble) {
-      bubble.style.left = (x - 60) + "px";
-      bubble.style.top  = (y - 50) + "px";
-      bubble.textContent = msg;
-      bubble.style.opacity = "1";
-      if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(() => { bubble.style.opacity = "0"; cat.style.display = "none"; }, 2200);
-    }
-  }
-
-  // Поле імені — кіт хвалить ім'я
-  const nameInput = document.getElementById("f-name");
-  if (nameInput) {
-    nameInput.addEventListener("input", () => {
-      const v = nameInput.value.trim();
-      if (v.length >= 2) {
-        const r = nameInput.getBoundingClientRect();
-        showCatAt(r.right - 10, r.top + window.scrollY, "гарне ім'я 🌸");
-      }
-    });
-  }
-
-  // Поле TG — кіт хвалить нік
-  const tgInput = document.getElementById("f-tg");
-  if (tgInput) {
-    tgInput.addEventListener("input", () => {
-      const v = tgInput.value.trim();
-      if (v.length >= 3) {
-        const r = tgInput.getBoundingClientRect();
-        showCatAt(r.right - 10, r.top + window.scrollY, "прикольний нік ✨");
-      }
-    });
-  }
-
-  document.addEventListener("click", e => {
-    if (e.target.closest("button,a,input[type=checkbox],select,label")) {
-      showCatAt(e.clientX, e.clientY + window.scrollY, messages[Math.floor(Math.random() * messages.length)]);
-    }
-  });
-})();
+(function initWhiteCat() { ret)();
 
 (async () => {
   await loadPaySettings();
@@ -1350,5 +1295,35 @@ function chgMonth(d) {
 <div id="white-cat">🐈</div>
 <div class="white-cat-bubble" id="white-cat-bubble"></div>
 
+
+<!-- Фонова музика -->
+<div id="yt-btn" style="position:fixed;bottom:18px;right:18px;z-index:9999;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);border:1px solid rgba(139,102,54,.18);border-radius:50px;padding:7px 16px 7px 10px;box-shadow:0 2px 14px rgba(0,0,0,.08);cursor:pointer;font-family:sans-serif;font-size:.76rem;color:#7a6a55;display:flex;align-items:center;gap:7px;opacity:0;transition:opacity .6s" onclick="toggleBgMusic(event)">
+  <span id="yt-icon" style="font-size:1rem">🎵</span><span id="yt-lbl">Фонова музика</span>
+</div>
+<iframe id="yt-frame" style="display:none;width:1px;height:1px;position:fixed;top:-999px;left:-999px" src="about:blank" allow="autoplay" tabindex="-1"></iframe>
+<script>
+(function(){
+  let _started=false,_muted=false;
+  const btn=document.getElementById('yt-btn');
+  const ifr=document.getElementById('yt-frame');
+  const icon=document.getElementById('yt-icon');
+  const lbl=document.getElementById('yt-lbl');
+  setTimeout(()=>{btn.style.opacity='1';},2500);
+  function start(){
+    if(_started)return;_started=true;
+    ifr.src='https://www.youtube.com/embed/Q6nu9-J-DH0?autoplay=1&loop=1&playlist=Q6nu9-J-DH0&controls=0';
+  }
+  document.addEventListener('click',function h(e){if(!e.target.closest('#yt-btn')){start();}},{once:true,passive:true});
+  document.addEventListener('touchstart',function h(){start();},{once:true,passive:true});
+  window.toggleBgMusic=function(e){
+    if(e)e.stopPropagation();
+    if(!_started){start();return;}
+    _muted=!_muted;
+    ifr.contentWindow?.postMessage(JSON.stringify({event:'command',func:_muted?'muteVideo':'unMuteVideo'}),'*');
+    icon.textContent=_muted?'🔇':'🎵';
+    lbl.textContent=_muted?'Вимкнено':'Фонова музика';
+  };
+})();
+</script>
 </body>
 </html>
