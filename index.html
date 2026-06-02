@@ -698,7 +698,20 @@ async function checkClientPackage() {
       }
     } else {
       S.activePackage = null;
-      activeDiv.style.display = "none";
+      // Перевіряємо чи є вичерпані пакети — показуємо повідомлення
+      const exhausted = snap.docs.filter(d => (d.data().sessionsRemaining || 0) === 0);
+      if (exhausted.length > 0) {
+        exhausted.sort((a,b) => (b.data().createdAt||"").localeCompare(a.data().createdAt||""));
+        const lastPkg = exhausted[0].data();
+        const lastDate = lastPkg.createdAt ? new Date(lastPkg.createdAt).toLocaleDateString("uk-UA", {day:"numeric",month:"long",year:"numeric"}) : "невідома";
+        document.getElementById("tg-pkg-active-text").innerHTML =
+          "<strong>ℹ️ Пакет вичерпано</strong><br>" +
+          "По ніку <strong>" + handle + "</strong> активних сесій немає — пакет «" + lastPkg.packageName + "» вже використано повністю. " +
+          "Якщо хочеш продовжити — обери новий пакет нижче 🌿";
+        activeDiv.style.display = "block";
+      } else {
+        activeDiv.style.display = "none";
+      }
     }
   } catch(e) { console.warn("checkClientPackage error", e); }
   const submitBtn = document.querySelector("#bk-form button[type=submit]");
@@ -799,7 +812,7 @@ const PKG_DETAILS = {
   },
   pack12: {
     title: "Пакет 12 наших зустрічей", sessions: "55–60 хвилин · 12 зустрічей", price: 11000,
-    desc: "Тривала, стабільна присутність — тут ти нарешті перестаєш «налаштовуватись» і починаєш справжню роботу. Глибока трансформація, яка залишається з тобою назавжди.",
+    desc: "Тривала, стабільна присутність — тут ти нарешті перестаєш «налаштовуватись» і починаєш справжню роботу. Глибока трансформація патернів, стосунків, внутрішніх блоків. І найголовніше — ти виходиш із конкретними інструментами: техніками, які вже знаєш як застосовувати у своєму житті щодня.",
     note: "📩 Telegram обов'язковий — наступні сесії бронюєш без оплати", save: "✓ Економія 1 000 грн · 917 грн/сесія"
   }
 };
@@ -1290,31 +1303,31 @@ function chgMonth(d) {
 </div>
 
 <!-- Фонова музика -->
-<div id="yt-btn" style="position:fixed;bottom:18px;right:18px;z-index:9999;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);border:1px solid rgba(139,102,54,.18);border-radius:50px;padding:7px 16px 7px 10px;box-shadow:0 2px 14px rgba(0,0,0,.08);cursor:pointer;font-family:sans-serif;font-size:.76rem;color:#7a6a55;display:flex;align-items:center;gap:7px;opacity:0;transition:opacity .6s" onclick="toggleBgMusic(event)">
-  <span id="yt-icon" style="font-size:1rem">🎵</span><span id="yt-lbl">Фонова музика</span>
+<div id="yt-btn" style="position:fixed;bottom:18px;right:18px;z-index:9999;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border:1px solid rgba(139,102,54,.18);border-radius:50px;padding:8px 18px 8px 12px;box-shadow:0 2px 14px rgba(0,0,0,.09);cursor:pointer;font-family:sans-serif;font-size:.76rem;color:#7a6a55;display:flex;align-items:center;gap:8px;transition:all .3s" onclick="toggleBgMusic()">
+  <span id="yt-icon" style="font-size:1rem">🎵</span><span id="yt-lbl">Музика</span>
 </div>
-<iframe id="yt-frame" style="display:none;width:1px;height:1px;position:fixed;top:-999px;left:-999px" src="about:blank" allow="autoplay" tabindex="-1"></iframe>
+<iframe id="yt-frame" style="display:none;position:fixed;top:-9999px;left:-9999px;width:1px;height:1px" frameborder="0" allow="autoplay; encrypted-media"></iframe>
 <script>
 (function(){
-  let _started=false,_muted=false;
-  const btn=document.getElementById('yt-btn');
-  const ifr=document.getElementById('yt-frame');
-  const icon=document.getElementById('yt-icon');
-  const lbl=document.getElementById('yt-lbl');
-  setTimeout(()=>{btn.style.opacity='1';},2500);
-  function start(){
-    if(_started)return;_started=true;
-    ifr.src='https://www.youtube.com/embed/Q6nu9-J-DH0?autoplay=1&loop=1&playlist=Q6nu9-J-DH0&controls=0';
-  }
-  document.addEventListener('click',function h(e){if(!e.target.closest('#yt-btn')){start();}},{once:true,passive:true});
-  document.addEventListener('touchstart',function h(){start();},{once:true,passive:true});
-  window.toggleBgMusic=function(e){
-    if(e)e.stopPropagation();
-    if(!_started){start();return;}
-    _muted=!_muted;
-    ifr.contentWindow?.postMessage(JSON.stringify({event:'command',func:_muted?'muteVideo':'unMuteVideo'}),'*');
-    icon.textContent=_muted?'🔇':'🎵';
-    lbl.textContent=_muted?'Вимкнено':'Фонова музика';
+  let _on=false;
+  window.toggleBgMusic=function(){
+    const ifr=document.getElementById('yt-frame');
+    const icon=document.getElementById('yt-icon');
+    const lbl=document.getElementById('yt-lbl');
+    const btn=document.getElementById('yt-btn');
+    if(!_on){
+      _on=true;
+      ifr.style.display='block';
+      ifr.src='https://www.youtube.com/embed/Q6nu9-J-DH0?autoplay=1&loop=1&playlist=Q6nu9-J-DH0&controls=0';
+      icon.textContent='🔊';lbl.textContent='Грає';
+      btn.style.background='rgba(139,102,54,.1)';
+    } else {
+      _on=false;
+      ifr.src='about:blank';
+      ifr.style.display='none';
+      icon.textContent='🎵';lbl.textContent='Музика';
+      btn.style.background='rgba(255,255,255,.88)';
+    }
   };
 })();
 </script>
