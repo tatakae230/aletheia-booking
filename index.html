@@ -1308,30 +1308,27 @@ function chgMonth(d) {
 </div>
 <script>
 (function(){
-  let _on=false, _el=null;
-  window.toggleBgMusic=function(){
-    const icon=document.getElementById('yt-icon');
-    const lbl=document.getElementById('yt-lbl');
-    const btn=document.getElementById('yt-btn');
-    if(!_on){
-      _on=true;
-      // Створюємо iframe динамічно прямо тут — зберігає user gesture для autoplay
-      _el=document.createElement('iframe');
-      _el.width='0'; _el.height='0';
-      _el.style.cssText='position:fixed;top:-9999px;left:-9999px;border:0;width:0;height:0';
-      _el.setAttribute('allow','autoplay; encrypted-media; gyroscope; picture-in-picture');
-      _el.setAttribute('allowfullscreen','');
-      _el.src='https://www.youtube.com/embed/Q6nu9-J-DH0?autoplay=1&loop=1&playlist=Q6nu9-J-DH0&controls=0&mute=0';
-      document.body.appendChild(_el);
-      icon.textContent='🔊';lbl.textContent='Грає';
-      btn.style.background='rgba(139,102,54,.1)';
-    } else {
-      _on=false;
-      if(_el){_el.src='about:blank';_el.remove();_el=null;}
-      icon.textContent='🎵';lbl.textContent='Музика';
-      btn.style.background='rgba(255,255,255,.88)';
-    }
-  };
+  var audio = new Audio('bg-music.mp3');
+  audio.loop = true;
+  audio.volume = 0.3;
+  var btn = document.getElementById('yt-btn');
+  var lbl = document.getElementById('yt-lbl');
+  var playing = false;
+  if(btn){
+    btn.style.cursor='pointer';
+    btn.addEventListener('click', function(){
+      if(playing){
+        audio.pause();
+        if(lbl) lbl.textContent = '♪ Музика';
+        btn.classList.remove('active');
+      } else {
+        audio.play().catch(function(){});
+        if(lbl) lbl.textContent = '⏸ Музика';
+        btn.classList.add('active');
+      }
+      playing = !playing;
+    });
+  }
 })();
 </script>
 </body>
