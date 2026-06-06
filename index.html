@@ -1306,15 +1306,6 @@ function chgMonth(d) {
 <div id="yt-btn" style="position:fixed;bottom:18px;right:18px;z-index:9999;background:rgba(255,255,255,0.88);backdrop-filter:blur(10px);border:1px solid rgba(139,102,54,0.18);border-radius:50px;padding:8px 18px 8px 12px;box-shadow:0 2px 14px rgba(0,0,0,0.09);cursor:pointer;font-family:sans-serif;font-size:0.76rem;color:rgb(122,106,85);display:flex;align-items:center;gap:8px;transition:0.3s;">
   <span id="yt-icon">🎵</span><span id="yt-lbl">Музика</span>
 </div>
-<div id="med-btn" style="position:fixed;bottom:68px;right:18px;z-index:9999;background:rgba(255,255,255,0.88);backdrop-filter:blur(10px);border:1px solid rgba(139,102,54,0.18);border-radius:50px;padding:8px 18px 8px 12px;box-shadow:0 2px 14px rgba(0,0,0,0.09);cursor:pointer;font-family:sans-serif;font-size:0.76rem;color:rgb(122,106,85);display:flex;align-items:center;gap:8px;transition:0.3s;">
-  <span>🧘</span><span id="med-lbl">Медитація</span>
-</div>
-<div id="breath-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(20,15,10,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center;flex-direction:column;gap:20px;">
-  <style>@keyframes breathe{0%,100%{transform:scale(1);opacity:0.55}50%{transform:scale(1.65);opacity:1}}#breath-circle{animation:breathe 8s ease-in-out infinite}</style>
-  <div id="breath-circle" style="width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.75);"></div>
-  <div id="breath-label" style="color:white;font-family:sans-serif;font-size:1.25rem;letter-spacing:0.06em;min-height:2rem;text-align:center;"></div>
-  <div id="breath-stop" style="color:rgba(255,255,255,0.65);font-family:sans-serif;font-size:0.75rem;cursor:pointer;border:1px solid rgba(255,255,255,0.3);padding:6px 18px;border-radius:20px;margin-top:8px;">✕ Зупинити</div>
-</div>
 <script>
 (function(){
   var bgAudio=new Audio('bg-music.mp3');bgAudio.loop=true;bgAudio.volume=0.25;
@@ -1327,22 +1318,6 @@ function chgMonth(d) {
     musicOn=!musicOn;
   });}
   var medAudio=new Audio('meditation.mp3');medAudio.volume=0.7;
-  var medBtn=document.getElementById('med-btn');
-  var medLbl=document.getElementById('med-lbl');
-  var overlay=document.getElementById('breath-overlay');
-  var breathLbl=document.getElementById('breath-label');
-  var stopBtn=document.getElementById('breath-stop');
-  var medOn=false;var breathTimer=null;var breathPhase=0;
-  var phases=['вдих…','','видих…',''];
-  var durations=[4000,100,4000,100];
-  function breathTick(){if(breathLbl)breathLbl.textContent=phases[breathPhase];breathPhase=(breathPhase+1)%phases.length;breathTimer=setTimeout(breathTick,durations[breathPhase]);}
-  function stopMed(){medAudio.pause();medAudio.currentTime=0;overlay.style.display='none';if(medLbl)medLbl.textContent='Медитація';clearTimeout(breathTimer);breathPhase=0;medOn=false;}
-  if(medBtn){medBtn.addEventListener('click',function(){
-    if(medOn){stopMed();}
-    else{medAudio.play().catch(function(){});overlay.style.display='flex';breathTick();if(medLbl)medLbl.textContent='⏸ Стоп';medOn=true;}
-  });}
-  if(stopBtn)stopBtn.addEventListener('click',stopMed);
-  medAudio.addEventListener('ended',stopMed);
 })();
 </script>
 </body>
