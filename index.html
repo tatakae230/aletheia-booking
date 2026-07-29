@@ -60,9 +60,9 @@ header{
 .section-title{font-size:1.3rem;font-weight:400;margin-bottom:22px;color:var(--text)}
 
 /* ─── COMPACT PKG TABS ─── */
-.pkg-tabs{display:flex;gap:8px;margin-bottom:4px}
+.pkg-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
 .pkg-tab{
-  flex:1;padding:16px 10px;border:2px solid var(--border);border-radius:12px;
+  flex:1 1 21%;padding:16px 10px;border:2px solid var(--border);border-radius:12px;
   background:rgba(255,255,255,0.85);cursor:pointer;text-align:center;
   transition:all .2s;display:flex;flex-direction:column;gap:4px;
   font-family:sans-serif;outline:none;
@@ -246,6 +246,7 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
   .slots-grid{grid-template-columns:repeat(2,1fr)}
   .sticky-book{padding:10px 16px 18px}
   #page-bg-video{opacity:0.65!important;filter:brightness(1.05) saturate(1.1) contrast(1.0)!important}
+  .pkg-tab{flex:1 1 42%}
 }
 </style>
 </head>
@@ -286,16 +287,20 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
 
     <!-- 3 compact tabs -->
     <div class="pkg-tabs">
-      <button class="pkg-tab" id="ptab-single" onclick="selectPkgTab(this,'single',1000,'Разова сесія')">
-        <span class="pkg-tab-name">Разова сесія</span>
+      <button class="pkg-tab" id="ptab-single" onclick="selectPkgTab(this,'single',1250,'Індивідуальна консультація')">
+        <span class="pkg-tab-main">Індивідуальна</span><span class="pkg-tab-sub">консультація</span>
         <span class="pkg-tab-arrow">↓</span>
       </button>
-      <button class="pkg-tab popular-tab" id="ptab-pack8" onclick="selectPkgTab(this,'pack8',7100,'Пакет 8 наших зустрічей',8)">
-        <span class="pkg-tab-main">Пакет</span><span class="pkg-tab-sub">8 наших зустрічей</span>
+      <button class="pkg-tab" id="ptab-pack4" onclick="selectPkgTab(this,'pack4',4700,'Пакет 4 сесії',4)">
+        <span class="pkg-tab-main">Пакет</span><span class="pkg-tab-sub">4 сесії</span>
         <span class="pkg-tab-arrow">↓</span>
       </button>
-      <button class="pkg-tab" id="ptab-pack12" onclick="selectPkgTab(this,'pack12',11000,'Пакет 12 наших зустрічей',12)">
-        <span class="pkg-tab-main">Пакет</span><span class="pkg-tab-sub">12 наших зустрічей</span>
+      <button class="pkg-tab popular-tab" id="ptab-pack8" onclick="selectPkgTab(this,'pack8',9100,'Пакет 8 сесій',8)">
+        <span class="pkg-tab-main">Пакет</span><span class="pkg-tab-sub">8 сесій</span>
+        <span class="pkg-tab-arrow">↓</span>
+      </button>
+      <button class="pkg-tab" id="ptab-pack12" onclick="selectPkgTab(this,'pack12',13000,'Пакет 12 сесій',12)">
+        <span class="pkg-tab-main">Пакет</span><span class="pkg-tab-sub">12 сесій</span>
         <span class="pkg-tab-arrow">↓</span>
       </button>
     </div>
@@ -321,9 +326,10 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
     <!-- Hidden select for form -->
     <select id="f-pkg-top" style="display:none">
       <option value="">-- оберіть --</option>
-      <option value="single|1000|Разова сесія">Разова сесія — 1 000 грн</option>
-      <option value="pack8|7100|Пакет 8 сесій">Пакет 8 сесій — 7 100 грн</option>
-      <option value="pack12|11000|Пакет 12 сесій">Пакет 12 сесій — 11 000 грн</option>
+      <option value="single|1250|Індивідуальна консультація">Індивідуальна консультація — 1 250 грн</option>
+      <option value="pack4|4700|Пакет 4 сесії">Пакет 4 сесії — 4 700 грн</option>
+      <option value="pack8|9100|Пакет 8 сесій">Пакет 8 сесій — 9 100 грн</option>
+      <option value="pack12|13000|Пакет 12 сесій">Пакет 12 сесій — 13 000 грн</option>
     </select>
   </div>
 
@@ -418,9 +424,10 @@ details[open] .faq-q{color:var(--accent);border-bottom:1px solid var(--border)}
         <label>Пакет *</label>
         <select id="f-pkg" required onchange="onPkgSelectChange()">
           <option value="">— Оберіть пакет —</option>
-          <option value="single|1000|Разова сесія">Разова сесія — 1 000 грн</option>
-          <option value="pack8|7100|Пакет 8 наших зустрічей">Пакет 8 сесій — 7 100 грн</option>
-          <option value="pack12|11000|Пакет 12 наших зустрічей">Пакет 12 сесій — 11 000 грн</option>
+          <option value="single|1250|Індивідуальна консультація">Індивідуальна консультація — 1 250 грн</option>
+          <option value="pack4|4700|Пакет 4 сесії">Пакет 4 сесії — 4 700 грн</option>
+          <option value="pack8|9100|Пакет 8 сесій">Пакет 8 сесій — 9 100 грн</option>
+          <option value="pack12|13000|Пакет 12 сесій">Пакет 12 сесій — 13 000 грн</option>
         </select>
       </div>
       </div>
@@ -802,19 +809,24 @@ function scrollToCalendar() {
 // ── COMPACT PKG TAB SELECTOR ──────────────────────────────────
 const PKG_DETAILS = {
   single: {
-    title: "Разова сесія", sessions: "55–60 хвилин · 1 зустріч", price: 1000,
-    desc: "Одна зустріч — один фокус. Якщо є щось конкретне, з чим важливо розібратися тут і зараз, або ми продовжуємо роботу, яку починали раніше.",
+    title: "Індивідуальна консультація", sessions: "55–60 хвилин · 1 зустріч", price: 1250,
+    desc: "Одна зустріч, щоб розібратися з конкретною ситуацією, яка турбує зараз, або відчути, чи підходить вам мій стиль роботи перед довшим форматом. Ви отримуєте перший погляд на те, що стоїть за вашим запитом, але одна сесія не змінює патерн, який формувався роками.",
     urgent: true, save: ""
   },
+  pack4: {
+    title: "Пакет 4 сесії", sessions: "55–60 хвилин · 4 зустрічі", price: 4700,
+    desc: "Ви починаєте бачити свій сценарій не одноразово, а в дії — двічі-тричі за різних обставин, поки він не стане настільки очевидним, що ви самі почнете його впізнавати. Це мінімальний обсяг, за якого інсайт встигає перетворитися на усвідомлення, яке вже не забувається.",
+    note: "📩 Telegram обов'язковий — наступні сесії бронюєш без оплати", save: "✓ Економія 300 грн · 1 175 грн/сесія"
+  },
   pack8: {
-    title: "Пакет 8 наших зустрічей", sessions: "55–60 хвилин · 8 зустрічей", price: 7100,
-    desc: "Дозволяєш собі справді зайнятися тим, що давно чекає на увагу. Разом розбираємо патерни, повторювані сценарії в тому темпі, який відчувається як твій.",
-    note: "📩 Telegram обов'язковий — наступні сесії бронюєш без оплати", save: "✓ Економія 900 грн · 887 грн/сесія"
+    title: "Пакет 8 сесій", sessions: "55–60 хвилин · 8 зустрічей", price: 9100,
+    desc: "Це час, потрібний, щоб нова поведінка встигла закріпитися, а не залишилась лише розмовою. Тут ми встигаємо і розібрати причину, і випробувати конкретні зміни в реальному житті між сесіями, і повернутися з результатом — побачити, що спрацювало, а що ні.",
+    note: "📩 Telegram обов'язковий — наступні сесії бронюєш без оплати", save: "✓ Економія 900 грн · 1 138 грн/сесія"
   },
   pack12: {
-    title: "Пакет 12 наших зустрічей", sessions: "55–60 хвилин · 12 зустрічей", price: 11000,
-    desc: "Тривала, стабільна присутність — тут ти нарешті перестаєш «налаштовуватись» і починаєш справжню роботу. Глибока трансформація патернів, стосунків, внутрішніх блоків. І найголовніше — ти виходиш із конкретними інструментами: техніками, які вже знаєш як застосовувати у своєму житті щодня.",
-    note: "📩 Telegram обов'язковий — наступні сесії бронюєш без оплати", save: "✓ Економія 1 000 грн · 917 грн/сесія"
+    title: "Пакет 12 сесій", sessions: "55–60 хвилин · 12 зустрічей", price: 13000,
+    desc: "Це повноцінна ґрунтовна робота з тим, що формувалося не місяцями, а роками — стосунками з батьками, травматичним досвідом, стійкими сценаріями поведінки. Це обсяг, у якому зміна встигає стати вашим новим звичайним способом жити, а не тимчасовим станом після натхненної розмови.",
+    note: "📩 Telegram обов'язковий — наступні сесії бронюєш без оплати", save: "✓ Економія 2 000 грн · 1 083 грн/сесія"
   }
 };
 
@@ -942,7 +954,7 @@ async function submitForm(e) {
     S.urgentIsPackageSurcharge = !!(S.activePackage && S.activePackage.docId);
     S.urgentPrice = S.urgentIsPackageSurcharge ? 450 : 1450;
     if (!document.getElementById("f-pkg").value) {
-      document.getElementById("f-pkg").value = "single|1000|Разова сесія";
+      document.getElementById("f-pkg").value = "single|1250|Індивідуальна консультація";
     }
   }
 
@@ -973,13 +985,13 @@ async function submitForm(e) {
     finalPkgId = S.activePackage?.packageId || "pack";
   } else if (S.isUrgent) {
     finalPrice = 1450;
-    finalPkgName = "Разова сесія ⚡";
+    finalPkgName = "Індивідуальна консультація ⚡";
     finalPkgId = "single";
   } else {
-    const parts = (pkgVal || "single|1000|Разова сесія").split("|");
+    const parts = (pkgVal || "single|1250|Індивідуальна консультація").split("|");
     finalPkgId   = parts[0] || "single";
-    finalPrice   = parseInt(parts[1]) || 1000;
-    finalPkgName = parts[2] || "Разова сесія";
+    finalPrice   = parseInt(parts[1]) || 1250;
+    finalPkgName = parts[2] || "Індивідуальна консультація";
   }
 
   S.clientData = {
