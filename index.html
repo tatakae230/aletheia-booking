@@ -702,6 +702,13 @@ const WDAYS  = ["Неділя","Понеділок","Вівторок","Сере
 // ── URGENT SESSION ─────────────────────────────────────────────
 let _pendingUrgentSlot = null, _pendingUrgentEl = null;
 
+function cleanPkgName(name) {
+  return (name || "")
+    .replace(/ *⚡ *\(?терміново,? *без *доплати\)?/gi, '')
+    .replace(/ *⚡? *термін\.? *доплата/gi, '')
+    .replace(/\s+/g, ' ').trim();
+}
+
 function isWithin12h(slotDate, slotTime) {
   if (!slotDate || !slotTime) return false;
   const slotDt = new Date(slotDate + "T" + slotTime + ":00");
@@ -745,12 +752,13 @@ async function checkClientPackage() {
       const pkgDoc = active[0];
       const pkg = pkgDoc.data();
       S.activePackage = { docId: pkgDoc.id, ...pkg };
+      const cleanedName = cleanPkgName(pkg.packageName);
       const rem = pkg.sessionsRemaining;
       const plural = rem === 1 ? "сесія" : rem < 5 ? "сесії" : "сесій";
       document.getElementById("tg-pkg-active-text").innerHTML =
         (rem === 1
           ? "<strong>⚠️ Остання сесія в пакеті</strong><br>Ця зустріч з пакету — платити зараз не потрібно 🌿 Після неї пакет завершиться. Повертайся та обери зручний для тебе пакет 🌿"
-          : "<strong>✅ Залишилось " + rem + " " + plural + " в пакеті</strong><br>Пакет «" + pkg.packageName + "» — просто обери час, оплачувати не потрібно 🌿");
+          : "<strong>✅ Залишилось " + rem + " " + plural + " в пакеті</strong><br>Пакет «" + cleanedName + "» — просто обери час, оплачувати не потрібно 🌿");
       activeDiv.style.display = "block";
       const sel = document.getElementById("f-pkg");
       if (sel) {
@@ -758,7 +766,7 @@ async function checkClientPackage() {
         for (const o of sel.options) { if (o.value === val) { sel.value = val; break; } }
       }
       if (!S.selPkg || S.selPkg.id !== pkg.packageId) {
-        S.selPkg = { id: pkg.packageId, price: 0, name: pkg.packageName };
+        S.selPkg = { id: pkg.packageId, price: 0, name: cleanedName };
       }
     } else {
       S.activePackage = null;
@@ -770,7 +778,7 @@ async function checkClientPackage() {
         const lastDate = lastPkg.createdAt ? new Date(lastPkg.createdAt).toLocaleDateString("uk-UA", {day:"numeric",month:"long",year:"numeric"}) : "невідома";
         document.getElementById("tg-pkg-active-text").innerHTML =
           "<strong>ℹ️ Пакет вичерпано</strong><br>" +
-          "По ніку <strong>" + handle + "</strong> активних сесій немає — пакет «" + lastPkg.packageName + "» вже використано повністю. " +
+          "По ніку <strong>" + handle + "</strong> активних сесій немає — пакет «" + cleanPkgName(lastPkg.packageName) + "» вже використано повністю. " +
           "Якщо хочеш продовжити — обери новий пакет або забронюй разову сесію";
         activeDiv.style.display = "block";
       } else {
@@ -1027,16 +1035,17 @@ async function submitForm(e) {
 
   if (hasPkg && !S.urgentIsPackageSurcharge) {
     const pkg = S.activePackage;
+    const cleanName = cleanPkgName(pkg.packageName);
     S.clientData = {
       name, telegram: tg.startsWith("@") ? tg : "@" + tg, comment,
-      pkgId: pkg.packageId, pkgName: pkg.packageName, pkgPrice: 0,
+      pkgId: pkg.packageId, pkgName: cleanName, pkgPrice: 0,
       usedPackageDoc: pkg.docId, isUrgentSurcharge: !!S.isUrgent
     };
     const [y,m,d] = S.selDate.split("-");
     document.getElementById("pkg-confirm-details").innerHTML =
       "<p>Дата: <strong>" + parseInt(d) + " " + MONTHS_GEN[parseInt(m)-1] + " " + y + "</strong></p>" +
       "<p>Час: <strong>" + S.selSlotTime + "</strong></p>" +
-      "<p>Пакет: <strong>" + pkg.packageName + "</strong></p>" +
+      "<p>Пакет: <strong>" + cleanName + "</strong></p>" +
       "<p>Залишилось: <strong>" + pkg.sessionsRemaining + " сесій</strong></p>" +
       "<p>Оплата: <strong>З пакету</strong></p>";
     goto("confirm-pkg");
@@ -1045,7 +1054,7 @@ async function submitForm(e) {
 
   if (S.isUrgent && S.urgentIsPackageSurcharge) {
     finalPrice = 350;
-    finalPkgName = (S.activePackage?.packageName || "Пакет") + " ⚡ термін. доплата";
+    finalPkgName = cleanPkgName(S.activePackage?.packageName || "Пакет") + " ⚡ термін. доплата";
     finalPkgId = S.activePackage?.packageId || "pack";
   } else {
     const parts = (pkgVal || "single|1250|Індивідуальна консультація").split("|");
@@ -1165,7 +1174,7 @@ async function confirmBooking() {
 
     if (S.clientData.pkgId?.startsWith("pack") && !S.clientData.usedPackageDoc) {
       const sessions = S.clientData.pkgId === "pack4" ? 4 : S.clientData.pkgId === "pack8" ? 8 : 12;
-      const cleanName = S.clientData.pkgName.replace(/ *⚡? *термін\.? *доплата/gi,'').replace(/\s+/g,' ').trim();
+      const cleanName = cleanPkgName(S.clientData.pkgName);
       await saveClientPackage(S.clientData.telegram, S.clientData.pkgId, cleanName, S.clientData.pkgPrice, sessions);
     } else if (S.clientData.pkgId?.startsWith("pack") && S.clientData.usedPackageDoc) {
       await usePackageSession(S.clientData.usedPackageDoc);
@@ -1334,12 +1343,15 @@ function pickSlot(sl, el) {
     _pendingUrgentSlot = sl; _pendingUrgentEl = el;
     const priceEl = document.getElementById("urgent-modal-price");
     const noteEl  = document.getElementById("urgent-modal-note");
+    const hintEl  = document.getElementById("urgent-modal-hint");
     if (S.selPkg && S.selPkg.id !== "single") {
       if (priceEl) priceEl.innerHTML = "До початку сесії менше 10 годин.<br>Оплата — повна вартість обраного пакета «" + S.selPkg.name + "» (<strong>" + S.selPkg.price.toLocaleString("uk-UA") + " грн</strong>), без доплати за терміновість.";
       if (noteEl) noteEl.style.display = "none";
+      if (hintEl) hintEl.style.display = "none";
     } else {
       if (priceEl) priceEl.innerHTML = "До початку сесії менше 10 годин.<br>Вартість: <strong>1 600 грн</strong> замість 1 250 грн.";
       if (noteEl) { noteEl.style.display = ""; noteEl.innerHTML = "Якщо у тебе є діючий пакет сесій — доплата лише <strong>350 грн</strong>."; }
+      if (hintEl) { hintEl.style.display = ""; hintEl.textContent = "Якщо хочеш уникнути доплати — обери інший час ↩️"; }
     }
     document.getElementById("urgent-modal").style.display = "flex";
     return;
@@ -1388,7 +1400,7 @@ function chgMonth(d) {
     <h3 style="font-family:sans-serif;font-size:1.05rem;font-weight:600;text-align:center;margin-bottom:12px;color:#1e1a14">Термінова сесія</h3>
     <p id="urgent-modal-price" style="font-family:sans-serif;font-size:.88rem;color:#7d6e5e;line-height:1.65;text-align:center;margin-bottom:8px">До початку сесії менше 10 годин.<br>Вартість: <strong>1 600 грн</strong> замість 1 250 грн.</p>
     <p id="urgent-modal-note" style="font-family:sans-serif;font-size:.84rem;color:#8b6636;line-height:1.6;text-align:center;margin-bottom:8px">Якщо у тебе є діючий пакет сесій — доплата лише <strong>350 грн</strong>.</p>
-    <p style="font-family:sans-serif;font-size:.78rem;color:#bbb;text-align:center;margin-bottom:20px">Якщо хочеш уникнути доплати — обери інший час ↩️</p>
+    <p id="urgent-modal-hint" style="font-family:sans-serif;font-size:.78rem;color:#bbb;text-align:center;margin-bottom:20px">Якщо хочеш уникнути доплати — обери інший час ↩️</p>
     <div style="display:flex;gap:10px">
       <button onclick="declineUrgent()" style="flex:1;padding:13px;border:1.5px solid #ddd3c6;border-radius:10px;background:#fff;font-family:sans-serif;font-size:.9rem;cursor:pointer;color:#7d6e5e">← Назад</button>
       <button onclick="acceptUrgent()" style="flex:2;padding:13px;border:none;border-radius:10px;background:#8b6636;color:#fff;font-family:sans-serif;font-size:.9rem;font-weight:600;cursor:pointer">Записатись ⚡</button>
